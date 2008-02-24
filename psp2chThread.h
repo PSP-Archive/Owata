@@ -16,6 +16,6 @@ int psp2chGetSubject(int ita);
 void psp2chSort(int sort);
 void psp2chThreadSort(void);
 int psp2chThreadSearch(void);
-void psp2chDrawThread(int start, int select);
+void psp2chDrawThread(int scrollX);
 
 #endif

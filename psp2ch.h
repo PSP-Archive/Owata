@@ -110,6 +110,7 @@ int psp2ch(void);
 void psp2chStart(void);
 int psp2chOwata(void);
 int psp2chCursorSet(S_2CH_SCREEN* line);
+int psp2chPadSet(int scrollX);
 int psp2chInit(void);
 int psp2chTerm(void);
 int psp2chCloseSocket(int mySocket);

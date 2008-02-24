@@ -43,6 +43,7 @@ char keyWords[128];
 *****************/
 int psp2chThread(void)
 {
+    static int scrollX = 0;
     static char* menuStr = "";
     int rMenu;
 
@@ -129,9 +130,9 @@ int psp2chThread(void)
                     sel = 1;
                 }
             }
-        }
-        psp2chDrawThread(thread.start, thread.select);
-        pgCopy(0, 0);
+        }scrollX = psp2chPadSet(scrollX);
+        psp2chDrawThread(scrollX);
+        pgCopy(scrollX, 0);
         pgMenuBar(menuStr);
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
@@ -700,8 +701,9 @@ int psp2chThreadSearch(void)
 /****************
 ƒXƒŒˆê——‚Ì•`‰æƒ‹[ƒ`ƒ“
 *****************/
-void psp2chDrawThread(int start, int select)
+void psp2chDrawThread(int scrollX)
 {
+    int start;
     int i;
     int lineEnd, scrW, scrH, resCount;
 
@@ -710,15 +712,16 @@ void psp2chDrawThread(int start, int select)
         lineEnd = 35;
         scrW = SCR_HEIGHT;
         scrH = SCR_WIDTH;
-        resCount = scrW - 24;
+        resCount = scrW - 50 + scrollX;
     }
     else
     {
         lineEnd = 20;
         scrW = SCR_WIDTH;
         scrH = SCR_HEIGHT;
-        resCount = THREAD_RES;
+        resCount = THREAD_RES + scrollX;
     }
+    start = thread.start;
     if (start + lineEnd > thread.count)
     {
         start = thread.count - lineEnd;
@@ -727,7 +730,7 @@ void psp2chDrawThread(int start, int select)
     {
         start = 0;
     }
-    pgFillvram(threadColor.bg, 0, 0, scrW, scrH);
+    pgFillvram(threadColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
     pgCursorY = 0;
     for (i = start; i < start + lineEnd; i++)
     {
@@ -736,9 +739,9 @@ void psp2chDrawThread(int start, int select)
             return;
         }
         pgCursorX = 0;
-        if (i == select)
+        if (i == thread.select)
         {
-            pgFillvram(threadColor.s_bg, 0, pgCursorY, scrW, LINE_PITCH);
+            pgFillvram(threadColor.s_bg, 0, pgCursorY, BUF_WIDTH, LINE_PITCH);
             pgPrintNumber(threadList[threadSort[i]].id + 1, threadColor.s_num, threadColor.s_bg);
         }
         else
@@ -746,33 +749,33 @@ void psp2chDrawThread(int start, int select)
             pgPrintNumber(threadList[threadSort[i]].id + 1, threadColor.num, threadColor.bg);
         }
         pgCursorX = THREAD_ID;
-        if (i == select)
+        if (i == thread.select)
         {
             if (threadList[threadSort[i]].old > 0)
             {
-                pgPrint(threadList[threadSort[i]].title, threadColor.s_text2, threadColor.s_bg, scrW);
+                pgPrint(threadList[threadSort[i]].title, threadColor.s_text2, threadColor.s_bg, resCount+12);
             }
             else
             {
-                pgPrint(threadList[threadSort[i]].title, threadColor.s_text1, threadColor.s_bg, scrW);
+                pgPrint(threadList[threadSort[i]].title, threadColor.s_text1, threadColor.s_bg, resCount+12);
             }
         }
         else
         {
             if (threadList[threadSort[i]].old > 0)
             {
-                pgPrint(threadList[threadSort[i]].title, threadColor.text2, threadColor.bg, scrW);
+                pgPrint(threadList[threadSort[i]].title, threadColor.text2, threadColor.bg, resCount+12);
             }
             else
             {
-                pgPrint(threadList[threadSort[i]].title, threadColor.text1, threadColor.bg, scrW);
+                pgPrint(threadList[threadSort[i]].title, threadColor.text1, threadColor.bg, resCount+12);
             }
         }
         pgCursorX = resCount;
-        if (i == select)
+        if (i == thread.select)
         {
             pgPrintNumber(threadList[threadSort[i]].res, threadColor.s_count1, threadColor.s_bg);
-            if (!tateFlag && threadList[threadSort[i]].old > 0)
+            if (threadList[threadSort[i]].old > 0)
             {
                 pgCursorX += 2;
                 pgPrintNumber(threadList[threadSort[i]].old, threadColor.s_count2, threadColor.s_bg);
@@ -781,7 +784,7 @@ void psp2chDrawThread(int start, int select)
         else
         {
             pgPrintNumber(threadList[threadSort[i]].res, threadColor.count1, threadColor.bg);
-            if (!tateFlag && threadList[threadSort[i]].old > 0)
+            if (threadList[threadSort[i]].old > 0)
             {
                 pgCursorX += 2;
                 pgPrintNumber(threadList[threadSort[i]].old, threadColor.count2, threadColor.bg);

@@ -31,6 +31,7 @@ S_2CH_SCREEN find;
 
 int psp2chSearch(int retSel)
 {
+    static int scrollX = 0;
     static char* menuStr = "";
     static int ret = 0;
     int rMenu;
@@ -119,8 +120,9 @@ int psp2chSearch(int retSel)
                 }
             }
         }
-        psp2chDrawSearch(find.start, find.select);
-        pgCopy(0, 0);
+        scrollX = psp2chPadSet(scrollX);
+        psp2chDrawSearch(scrollX);
+        pgCopy(scrollX, 0);
         pgMenuBar(menuStr);
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
@@ -344,8 +346,9 @@ int psp2chSearchList(void)
 
 /**********************
 **********************/
-void psp2chDrawSearch(int start, int select)
+void psp2chDrawSearch(int scrollX)
 {
+    int start;
     int i;
     char buf[32];
     int lineEnd, scrW, scrH;
@@ -353,15 +356,16 @@ void psp2chDrawSearch(int start, int select)
     if (tateFlag)
     {
         lineEnd = 35;
-        scrW = SCR_HEIGHT;
+        scrW = SCR_HEIGHT + scrollX;
         scrH = SCR_WIDTH;
     }
     else
     {
         lineEnd = 20;
-        scrW = SCR_WIDTH;
+        scrW = SCR_WIDTH + scrollX;
         scrH = SCR_HEIGHT;
     }
+    start = find.start;
     if (start + lineEnd > find.count)
     {
         start = find.count - lineEnd;
@@ -370,7 +374,7 @@ void psp2chDrawSearch(int start, int select)
     {
         start = 0;
     }
-    pgFillvram(threadColor.bg, 0, 0, scrW, scrH);
+    pgFillvram(threadColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
     pgCursorY = 0;
     for (i = start; i < start + lineEnd; i++)
     {
@@ -380,9 +384,9 @@ void psp2chDrawSearch(int start, int select)
         }
         pgCursorX = 0;
         sprintf(buf, "%4d", i + 1);
-        if (i == select)
+        if (i == find.select)
         {
-            pgFillvram(threadColor.s_bg, 0, pgCursorY, scrW, LINE_PITCH);
+            pgFillvram(threadColor.s_bg, 0, pgCursorY, BUF_WIDTH, LINE_PITCH);
             pgPrintNumber(i + 1, threadColor.s_num, threadColor.s_bg);
         }
         else
@@ -390,7 +394,7 @@ void psp2chDrawSearch(int start, int select)
             pgPrintNumber(i + 1, threadColor.num, threadColor.bg);
         }
         pgCursorX = THREAD_ID;
-        if (i == select)
+        if (i == find.select)
         {
             pgPrint(findList[i].title, threadColor.s_category, threadColor.s_bg, scrW);
             pgCursorX += 8;

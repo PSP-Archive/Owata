@@ -14,6 +14,6 @@ int psp2chFavorite(void);
 int psp2chLoadFavorite(void);
 int psp2chAddFavorite(char* host, char* dir, char* title, int dat);
 int psp2chDelFavorite(char* title, int dat);
-void psp2chDrawFavorite(int start, int select);
+void psp2chDrawFavorite(int scrollX);
 
 #endif

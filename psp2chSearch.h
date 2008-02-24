@@ -4,6 +4,6 @@
 
 int psp2chSearch(int retSel);
 int psp2chSearchList(void);
-void psp2chDrawSearch(int start, int select);
+void psp2chDrawSearch(int scrollX);
 
 #endif

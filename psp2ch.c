@@ -171,6 +171,30 @@ int psp2chCursorSet(S_2CH_SCREEN* line)
     static int keyStart = 0, keyRepeat = 0;
     static clock_t keyTime = 0;
     int lineEnd, rMenu;
+    int padUp = 0, padDown = 0;
+
+    if (tateFlag)
+    {
+        if (pad.Lx == 255)
+        {
+            padUp = 1;
+        }
+        else if (pad.Lx == 0)
+        {
+            padDown = 1;
+        }
+    }
+    else
+    {
+        if (pad.Ly == 0)
+        {
+            padUp = 1;
+        }
+        else if (pad.Ly == 255)
+        {
+            padDown = 1;
+        }
+    }
 
     if (tateFlag)
     {
@@ -188,7 +212,7 @@ int psp2chCursorSet(S_2CH_SCREEN* line)
     {
         rMenu = 0;
     }
-    if (pad.Buttons != oldPad.Buttons || keyRepeat)
+    if (pad.Buttons != oldPad.Buttons || keyRepeat || padUp || padDown)
     {
         if (pad.Buttons != oldPad.Buttons)
         {
@@ -200,9 +224,9 @@ int psp2chCursorSet(S_2CH_SCREEN* line)
         }
         keyTime = clock();
         keyRepeat = 0;
-        if((pad.Buttons & PSP_CTRL_UP && !tateFlag) || (pad.Buttons & PSP_CTRL_RIGHT && tateFlag))
+        if((pad.Buttons & PSP_CTRL_UP && !tateFlag) || (pad.Buttons & PSP_CTRL_RIGHT && tateFlag) || padUp)
         {
-            if (rMenu)
+            if (rMenu && !padUp)
             {
                 line->start = 0;
                 line->select = 0;
@@ -220,9 +244,9 @@ int psp2chCursorSet(S_2CH_SCREEN* line)
                 }
             }
         }
-        if((pad.Buttons & PSP_CTRL_DOWN && !tateFlag) || (pad.Buttons & PSP_CTRL_LEFT && tateFlag))
+        if((pad.Buttons & PSP_CTRL_DOWN && !tateFlag) || (pad.Buttons & PSP_CTRL_LEFT && tateFlag) || padDown)
         {
-            if (rMenu)
+            if (rMenu && !padDown)
             {
                 line->start = line->count - lineEnd;
                 if (line->start < 0)
@@ -299,6 +323,47 @@ int psp2chCursorSet(S_2CH_SCREEN* line)
         }
     }
     return rMenu;
+}
+
+int psp2chPadSet(int scrollX)
+{
+    static int xReverse = 1;
+
+    if (tateFlag)
+    {
+        if (pad.Ly == 0)
+        {
+            scrollX += 8 * xReverse;
+        }
+        else if (pad.Ly == 255)
+        {
+            scrollX -= 8 * xReverse;
+        }
+        if (scrollX > BUF_HEIGHT - SCR_HEIGHT)
+        {
+            scrollX = BUF_HEIGHT - SCR_HEIGHT;
+        }
+    }
+    else
+    {
+        if (pad.Lx == 0)
+        {
+            scrollX += 4 * xReverse;
+        }
+        else if (pad.Lx == 255)
+        {
+            scrollX -= 4 * xReverse;
+        }
+        if (scrollX > BUF_WIDTH - SCR_WIDTH)
+        {
+            scrollX = BUF_WIDTH - SCR_WIDTH;
+        }
+    }
+    if (scrollX < 0)
+    {
+        scrollX = 0;
+    }
+    return scrollX;
 }
 
 /***********************************
