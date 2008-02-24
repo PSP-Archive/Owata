@@ -113,7 +113,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
     }
     if(sceCtrlPeekBufferPositive(&pad, 1))
     {
-        rMenu = psp2chResCursorMove(&totalLine, &lineEnd);
+        rMenu = psp2chResCursorMove(&totalLine, &lineEnd, &cursorY, bar.view);
         if (pad.Buttons != oldPad.Buttons)
         {
             oldPad = pad;
@@ -434,12 +434,36 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
 
 /*****************************
 上下左右キーでの移動
+アナログパッドの移動も追加
 *****************************/
-int psp2chResCursorMove(int* totalLine, int* lineEnd)
+int psp2chResCursorMove(int* totalLine, int* lineEnd, int* cursorY, int limitY)
 {
     static int keyStart = 0, keyRepeat = 0, rMenu = 0;
     static clock_t keyTime = 0;
+    int padUp = 0, padDown = 0;
 
+    if (tateFlag)
+    {
+        if (*cursorY == 0 && pad.Lx == 255)
+        {
+            padUp = 1;
+        }
+        else if (*cursorY == limitY && pad.Lx == 0)
+        {
+            padDown = 1;
+        }
+    }
+    else
+    {
+        if (*cursorY == 0 && pad.Ly == 0)
+        {
+            padUp = 1;
+        }
+        else if (*cursorY == limitY && pad.Ly == 255)
+        {
+            padDown = 1;
+        }
+    }
     if(pad.Buttons & PSP_CTRL_RTRIGGER)
     {
         rMenu = 1;
@@ -460,9 +484,9 @@ int psp2chResCursorMove(int* totalLine, int* lineEnd)
         }
         keyTime = clock();
         keyRepeat = 0;
-        if((pad.Buttons & PSP_CTRL_UP && !tateFlag) || (pad.Buttons & PSP_CTRL_RIGHT && tateFlag))
+        if((pad.Buttons & PSP_CTRL_UP && !tateFlag) || (pad.Buttons & PSP_CTRL_RIGHT && tateFlag) || padUp)
         {
-            if (rMenu)
+            if (rMenu && !padUp)
             {
                 res.start = 0;
             }
@@ -475,9 +499,9 @@ int psp2chResCursorMove(int* totalLine, int* lineEnd)
                 }
             }
         }
-        if((pad.Buttons & PSP_CTRL_DOWN && !tateFlag) || (pad.Buttons & PSP_CTRL_LEFT && tateFlag))
+        if((pad.Buttons & PSP_CTRL_DOWN && !tateFlag) || (pad.Buttons & PSP_CTRL_LEFT && tateFlag) || padDown)
         {
-            if (rMenu)
+            if (rMenu && !padDown)
             {
                 res.start = *totalLine - *lineEnd;
             }
@@ -574,120 +598,113 @@ int psp2chResSetLine(S_SCROLLBAR* bar)
 void psp2chResPadMove(int* cursorX, int* cursorY, int limitX, int limitY)
 {
     int padX, padY;
+    int dL, dS;
 
     padX = pad.Lx - 127;
     padY = pad.Ly - 127;
     if(pad.Buttons & PSP_CTRL_RTRIGGER)
     {
-        if (tateFlag)
+        dL = 4;
+        dS = 2;
+    }
+    else
+    {
+        dL = 16;
+        dS = 8;
+    }
+    if (tateFlag)
+    {
+        if (padX < -PAD_CUTOFF)
         {
-            if (padX < -PAD_CUTOFF)
+            if (padX == -127)
             {
-                padX *= padX;
-                padX >>= 10; // 0-16
-                *cursorY += padX;
+                *cursorY += dL;
             }
-            else if (padX > PAD_CUTOFF)
+            else
             {
-                padX *= padX;
-                padX >>= 10;
-                *cursorY -= padX;
-            }
-            if (padY < -PAD_CUTOFF)
-            {
-                padY *= padY;
-                padY >>= 10;
-                *cursorX -= padY;
-            }
-            else if (padY > PAD_CUTOFF)
-            {
-                padY *= padY;
-                padY >>= 10;
-                *cursorX += padY;
+                *cursorY += dS;
             }
         }
-        else
+        else if (padX > PAD_CUTOFF)
         {
-            if (padX < -PAD_CUTOFF)
+            if (padX == 128)
             {
-                padX *= padX;
-                padX >>= 11; // 0-8
-                *cursorX -= padX;
+                *cursorY -= dL;
             }
-            else if (padX > PAD_CUTOFF)
+            else
             {
-                padX *= padX;
-                padX >>= 11;
-                *cursorX += padX;
+                *cursorY -= dS;
             }
-            if (padY < -PAD_CUTOFF)
+        }
+        if (padY < -PAD_CUTOFF)
+        {
+            if (padY == -127)
             {
-                padY *= padY;
-                padY >>= 11;
-                *cursorY -= padY;
+                *cursorX -= dL;
             }
-            else if (padY > PAD_CUTOFF)
+            else
             {
-                padY *= padY;
-                padY >>= 11;
-                *cursorY += padY;
+                *cursorX -= dS;
+            }
+        }
+        else if (padY > PAD_CUTOFF)
+        {
+            if (padY == 128)
+            {
+                *cursorX += dL;
+            }
+            else
+            {
+                *cursorX += dS;
             }
         }
     }
     else
     {
-        if (tateFlag)
+        dL >>= 1;
+        dS >>= 1;
+        if (padX < -PAD_CUTOFF)
         {
-            if (padX < -PAD_CUTOFF)
+            if (padX == -127)
             {
-                padX = (padX-1)*(padX-1);
-                padX >>= 12; // 0-4
-                *cursorY += padX;
+                *cursorX -= dL;
             }
-            else if (padX > PAD_CUTOFF)
+            else
             {
-                padX *= padX;
-                padX >>= 12;
-                *cursorY -= padX;
-            }
-            if (padY < -PAD_CUTOFF)
-            {
-                padY = (padY-1)*(padY-1);
-                padY >>= 12;
-                *cursorX -= padY;
-            }
-            else if (padY > PAD_CUTOFF)
-            {
-                padY *= padY;
-                padY >>= 12;
-                *cursorX += padY;
+                *cursorX -= dS;
             }
         }
-        else
+        else if (padX > PAD_CUTOFF)
         {
-            if (padX < -PAD_CUTOFF)
+            if (padX == 128)
             {
-                padX = (padX-1)*(padX-1);
-                padX >>= 13; // 0-2
-                *cursorX -= padX;
+                *cursorX += dL;
             }
-            else if (padX > PAD_CUTOFF)
+            else
             {
-                padX *= padX;
-                padX >>= 13;
-                *cursorX += padX;
+                *cursorX += dS;
             }
-            if (padY < -PAD_CUTOFF)
+        }
+        if (padY < -PAD_CUTOFF)
+        {
+            if (padY == -127)
             {
-                padY = (padY-1)*(padY-1);
-                padY >>= 13;
-                *cursorY -= padY;
+                *cursorY -= dL;
             }
-            else if (padY > PAD_CUTOFF)
+            else
             {
-                padY *= padY;
-                padY >>= 13;
-                *cursorY += padY;
+                *cursorY -= dS;
+            }
+        }
+        else if (padY > PAD_CUTOFF)
+        {
+            if (padY == 128)
+            {
+                *cursorY += dL;
+            }
+            else
+            {
+                *cursorY += dS;
             }
         }
     }
