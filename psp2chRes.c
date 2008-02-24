@@ -1009,11 +1009,18 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
         case 206: // Partial content
             break;
         case 302: // Found
+            /*
             memset(&mh,0,sizeof(MESSAGE_HELPER));
             strcpy(mh.message, TEXT_10);
             pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-            psp2chCloseSocket(mySocket);
             sceCtrlPeekBufferPositive(&oldPad, 1);
+            */
+            psp2chCloseSocket(mySocket);
+            pgWaitVn(40);
+            pgMenuBar("‚±‚ÌƒXƒŒ‚ÍDAT—Ž‚¿‚µ‚½‚æ‚¤‚Å‚·");
+            sceDisplayWaitVblankStart();
+            framebuffer = sceGuSwapBuffers();
+            pgWaitVn(60);
             return -1;
             break;
         case 304: // Not modified
@@ -2065,11 +2072,14 @@ int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
         case 200: // OK
             break;
         default:
+            /*
             memset(&mh,0,sizeof(MESSAGE_HELPER));
             sprintf(mh.message, "HTTP error\nhost %s path %s\nStatus code %d", urlAnchor[anchor].host, urlAnchor[anchor].path, ret);
             pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-            psp2chCloseSocket(mySocket);
             sceCtrlPeekBufferPositive(&oldPad, 1);
+            */
+            psp2chCloseSocket(mySocket);
+            pgWaitVn(60);
             return -1;
     }
     // Receive and Save dat
