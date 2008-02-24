@@ -1,3 +1,6 @@
+/*
+* $Id$
+*/
 
 #include "pspdialogs.h"
 #include <stdio.h>

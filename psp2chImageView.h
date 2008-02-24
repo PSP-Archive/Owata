@@ -1,3 +1,7 @@
+/*
+* $Id$
+*/
+
 #ifndef __PSP2CH_IMAGE_VIEW__
 #define __PSP2CH_IMAGE_VIEW__
 

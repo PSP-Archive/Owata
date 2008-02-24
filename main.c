@@ -1,3 +1,6 @@
+/*
+* $Id$
+*/
 
 #include <pspctrl.h>
 #include <pspsdk.h>

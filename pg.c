@@ -1,3 +1,6 @@
+/*
+* $Id$
+*/
 
 #include <pspkernel.h>
 #include <pspgu.h>

@@ -1,3 +1,7 @@
+/*
+* $Id$
+*/
+
 #ifndef __PSP2CH_FAVORITE_H__
 #define __PSP2CH_FAVORITE_H__
 

@@ -1,3 +1,7 @@
+/*
+* $Id$
+*/
+
 #ifndef __PG_H__
 #define __PG_H__
 

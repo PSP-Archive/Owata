@@ -1,3 +1,7 @@
+/*
+* $Id$
+*/
+
 #ifndef __PSP2CH_RES_H__
 #define __PSP2CH_RES_H__
 
