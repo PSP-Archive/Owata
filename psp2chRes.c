@@ -236,7 +236,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                     if (message == NULL)
                     {
                         memset(&mh,0,sizeof(MESSAGE_HELPER));
-                        sprintf(mh.message, "memorry error\n");
+                        sprintf(mh.message, "memorry error\nForm message");
                         pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
                         sceCtrlPeekBufferPositive(&oldPad, 1);
                         return 0;
@@ -249,12 +249,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                         psp2chGetDat(host, dir, title, dat);
                         psp2chResList(host, dir, title, dat);
                         res.start++;
-                        for (i = 0, j=0; i < res.count; i++)
-                        {
-                            j += resList[i].line;
-                            j++;
-                        }
-                        totalLine = j;
+                        totalLine = psp2chResSetLine(&bar);
                     }
                     tateFlag = tmp;
                 }
