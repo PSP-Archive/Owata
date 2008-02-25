@@ -1,6 +1,7 @@
 TARGET = owata
 OBJS = cp932.o intraFont.o main.o pg.o psp2ch.o psp2chFavorite.o psp2chSearch.o \
 psp2chImageView.o psp2chIta.o psp2chRes.o psp2chThread.o psp2chForm.o pspdialogs.o \
+psp2chResWindow.o psp2chMenu.o \
 libCat/Cat_Network.o libCat/Cat_Resolver.o
 
 INCDIR =
