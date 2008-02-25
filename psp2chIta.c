@@ -11,6 +11,7 @@
 #include "psp2chIta.h"
 #include "psp2chThread.h"
 #include "psp2chFavorite.h"
+#include "psp2chMenu.h"
 #include "utf8.h"
 #include "pg.h"
 
@@ -45,7 +46,7 @@ int psp2chIta(void)
     int ret;
     static int focus = 0, end = 0;
     static char* menuStr = "";
-    int rMenu;
+    int lineEnd, rMenu;
 
     if (itaList == NULL)
     {
@@ -56,6 +57,14 @@ int psp2chIta(void)
             return ret;
         }
         end = ita.count;
+    }
+    if (tateFlag)
+    {
+        lineEnd = 35;
+    }
+    else
+    {
+        lineEnd = 20;
     }
     if(sceCtrlPeekBufferPositive(&pad, 1))
     {
@@ -70,7 +79,7 @@ int psp2chIta(void)
             {
                 ita.count = end;
             }
-            rMenu = psp2chCursorSet(&ita);
+            rMenu = psp2chCursorSet(&ita, lineEnd);
             if (ita.start < categoryList[category.select].itaId)
             {
                 ita.start = categoryList[category.select].itaId;
@@ -89,7 +98,7 @@ int psp2chIta(void)
         }
         else
         {
-            rMenu = psp2chCursorSet(&category);
+            rMenu = psp2chCursorSet(&category, lineEnd);
             ita.start = categoryList[category.select].itaId;
             ita.select = categoryList[category.select].itaId;
             psp2chDrawCategory(category.start, category.select, cateOnColor);
@@ -109,6 +118,11 @@ int psp2chIta(void)
             if (pad.Buttons & PSP_CTRL_SELECT)
             {
                 tateFlag = (tateFlag) ? 0 : 1;
+            }
+            // STARTƒ{ƒ^ƒ“
+            else if(pad.Buttons & PSP_CTRL_START)
+            {
+                psp2chMenu();
             }
             else if(pad.Buttons & PSP_CTRL_CIRCLE)
             {

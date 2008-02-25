@@ -169,11 +169,11 @@ start:表示開始行
 select:カーソル選択行
 を変更しRボタン情報を返す
 *****************************/
-int psp2chCursorSet(S_2CH_SCREEN* line)
+int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd)
 {
     static int keyStart = 0, keyRepeat = 0;
     static clock_t keyTime = 0;
-    int lineEnd, rMenu;
+    int rMenu;
     int padUp = 0, padDown = 0;
 
     if (tateFlag)
@@ -199,14 +199,6 @@ int psp2chCursorSet(S_2CH_SCREEN* line)
         }
     }
 
-    if (tateFlag)
-    {
-        lineEnd = 35;
-    }
-    else
-    {
-        lineEnd = 20;
-    }
     if(pad.Buttons & PSP_CTRL_RTRIGGER)
     {
         rMenu = 1;

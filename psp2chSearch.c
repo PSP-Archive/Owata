@@ -37,7 +37,7 @@ int psp2chSearch(int retSel)
     static int scrollX = 0;
     static char* menuStr = "";
     static int ret = 0;
-    int rMenu;
+    int lineEnd, rMenu;
 
     if (findList == NULL)
     {
@@ -50,9 +50,17 @@ int psp2chSearch(int retSel)
         find.start = 0;
         find.select = 0;
     }
+    if (tateFlag)
+    {
+        lineEnd = 35;
+    }
+    else
+    {
+        lineEnd = 20;
+    }
     if(sceCtrlPeekBufferPositive(&pad, 1))
     {
-        rMenu = psp2chCursorSet(&find);
+        rMenu = psp2chCursorSet(&find, lineEnd);
         if (rMenu)
         {
             menuStr = "　↑ : 先頭　　　↓ : 最後　　　　□ : 全板検索";

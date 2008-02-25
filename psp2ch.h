@@ -113,7 +113,7 @@ typedef struct {
 int psp2ch(void);
 void psp2chStart(void);
 int psp2chOwata(void);
-int psp2chCursorSet(S_2CH_SCREEN* line);
+int psp2chCursorSet(S_2CH_SCREEN* line,  int lineEnd);
 int psp2chPadSet(int scrollX);
 int psp2chInit(void);
 int psp2chTerm(void);

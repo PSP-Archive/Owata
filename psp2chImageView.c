@@ -50,13 +50,6 @@ void psp2chImageViewJpeg(char* fname)
     jpeg_stdio_src(&cinfo, infile);
     jpeg_read_header(&cinfo, TRUE);
     jpeg_start_decompress(&cinfo);
-    if (cinfo.out_color_components != 3)
-    {
-        jpeg_finish_decompress(&cinfo);
-        jpeg_destroy_decompress(&cinfo);
-        fclose(infile);
-        return;
-    }
     width = cinfo.output_width;
     height = cinfo.output_height;
     img = (JSAMPARRAY)malloc(sizeof(JSAMPROW) * height);
@@ -89,16 +82,42 @@ void psp2chImageViewJpeg(char* fname)
     {
         img[i] = &tmp[i * width * 4];
     }
-    while(cinfo.output_scanline < cinfo.output_height)
+    if (cinfo.out_color_components == 3)
     {
-        jpeg_read_scanlines(&cinfo, &buf, 1);
-        for (i = 0; i < width; i++)
+        while(cinfo.output_scanline < cinfo.output_height)
         {
-            img[cinfo.output_scanline-1][i * 4 + 0] = buf[i * 3 + 0];
-            img[cinfo.output_scanline-1][i * 4 + 1] = buf[i * 3 + 1];
-            img[cinfo.output_scanline-1][i * 4 + 2] = buf[i * 3 + 2];
-            img[cinfo.output_scanline-1][i * 4 + 3] = 0xFF;
+            jpeg_read_scanlines(&cinfo, &buf, 1);
+            for (i = 0; i < width; i++)
+            {
+                img[cinfo.output_scanline-1][i * 4 + 0] = buf[i * 3 + 0];
+                img[cinfo.output_scanline-1][i * 4 + 1] = buf[i * 3 + 1];
+                img[cinfo.output_scanline-1][i * 4 + 2] = buf[i * 3 + 2];
+                img[cinfo.output_scanline-1][i * 4 + 3] = 0xFF;
+            }
         }
+    }
+    else if (cinfo.out_color_components == 1)
+    {
+        while(cinfo.output_scanline < cinfo.output_height)
+        {
+            jpeg_read_scanlines(&cinfo, &buf, 1);
+            for (i = 0; i < width; i++)
+            {
+                img[cinfo.output_scanline-1][i * 4 + 0] = buf[i];
+                img[cinfo.output_scanline-1][i * 4 + 1] = buf[i];
+                img[cinfo.output_scanline-1][i * 4 + 2] = buf[i];
+                img[cinfo.output_scanline-1][i * 4 + 3] = 0xFF;
+            }
+        }
+    }
+    else
+    {
+        free(buf);
+        free(imgbuf);
+        free(img);
+        jpeg_destroy_decompress(&cinfo);
+        fclose(infile);
+        return;
     }
     free(buf);
     jpeg_finish_decompress(&cinfo);

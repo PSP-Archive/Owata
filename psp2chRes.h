@@ -16,6 +16,7 @@ typedef struct {
 } S_SCROLLBAR;
 
 typedef struct {
+    int num;
     char* name;
     char* mail;
     char* date;
@@ -61,12 +62,9 @@ void psp2chResPadMove(int* cursorX, int* cursorY, int limitX, int limitY);
 int psp2chResList(char* host, char* dir, char* title, int dat);
 int psp2chGetDat(char* host, char* dir, char* title, int dat);
 void psp2chSaveIdx(char* title, int dat);
+int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, int endX,S_2CH_RES_COLOR c,S_2CH_HEADER_COLOR hc, int* drawLine);
+int psp2chDrawResText(int res, int* skip, int line, int lineEnd, int startX, int endX, S_2CH_RES_COLOR c, int* drawLine);
 void psp2chDrawRes(int line);
-void psp2chResAnchor(int anchor);
-int psp2chUrlAnchor(int anchor, char* title, int dat, int offset);
-void psp2chIdAnchor(int anchor);
 int psp2chCountRes(int res, int width);
-void psp2chUrlEncode(char* dst, char* src);
-int psp2chForm(char* host, char* dir, int dat, char* subject, char* message);
 
 #endif

@@ -13,6 +13,7 @@
 #include "psp2chThread.h"
 #include "psp2chRes.h"
 #include "psp2chFavorite.h"
+#include "psp2chMenu.h"
 #include "utf8.h"
 #include "pg.h"
 
@@ -44,7 +45,7 @@ int psp2chFavorite(void)
 {
     static int scrollX = 0;
     static char* menuStr = "";
-    int rMenu;
+    int lineEnd, rMenu;
 
     if (favList == NULL)
     {
@@ -54,9 +55,17 @@ int psp2chFavorite(void)
             return 0;
         }
     }
+    if (tateFlag)
+    {
+        lineEnd = 35;
+    }
+    else
+    {
+        lineEnd = 20;
+    }
     if(sceCtrlPeekBufferPositive(&pad, 1))
     {
-        rMenu = psp2chCursorSet(&fav);
+        rMenu = psp2chCursorSet(&fav, lineEnd);
         if (rMenu)
         {
             menuStr = "　↑ : 先頭　　　↓ : 最後　　　　□ : 全板検索";
@@ -71,6 +80,11 @@ int psp2chFavorite(void)
             if (pad.Buttons & PSP_CTRL_SELECT)
             {
                 tateFlag = (tateFlag) ? 0 : 1;
+            }
+            // STARTボタン
+            else if(pad.Buttons & PSP_CTRL_START)
+            {
+                psp2chMenu();
             }
             else if(pad.Buttons & PSP_CTRL_CIRCLE)
             {
