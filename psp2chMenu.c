@@ -22,16 +22,85 @@ extern int tateFlag; // psp2ch.c
 extern SceCtrlData pad; // psp2ch.c
 extern SceCtrlData oldPad; // psp2ch.c
 extern MESSAGE_HELPER mh; // psp2ch.c
-extern S_2CH_THREAD_COLOR threadColor; // psp2ch.c
+extern S_2CH_TXT_COLOR menuWinColor; // psp2ch.c
 
 #define MENU_WIDTH (80)
 #define MENU_HEIGHT (52)
 #define MENU_ITEM (4)
-int psp2chMenu(void)
+
+/****************
+メニュー選択ウィンドウ
+****************/
+int psp2chMenu(int pixelsX, int pixelsY)
 {
     static char* menuStr = "";
-    int lineEnd, rMenu;
+    int lineEnd;
     const char* menuList[] = {"基本設定", "NG設定"};
+    static S_2CH_SCREEN menu;
+    int startX, startY, scrX, scrY;
+
+    if (tateFlag)
+    {
+        startX = (SCR_HEIGHT - MENU_WIDTH) / 2;
+        startY = (SCR_WIDTH - MENU_HEIGHT) / 2;    }
+    else
+    {
+        startX = (SCR_WIDTH - 100) / 2;
+        startY = (SCR_HEIGHT - MENU_HEIGHT) / 2;
+    }
+    scrX = 100;
+    scrY = MENU_HEIGHT;
+    lineEnd = MENU_ITEM;
+    menu.count = 2;
+    printBuf = winPixels;
+    while (running)
+    {
+        if(sceCtrlPeekBufferPositive(&pad, 1))
+        {
+            psp2chCursorSet(&menu, lineEnd);
+            if (pad.Buttons != oldPad.Buttons)
+            {
+                oldPad = pad;
+                if(pad.Buttons & PSP_CTRL_CIRCLE)
+                {
+                    switch (menu.select)
+                    {
+                    case 0:
+                        break;
+                    case 1:
+                        psp2chMenuNG(pixelsX, pixelsY);
+                        break;
+                    }
+                }
+                else if(pad.Buttons & PSP_CTRL_CROSS)
+                {
+                    printBuf = pixels;
+                    break;
+                }
+                else if(pad.Buttons & PSP_CTRL_TRIANGLE)
+                {
+                }
+                else if(pad.Buttons & PSP_CTRL_SQUARE)
+                {
+                }
+            }
+            menuStr = "　○ : 決定　　　　× : 戻る　　　";
+            psp2chDrawMenu((char**)menuList, menu, startX, startY, scrX, scrY);
+            pgCopyWindow(0, startX, startY, scrX, scrY);
+            pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
+            pgMenuBar(menuStr);
+            sceDisplayWaitVblankStart();
+            framebuffer = sceGuSwapBuffers();
+        }
+    }
+    return 0;
+}
+
+void psp2chMenuNG(int pixelsX, int pixelsY)
+{
+    static char* menuStr = "";
+    int lineEnd;
+    const char* menuList[] = {"NG名前登録", "NG名前削除", "NGID削除"};
     static S_2CH_SCREEN menu;
     int startX, startY, scrX, scrY;
 
@@ -47,69 +116,38 @@ int psp2chMenu(void)
     scrX = MENU_WIDTH;
     scrY = MENU_HEIGHT;
     lineEnd = MENU_ITEM;
-    menu.count = 2;
+    menu.count = 3;
+    printBuf = pixels;
+    pgCopy(pixelsX, pixelsY);
+    framebuffer = sceGuSwapBuffers();
+    pgCopy(pixelsX, pixelsY);
     printBuf = winPixels;
     while (running)
     {
         if(sceCtrlPeekBufferPositive(&pad, 1))
         {
-            rMenu = psp2chCursorSet(&menu, lineEnd);
+            psp2chCursorSet(&menu, lineEnd);
             if (pad.Buttons != oldPad.Buttons)
             {
                 oldPad = pad;
                 if(pad.Buttons & PSP_CTRL_CIRCLE)
                 {
-                    if (rMenu)
+                    switch (menu.select)
                     {
-                    }
-                    else
-                    {
-                        switch (menu.select)
-                        {
-                        case 0:
-                            break;
-                        case 1:
-                            break;
-                        }
+                    case 0: // NG name add
+                        break;
+                    case 1: // NG name del
+                        break;
+                    case 2: // NG ID del
+                        break;
                     }
                 }
                 else if(pad.Buttons & PSP_CTRL_CROSS)
                 {
-                    if (rMenu)
-                    {
-                    }
-                    else
-                    {
-                        printBuf = pixels;
-                        break;
-                    }
-                }
-                else if(pad.Buttons & PSP_CTRL_TRIANGLE)
-                {
-                    if (rMenu)
-                    {
-                    }
-                    else
-                    {
-                    }
-                }
-                else if(pad.Buttons & PSP_CTRL_SQUARE)
-                {
-                    if (rMenu)
-                    {
-                    }
-                    else
-                    {
-                    }
+                    break;
                 }
             }
-            if (rMenu)
-            {
-            }
-            else
-            {
-                    menuStr = "　○ : 決定　　　　× : 戻る　　　";
-            }
+            menuStr = "　○ : 決定　　　　× : 戻る　　　";
             psp2chDrawMenu((char**)menuList, menu, startX, startY, scrX, scrY);
             pgCopyWindow(0, startX, startY, scrX, scrY);
             pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
@@ -118,7 +156,6 @@ int psp2chMenu(void)
             framebuffer = sceGuSwapBuffers();
         }
     }
-    return 0;
 }
 
 void psp2chDrawMenu(char** menuList, S_2CH_SCREEN menu, int x, int y, int width, int height)
@@ -127,17 +164,17 @@ void psp2chDrawMenu(char** menuList, S_2CH_SCREEN menu, int x, int y, int width,
 
     pgCursorX = x;
     pgCursorY = y;
-    pgFillvram(threadColor.bg, x, y, width, height);
+    pgFillvram(menuWinColor.bg, x, y, width, height);
     for (i = 0; i < menu.count; i++)
     {
         if (i == menu.select)
         {
-            pgFillvram(threadColor.s_bg, x, pgCursorY, width, LINE_PITCH);
-            pgPrint(menuList[i], threadColor.s_text1, threadColor.s_bg, x + width);
+            pgFillvram(menuWinColor.s_bg, x, pgCursorY, width, LINE_PITCH);
+            pgPrint(menuList[i], menuWinColor.s_text, menuWinColor.s_bg, x + width);
         }
         else
         {
-            pgPrint(menuList[i], threadColor.text1, threadColor.bg, x + width);
+            pgPrint(menuList[i], menuWinColor.text, menuWinColor.bg, x + width);
         }
         pgCursorX = x;
         pgCursorY += LINE_PITCH;

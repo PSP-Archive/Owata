@@ -49,6 +49,7 @@ S_2CH_THREAD_COLOR threadColor;
 S_2CH_ITA_COLOR cateOnColor;
 S_2CH_ITA_COLOR cateOffColor;
 S_2CH_FORM_COLOR formColor;
+S_2CH_TXT_COLOR menuWinColor;
 
 /*********************************
 メインループ
@@ -469,6 +470,11 @@ void psp2chSetColor(void)
 
                 setColor("FORM_TITLE_TEXT", formColor.title, WHITE);
                 setColor("FORM_TITLE_BG", formColor.title_bg, RED);
+
+                setColor("MENU_WIN_TEXT", menuWinColor.text, GRAY);
+                setColor("MENU_WIN_BG", menuWinColor.bg, BLACK);
+                setColor("MENU_WIN_S_TEXT", menuWinColor.text, WHITE);
+                setColor("MENU_WIN_S_BG", menuWinColor.bg, RGB(0x33, 0x33, 0x33));
                 free(buf);
                 return;
             }
@@ -550,6 +556,11 @@ void psp2chSetColor(void)
     // 送信フォーム
     formColor.title = WHITE;
     formColor.title_bg = RED;
+    // メニューウィンドウ
+    menuWinColor.text = GRAY;
+    menuWinColor.bg = BLACK;
+    menuWinColor.s_text = WHITE;
+    menuWinColor.s_bg = RGB(0x33, 0x33, 0x33);
 }
 
 /***********************************

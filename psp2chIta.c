@@ -122,7 +122,7 @@ int psp2chIta(void)
             // STARTƒ{ƒ^ƒ“
             else if(pad.Buttons & PSP_CTRL_START)
             {
-                psp2chMenu();
+                psp2chMenu(0, 0);
             }
             else if(pad.Buttons & PSP_CTRL_CIRCLE)
             {

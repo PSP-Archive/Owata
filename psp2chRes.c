@@ -133,7 +133,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
             // STARTボタン
             else if(pad.Buttons & PSP_CTRL_START)
             {
-                psp2chMenu();
+                psp2chMenu(0, res.start*LINE_PITCH);
             }
             // ○ボタン
             else if(pad.Buttons & PSP_CTRL_CIRCLE)

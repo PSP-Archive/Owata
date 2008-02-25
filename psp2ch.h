@@ -92,16 +92,16 @@ typedef struct {
     int s_count2;
 } S_2CH_THREAD_COLOR;
 
-struct sList {
+typedef struct {
     int text;
     int bg;
     int s_text;
     int s_bg;
-};
+} S_2CH_TXT_COLOR;
 
 typedef struct {
-    struct sList cate;
-    struct sList ita;
+    S_2CH_TXT_COLOR cate;
+    S_2CH_TXT_COLOR ita;
     int base;
 } S_2CH_ITA_COLOR;
 

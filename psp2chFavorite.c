@@ -84,7 +84,7 @@ int psp2chFavorite(void)
             // STARTƒ{ƒ^ƒ“
             else if(pad.Buttons & PSP_CTRL_START)
             {
-                psp2chMenu();
+                psp2chMenu(scrollX, 0);
             }
             else if(pad.Buttons & PSP_CTRL_CIRCLE)
             {
