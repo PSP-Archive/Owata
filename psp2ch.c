@@ -1091,13 +1091,13 @@ void psp2chGets(char* title, char* text, int num, int lines)
     char* s;
     int sjis, i;
     unsigned short string[128];
-    unsigned short pretext[256];
+    unsigned short pretext[2048];
     OSK_HELPER helper;
     char* buf = "l¶µÜÀ_(^o^)^";
 
-    if (num > 256)
+    if (num > 2048)
     {
-        num = 256;
+        num = 2048;
     }
     /* sjis => ucs */
     if (title && *title != '\0')
@@ -1122,7 +1122,7 @@ void psp2chGets(char* title, char* text, int num, int lines)
     string[i] = 0;
     i = 0;
     p = (unsigned char*)text;
-    while (*p && i < 255)
+    while (*p && i < 2048)
     {
         sjis = conv_sjiswin_wchar(*p++);
         if (sjis == -1)
@@ -1137,7 +1137,7 @@ void psp2chGets(char* title, char* text, int num, int lines)
     helper.title = (unsigned short*)string;
     helper.pretext = (unsigned short*)pretext;
     helper.textlength = num;
-    helper.textlimit = 100;
+    helper.textlimit = num;
     helper.lines = lines;
 
     pspShowOSK(&helper,DIALOG_LANGUAGE_AUTO);
