@@ -1175,6 +1175,10 @@ text2: OSKに表示するタイトル
 *****************/
 int psp2chInputDialog(const unsigned short* text1, char* text2)
 {
+    int temp;
+
+    temp = tateFlag;
+    tateFlag = 0;
     keyWords[0] = '\0';
     while (running)
     {
@@ -1189,6 +1193,7 @@ int psp2chInputDialog(const unsigned short* text1, char* text2)
                 }
                 if(pad.Buttons & PSP_CTRL_CROSS)
                 {
+                    tateFlag = temp;
                     return -1;
                 }
                 if(pad.Buttons & PSP_CTRL_SQUARE)
@@ -1216,5 +1221,6 @@ int psp2chInputDialog(const unsigned short* text1, char* text2)
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
     }
+    tateFlag = temp;
     return 0;
 }
