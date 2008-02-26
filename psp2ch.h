@@ -124,5 +124,6 @@ int psp2chGetStatusLine(int mySocket);
 int psp2chGetHttpHeaders(int mySocket, HTTP_HEADERS* header);
 int psp2chApConnect(void);
 void psp2chGets(char* title, char* text, int num, int lines);
+int psp2chInputDialog(const unsigned short* text1, char* text2);
 
 #endif

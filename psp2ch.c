@@ -29,12 +29,16 @@
 extern int running; //main.c
 extern char cwDir[256]; //main.c
 extern void* framebuffer; // pg.c
+extern unsigned long pgCursorX, pgCursorY; // pg.c
+extern unsigned int list[512*512]; // pg.c
+extern intraFont* jpn0; // pg.c
 
 int tateFlag = 0;
 int sel = 0;
 const char* userAgent = "Monazilla/1.00 (Compatible; PSP; ja) owata\(^o^)/0.4.3";
 const char* logDir = "log";
 char cookie[128] = {0};
+char keyWords[128];
 SceCtrlData pad;
 SceCtrlData oldPad;
 MESSAGE_HELPER mh;
@@ -1161,4 +1165,56 @@ void psp2chGets(char* title, char* text, int num, int lines)
         }
     }
     s[i] = '\0';
+}
+
+/****************
+入力ダイアログ表示
+text1: ダイアログに表示されるタイトル
+text2: OSKに表示するタイトル
+戻り値 0=入力, -1=取消し
+*****************/
+int psp2chInputDialog(const unsigned short* text1, char* text2)
+{
+    keyWords[0] = '\0';
+    while (running)
+    {
+        if(sceCtrlPeekBufferPositive(&pad, 1))
+        {
+            if (pad.Buttons != oldPad.Buttons)
+            {
+                oldPad = pad;
+                if(pad.Buttons & PSP_CTRL_CIRCLE)
+                {
+                    psp2chGets(text2, keyWords, 128, 1);
+                }
+                if(pad.Buttons & PSP_CTRL_CROSS)
+                {
+                    return -1;
+                }
+                if(pad.Buttons & PSP_CTRL_SQUARE)
+                {
+                    break;
+                }
+            }
+            sceGuStart(GU_DIRECT, list);
+            sceGuClearDepth(0);
+            sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
+            pgFillvram(BLUE, 80, 60, 320, 45);
+            pgEditBox(WHITE, 140, 85, 340, 100);
+            pgCursorX = 142;
+            pgCursorY =  87;
+            pgPrint(keyWords, BLACK, WHITE, 340);
+            pgCopy(0, 0);
+            pgMenuBar("　○ : 入力　　　× : 戻る　　　□ : 決定");
+            pgCursorX = 240;
+            pgCursorY =  77;
+            intraFontSetStyle(jpn0, 1.0f, YELLOW, 0, INTRAFONT_ALIGN_CENTER);
+            intraFontPrintUCS2(jpn0, pgCursorX, pgCursorY, text1);
+            sceGuFinish();
+            sceGuSync(0,0);
+        }
+        sceDisplayWaitVblankStart();
+        framebuffer = sceGuSwapBuffers();
+    }
+    return 0;
 }

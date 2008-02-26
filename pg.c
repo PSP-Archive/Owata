@@ -391,7 +391,7 @@ void pgWindowFrame(int x1, int y1, int x2, int y2)
     if (tateFlag)
     {
         tmp = x1;
-        x1 = SCR_WIDTH - y2;
+        x1 = SCR_WIDTH - y2 + 1;
         y2 = x2;
         x2 = SCR_WIDTH - y1;
         y1 = tmp;

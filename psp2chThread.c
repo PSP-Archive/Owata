@@ -36,11 +36,11 @@ extern S_2CH_RES* resList; // psp2chRes.c
 extern int preLine; // psp2chRes.c
 extern S_2CH_THREAD_COLOR threadColor; // psp2ch.c
 extern S_2CH_FAVORITE* findList; // psp2chSearch.c
+extern char keyWords[128]; //psp2ch.c
 
 S_2CH_THREAD* threadList;
 S_2CH_SCREEN thread;
 int* threadSort = NULL;
-char keyWords[128];
 
 /****************
  スレッド一覧表示
@@ -671,48 +671,7 @@ int psp2chThreadSearch(void)
     const unsigned short text1[] = {0x691C,0x7D22,0x6587,0x5B57,0x5217,0x3092,0x5165,0x529B,0x3057,0x3066,0x304F,0x3060,0x3055,0x3044,0};
     char* text2 = "検索文字列";
 
-    keyWords[0] = '\0';
-    while (running)
-    {
-        if(sceCtrlPeekBufferPositive(&pad, 1))
-        {
-            if (pad.Buttons != oldPad.Buttons)
-            {
-                oldPad = pad;
-                if(pad.Buttons & PSP_CTRL_CIRCLE)
-                {
-                    psp2chGets(text2, keyWords, 128, 1);
-                }
-                if(pad.Buttons & PSP_CTRL_CROSS)
-                {
-                    return -1;
-                }
-                if(pad.Buttons & PSP_CTRL_SQUARE)
-                {
-                    break;
-                }
-            }
-            sceGuStart(GU_DIRECT, list);
-            sceGuClearDepth(0);
-            sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
-            pgFillvram(BLUE, 100, 60, 280, 45);
-            pgEditBox(WHITE, 140, 85, 340, 100);
-            pgCursorX = 142;
-            pgCursorY =  87;
-            pgPrint(keyWords, BLACK, WHITE, 340);
-            pgCopy(0, 0);
-            pgMenuBar("　○ : 入力　　　× : 戻る　　　□ : 決定");
-            pgCursorX = 240;
-            pgCursorY =  77;
-            intraFontSetStyle(jpn0, 1.0f, YELLOW, 0, INTRAFONT_ALIGN_CENTER);
-            intraFontPrintUCS2(jpn0, pgCursorX, pgCursorY, text1);
-            sceGuFinish();
-            sceGuSync(0,0);
-        }
-        sceDisplayWaitVblankStart();
-        framebuffer = sceGuSwapBuffers();
-    }
-    return 0;
+    return psp2chInputDialog(text1, text2);
 }
 
 /****************
