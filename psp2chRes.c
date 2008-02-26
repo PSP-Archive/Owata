@@ -111,6 +111,10 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         {
             res.start = totalLine - lineEnd;
         }
+        if (res.start < 0)
+        {
+            res.start = 0;
+        }
     }
     if(sceCtrlPeekBufferPositive(&pad, 1))
     {
@@ -127,6 +131,10 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                 {
                     res.start = totalLine - lineEnd;
                 }
+                if (res.start < 0)
+                {
+                    res.start = 0;
+                }
                 for (i = 0; i < 50; i++)
                 {
                     resAnchor[i].x2 = 0;
@@ -142,6 +150,10 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                 if (res.start > totalLine - lineEnd)
                 {
                     res.start = totalLine - lineEnd;
+                }
+                if (res.start < 0)
+                {
+                    res.start = 0;
                 }
                 preLine = -2;
             }
@@ -302,6 +314,10 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                         {
                             res.start = totalLine - lineEnd;
                         }
+                        if (res.start < 0)
+                        {
+                            res.start = 0;
+                        }
                     }
                 }
                 else
@@ -314,6 +330,10 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                     if (res.start > totalLine - lineEnd)
                     {
                         res.start = totalLine - lineEnd;
+                    }
+                    if (res.start < 0)
+                    {
+                        res.start = 0;
                     }
                 }
             }
@@ -593,6 +613,10 @@ int psp2chResCursorMove(int* totalLine, int* lineEnd, int* cursorY, int limitY)
                 {
                     res.start = *totalLine - *lineEnd;
                 }
+                if (res.start < 0)
+                {
+                    res.start = 0;
+                }
             }
         }
         if((pad.Buttons & PSP_CTRL_LEFT && !tateFlag) || (pad.Buttons & PSP_CTRL_UP && tateFlag))
@@ -609,6 +633,10 @@ int psp2chResCursorMove(int* totalLine, int* lineEnd, int* cursorY, int limitY)
             if (res.start > *totalLine - *lineEnd)
             {
                 res.start = *totalLine - *lineEnd;
+            }
+            if (res.start < 0)
+            {
+                res.start = 0;
             }
         }
     }
@@ -1770,6 +1798,7 @@ void psp2chDrawRes(int drawLine)
             line = psp2chDrawResText(re, &skip, line, lineEnd, 0, endX, resColor, &drawLine);
             while (++re < res.count && resList[re].ng)
             {
+                // NG レスをスキップ
             }
             if (re >= res.count)
             {
