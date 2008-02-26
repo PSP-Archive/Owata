@@ -51,6 +51,13 @@ typedef struct {
     char id[12];
 } S_2CH_ID_ANCHOR;
 
+typedef struct {
+    int x1;
+    int x2;
+    int line;
+    int num;
+} S_2CH_NUM_ANCHOR;
+
 int psp2chFavoriteRes(int ret);
 int psp2chThreadRes(int ret);
 int psp2chJumpRes(int ret);

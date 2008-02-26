@@ -35,7 +35,7 @@ extern intraFont* jpn0; // pg.c
 
 int tateFlag = 0;
 int sel = 0;
-const char* userAgent = "Monazilla/1.00 (Compatible; PSP; ja) owata\(^o^)/0.5.0";
+const char* userAgent = "Monazilla/1.00 (Compatible; PSP; ja) owata\(^o^)/0.5.1";
 const char* logDir = "log";
 char cookie[128] = {0};
 char keyWords[128];
@@ -325,6 +325,11 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd)
     return rMenu;
 }
 
+/*****************************
+アナログパッドで横スクロール
+xReverseを-1にするとスクロール方向が反転する
+設定ファイル実装時に設定項目とする予定
+*****************************/
 int psp2chPadSet(int scrollX)
 {
     static int xReverse = 1;
@@ -478,7 +483,7 @@ void psp2chSetColor(void)
                 setColor("MENU_WIN_TEXT", menuWinColor.text, GRAY);
                 setColor("MENU_WIN_BG", menuWinColor.bg, BLACK);
                 setColor("MENU_WIN_S_TEXT", menuWinColor.s_text, WHITE);
-                setColor("MENU_WIN_S_BG", menuWinColor.s_bg, RGB(0x33, 0x33, 0x33));
+                setColor("MENU_WIN_S_BG", menuWinColor.s_bg, BLUE);
                 free(buf);
                 return;
             }
@@ -564,7 +569,7 @@ void psp2chSetColor(void)
     menuWinColor.text = GRAY;
     menuWinColor.bg = BLACK;
     menuWinColor.s_text = WHITE;
-    menuWinColor.s_bg = RGB(0x33, 0x33, 0x33);
+    menuWinColor.s_bg = BLUE;
 }
 
 /***********************************

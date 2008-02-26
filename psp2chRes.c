@@ -50,9 +50,11 @@ S_2CH_SCREEN res;
 S_2CH_URL_ANCHOR urlAnchor[50];
 S_2CH_RES_ANCHOR resAnchor[50];
 S_2CH_ID_ANCHOR idAnchor[40];
+S_2CH_NUM_ANCHOR numAnchor[40];
 int urlAnchorCount = 0;
 int resAnchorCount = 0;
 int idAnchorCount = 0;
+int numAnchorCount = 0;
 
 static char jmpHost[32], jmpDir[32], jmpTitle[32];
 static int jmpDat;
@@ -86,7 +88,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
     char *p, *q;
     static char* menuStr = "";
     int i, j, tmp;
-    static int resMenu = -1, urlMenu = -1, idMenu = -1;
+    static int resMenu = -1, urlMenu = -1, idMenu = -1, numMenu = -1;
     int lineEnd, rMenu;
 
     if (tateFlag)
@@ -248,6 +250,10 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                         sceCtrlPeekBufferPositive(&oldPad, 1);
                         return 0;
                     }
+                    if (numMenu >= 0 && message[0] == '\0')
+                    {
+                        sprintf(message, ">>%d\n", numAnchor[numMenu].num + 1);
+                    }
                     if (psp2chForm(host, dir, dat, resList[0].title, message) == 1)
                     {
                         free(message);
@@ -400,6 +406,20 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                 idMenu = -1;
             }
         }
+        // 番号の場所か
+        for (i = 0; i < 40; i++)
+        {
+            if (cursorY/LINE_PITCH+res.start == numAnchor[i].line &&
+                cursorX > numAnchor[i].x1 && cursorX < numAnchor[i].x2)
+            {
+                numMenu = i;
+                break;
+            }
+            else
+            {
+                numMenu = -1;
+            }
+        }
         if (resMenu >= 0)
         {
             menuStr = "　○ : レス表\示　　　△ : レスに移動";
@@ -411,6 +431,10 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         else if (idMenu >= 0)
         {
             menuStr = "　○ : ID抽出　　　□ : NGID登録";
+        }
+        else if (numMenu >= 0)
+        {
+            menuStr = "　○ : レスをする";
         }
         else if (rMenu)
         {
@@ -638,7 +662,7 @@ void psp2chResPadMove(int* cursorX, int* cursorY, int limitX, int limitY)
     else
     {
         dL = 16;
-        dS = 8;
+        dS = 2;
     }
     if (tateFlag)
     {
@@ -1283,6 +1307,9 @@ int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, in
             pgCursorX = startX;
             if (--(*skip) == 0)
             {
+                numAnchor[numAnchorCount].x1 = pgCursorX;
+                numAnchor[numAnchorCount].line = *drawLine;
+                numAnchor[numAnchorCount].num = resList[re].num;
                 pgFillvram(c.bg, startX, pgCursorY, endX-startX, LINE_PITCH);
                 line = psp2chDrawResStr(str, c, line, lineEnd, startX, endX, drawLine);
                 break;
@@ -1291,8 +1318,17 @@ int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, in
     }
     else
     {
+        numAnchor[numAnchorCount].x1 = pgCursorX;
+        numAnchor[numAnchorCount].line = *drawLine;
+        numAnchor[numAnchorCount].num = resList[re].num;
         pgFillvram(c.bg, startX, pgCursorY, endX-startX, LINE_PITCH);
         line = psp2chDrawResStr(str, c, line, lineEnd, startX, endX, drawLine);
+    }
+    numAnchor[numAnchorCount].x2 = pgCursorX;
+    numAnchorCount++;
+    if (numAnchorCount >= 40)
+    {
+        numAnchorCount = 0;
     }
     sprintf(buf, "名前:");
     str = buf;
@@ -1395,7 +1431,7 @@ int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, in
         c.text = hc.id1;
         for (i = 0, j = 0; i < res.count; i++)
         {
-            if (resList[i].id && (strcmp(resList[i].id, resList[re].id) == 0))
+            if (resList[i].id && resList[i].id[0] != '?' && (strcmp(resList[i].id, resList[re].id) == 0))
             {
                 if (++j == ID_COUNT)
                 {
@@ -1685,6 +1721,8 @@ void psp2chDrawRes(int drawLine)
         {
             idAnchor[i].x1 = 0;
             idAnchor[i].x2 = 0;
+            numAnchor[i].x1 = 0;
+            numAnchor[i].x2 = 0;
         }
         line = 0;
         while (line <= lineEnd)

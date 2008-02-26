@@ -39,7 +39,7 @@ const char* ngIDFile = "ngid.txt";
 #define MENU_ITEM (4)
 int psp2chMenu(int pixelsX, int pixelsY)
 {
-    const char* menuList[] = {"NG設定"};
+    const char* menuList[] = {"NG 設定", "LAN 切断"};
     static char* menuStr = "";
     int lineEnd;
     static S_2CH_SCREEN menu;
@@ -57,7 +57,7 @@ int psp2chMenu(int pixelsX, int pixelsY)
     scrX = MENU_WIDTH;
     scrY = MENU_HEIGHT;
     lineEnd = MENU_ITEM;
-    menu.count = 1;
+    menu.count = 2;
     printBuf = winPixels;
     while (running)
     {
@@ -75,6 +75,7 @@ int psp2chMenu(int pixelsX, int pixelsY)
                         psp2chMenuNG(pixelsX, pixelsY);
                         break;
                     case 1:
+                        sceNetApctlDisconnect();
                         break;
                     }
                     printBuf = pixels;
@@ -192,7 +193,8 @@ void psp2chMenuNG(int pixelsX, int pixelsY)
 }
 
 /****************
-NGファイルがあればバッファを確保し読み込んで返す
+NGファイルがあればバッファを確保し
+ファイル内容を読み込んで返す
 ****************/
 char* psp2chGetNGBuf(const char* file, char* buf)
 {
