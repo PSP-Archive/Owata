@@ -82,7 +82,7 @@ int psp2ch(void)
             retSel = 2;
             break;
         case 3:
-            psp2chThread();
+            psp2chThread(retSel);
             retSel = 3;
             break;
         case 4:

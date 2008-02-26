@@ -45,21 +45,16 @@ int* threadSort = NULL;
 /****************
  スレッド一覧表示
 *****************/
-int psp2chThread(void)
+int psp2chThread(int retSel)
 {
     static int scrollX = 0;
     static char* menuStr = "";
+    static int ret = 0;
     int lineEnd, rMenu;
 
-    if (threadList == NULL)
+    if (ret == 0)
     {
-        if (psp2chThreadList(ita.select) < 0)
-        {
-            sel = 0;
-            return -1;
-        }
-        thread.start = 0;
-        thread.select = 0;
+        ret = retSel;
     }
     if (tateFlag)
     {
@@ -78,7 +73,14 @@ int psp2chThread(void)
         }
         else
         {
-            menuStr = "　○ : 決定　　　　　× : 戻る　　　　　△ : 更新　　　　　□ : お気に入り　　　R : メニュー切替";
+            if (tateFlag)
+            {
+                menuStr = "　L : 決定　　　　　× : 戻る　　　　　△ : 更新　　　　　□ : お気に入り　　　R : メニュー切替";
+            }
+            else
+            {
+                menuStr = "　○ : 決定　　　　　× : 戻る　　　　　△ : 更新　　　　　□ : お気に入り　　　R : メニュー切替";
+            }
         }
         if (pad.Buttons != oldPad.Buttons)
         {
@@ -92,7 +94,7 @@ int psp2chThread(void)
             {
                 psp2chMenu(scrollX, 0);
             }
-            else if(pad.Buttons & PSP_CTRL_CIRCLE)
+            else if((!tateFlag && pad.Buttons & PSP_CTRL_CIRCLE) || (tateFlag && pad.Buttons & PSP_CTRL_LTRIGGER))
             {
                 if (rMenu)
                 {
@@ -108,7 +110,8 @@ int psp2chThread(void)
             }
             else if(pad.Buttons & PSP_CTRL_CROSS)
             {
-                sel = 2;
+                sel = ret;
+                ret = 0;
                 return 0;
             }
             else if(pad.Buttons & PSP_CTRL_TRIANGLE)

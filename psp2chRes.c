@@ -146,7 +146,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                 preLine = -2;
             }
             // ○ボタン
-            else if(pad.Buttons & PSP_CTRL_CIRCLE)
+            else if((!tateFlag && pad.Buttons & PSP_CTRL_CIRCLE) || (tateFlag && pad.Buttons & PSP_CTRL_LTRIGGER))
             {
                 /* レスアンカー表示 */
                 if (resMenu >= 0)
@@ -422,19 +422,47 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         }
         if (resMenu >= 0)
         {
-            menuStr = "　○ : レス表\示　　　△ : レスに移動";
+            if (tateFlag)
+            {
+                menuStr = "　L : レス表\示　　　△ : レスに移動";
+            }
+            else
+            {
+                menuStr = "　○ : レス表\示　　　△ : レスに移動";
+            }
         }
         else if (urlMenu >= 0)
         {
-            menuStr = "　○ : リンク表\示　　　";
+            if (tateFlag)
+            {
+                menuStr = "　L : リンク表\示　　　";
+            }
+            else
+            {
+                menuStr = "　○ : リンク表\示　　　";
+            }
         }
         else if (idMenu >= 0)
         {
-            menuStr = "　○ : ID抽出　　　□ : NGID登録";
+            if (tateFlag)
+            {
+                menuStr = "　L : ID抽出　　　□ : NGID登録";
+            }
+            else
+            {
+                menuStr = "　○ : ID抽出　　　□ : NGID登録";
+            }
         }
         else if (numMenu >= 0)
         {
-            menuStr = "　○ : レスをする";
+            if (tateFlag)
+            {
+                menuStr = "　L : レスをする";
+            }
+            else
+            {
+                menuStr = "　○ : レスをする";
+            }
         }
         else if (rMenu)
         {
@@ -464,7 +492,14 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         }
         else
         {
-            menuStr = "　○ : 書き込み　　　× : 戻る　　　　　△ : 更新　　　　　□ : 削除　　　R : メニュー切替";
+            if (tateFlag)
+            {
+                menuStr = "　L : 書き込み　　　× : 戻る　　　　　△ : 更新　　　　　□ : 削除　　　R : メニュー切替";
+            }
+            else
+            {
+                menuStr = "　○ : 書き込み　　　× : 戻る　　　　　△ : 更新　　　　　□ : 削除　　　R : メニュー切替";
+            }
         }
         psp2chDrawRes(res.start);
         pgCopy(0, res.start*LINE_PITCH);

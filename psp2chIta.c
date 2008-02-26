@@ -93,7 +93,14 @@ int psp2chIta(void)
             }
             else
             {
-                menuStr = "　○ : 決定　　　　× : 戻る　　　　□ : お気に入り　　　△ : 更新　　　　　R : メニュー切替";
+                if (tateFlag)
+                {
+                    menuStr = "　L : 決定　　　　　× : 戻る　　　　□ : お気に入り　　　△ : 更新　　　　　R : メニュー切替";
+                }
+                else
+                {
+                    menuStr = "　○ : 決定　　　　× : 戻る　　　　□ : お気に入り　　　△ : 更新　　　　　R : メニュー切替";
+                }
             }
         }
         else
@@ -109,7 +116,14 @@ int psp2chIta(void)
             }
             else
             {
-                menuStr = "　○ : 決定　　　　× : 終了　　　　□ : お気に入り　　　△ : 更新　　　　　R : メニュー切替";
+                if (tateFlag)
+                {
+                    menuStr = "　L : 決定　　　　　× : 終了　　　　□ : お気に入り　　　△ : 更新　　　　　R : メニュー切替";
+                }
+                else
+                {
+                    menuStr = "　○ : 決定　　　　× : 終了　　　　□ : お気に入り　　　△ : 更新　　　　　R : メニュー切替";
+                }
             }
         }
         if (pad.Buttons != oldPad.Buttons)
@@ -124,7 +138,7 @@ int psp2chIta(void)
             {
                 psp2chMenu(0, 0);
             }
-            else if(pad.Buttons & PSP_CTRL_CIRCLE)
+            else if((!tateFlag && pad.Buttons & PSP_CTRL_CIRCLE) || (tateFlag && pad.Buttons & PSP_CTRL_LTRIGGER))
             {
                 if (rMenu)
                 {
@@ -133,10 +147,10 @@ int psp2chIta(void)
                 {
                     if (focus)
                     {
-                        if (threadList)
+                        if (psp2chThreadList(ita.select) < 0)
                         {
-                            free(threadList);
-                            threadList = NULL;
+                            sel = 0;
+                            return -1;
                         }
                         thread.start = 0;
                         thread.select = 0;

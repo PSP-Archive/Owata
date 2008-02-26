@@ -67,7 +67,14 @@ int psp2chSearch(int retSel)
         }
         else
         {
-            menuStr = "　○ : 決定　　　　　□ : 板一覧　　　　△ : お気に入り　　　　× : 戻る　　　R : メニュー切替";
+            if (tateFlag)
+            {
+                menuStr = "　L : 決定　　　　　□ : 板一覧　　　　△ : お気に入り　　　　× : 戻る　　　R : メニュー切替";
+            }
+            else
+            {
+                menuStr = "　○ : 決定　　　　　□ : 板一覧　　　　△ : お気に入り　　　　× : 戻る　　　R : メニュー切替";
+            }
         }
         if (pad.Buttons != oldPad.Buttons)
         {
@@ -76,7 +83,7 @@ int psp2chSearch(int retSel)
             {
                 tateFlag = (tateFlag) ? 0 : 1;
             }
-            else if(pad.Buttons & PSP_CTRL_CIRCLE)
+            else if((!tateFlag && pad.Buttons & PSP_CTRL_CIRCLE) || (tateFlag && pad.Buttons & PSP_CTRL_LTRIGGER))
             {
                 if (rMenu)
                 {

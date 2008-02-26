@@ -29,7 +29,7 @@
 #define RES_A_HEIGHT_V 390
 #define RES_A_LINE_V 30
 
-#define PAD_CUTOFF 30
+#define PAD_CUTOFF 35
 
 typedef struct {
     int Content_Length;

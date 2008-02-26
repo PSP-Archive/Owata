@@ -72,7 +72,14 @@ int psp2chFavorite(void)
         }
         else
         {
-            menuStr = "　○ : 決定　　　　　× : 終了　　　　　△ : 削除　　　　　□ : 板一覧　　　R : メニュー切替";
+            if (tateFlag)
+            {
+                menuStr = "　L : 決定　　　　　× : 板一覧　　　　　　□ : 削除　　　　　R : メニュー切替";
+            }
+            else
+            {
+                menuStr = "　○ : 決定　　　　　× : 板一覧　　　　　　□ : 削除　　　　　R : メニュー切替";
+            }
         }
         if (pad.Buttons != oldPad.Buttons)
         {
@@ -86,7 +93,7 @@ int psp2chFavorite(void)
             {
                 psp2chMenu(scrollX, 0);
             }
-            else if(pad.Buttons & PSP_CTRL_CIRCLE)
+            else if((!tateFlag && pad.Buttons & PSP_CTRL_CIRCLE) || (tateFlag && pad.Buttons & PSP_CTRL_LTRIGGER))
             {
                 if (rMenu)
                 {
@@ -108,10 +115,7 @@ int psp2chFavorite(void)
                 }
                 else
                 {
-                    if (psp2chOwata())
-                    {
-                        return 0;
-                    }
+                    sel = 2;
                 }
             }
             else if(pad.Buttons & PSP_CTRL_TRIANGLE)
@@ -121,7 +125,6 @@ int psp2chFavorite(void)
                 }
                 else
                 {
-                    psp2chDelFavorite(favList[fav.select].title, favList[fav.select].dat);
                 }
             }
             else if(pad.Buttons & PSP_CTRL_SQUARE)
@@ -140,7 +143,7 @@ int psp2chFavorite(void)
                 }
                 else
                 {
-                    sel = 2;
+                    psp2chDelFavorite(favList[fav.select].title, favList[fav.select].dat);
                 }
             }
         }

@@ -67,7 +67,7 @@ int psp2chMenu(int pixelsX, int pixelsY)
             if (pad.Buttons != oldPad.Buttons)
             {
                 oldPad = pad;
-                if(pad.Buttons & PSP_CTRL_CIRCLE)
+                if((!tateFlag && pad.Buttons & PSP_CTRL_CIRCLE) || (tateFlag && pad.Buttons & PSP_CTRL_LTRIGGER))
                 {
                     switch (menu.select)
                     {
@@ -96,7 +96,14 @@ int psp2chMenu(int pixelsX, int pixelsY)
                 {
                 }
             }
-            menuStr = "　○ : 決定　　　　× : 戻る　　　";
+            if (tateFlag)
+            {
+                menuStr = "　L : 決定　　　　× : 戻る　　　";
+            }
+            else
+            {
+                menuStr = "　○ : 決定　　　　× : 戻る　　　";
+            }
             psp2chDrawMenu((char**)menuList, menu, startX, startY, scrX, scrY);
             pgCopyWindow(0, startX, startY, scrX, scrY);
             pgWindowFrame(startX, startY, startX + scrX, startY + scrY);

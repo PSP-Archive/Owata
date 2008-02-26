@@ -14,7 +14,7 @@ typedef struct {
     int old;
 } S_2CH_THREAD;
 
-int psp2chThread(void);
+int psp2chThread(int retSel);
 int psp2chThreadList(int ita);
 int psp2chGetSubject(int ita);
 void psp2chSort(int sort);
