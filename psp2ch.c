@@ -35,7 +35,7 @@ extern intraFont* jpn0; // pg.c
 
 int tateFlag = 0;
 int sel = 0;
-const char* userAgent = "Monazilla/1.00 (Compatible; PSP; ja) owata\(^o^)/0.4.3";
+const char* userAgent = "Monazilla/1.00 (Compatible; PSP; ja) owata\(^o^)/0.5.0";
 const char* logDir = "log";
 char cookie[128] = {0};
 char keyWords[128];
@@ -477,8 +477,8 @@ void psp2chSetColor(void)
 
                 setColor("MENU_WIN_TEXT", menuWinColor.text, GRAY);
                 setColor("MENU_WIN_BG", menuWinColor.bg, BLACK);
-                setColor("MENU_WIN_S_TEXT", menuWinColor.text, WHITE);
-                setColor("MENU_WIN_S_BG", menuWinColor.bg, RGB(0x33, 0x33, 0x33));
+                setColor("MENU_WIN_S_TEXT", menuWinColor.s_text, WHITE);
+                setColor("MENU_WIN_S_BG", menuWinColor.s_bg, RGB(0x33, 0x33, 0x33));
                 free(buf);
                 return;
             }
