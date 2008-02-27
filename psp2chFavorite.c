@@ -27,6 +27,8 @@ extern int tateFlag; // psp2ch.c
 extern SceCtrlData pad; // psp2ch.c
 extern SceCtrlData oldPad; // psp2ch.c
 extern MESSAGE_HELPER mh; // psp2ch.c
+extern S_2CH_ITA* itaList; // psp2chIta.c
+extern S_2CH_SCREEN ita; // psp2chIta.c
 extern S_2CH_THREAD* threadList; // psp2chThread.c
 extern S_2CH_SCREEN thread; // psp2chThread.c
 extern S_2CH_RES* resList; // psp2chRes.c
@@ -37,6 +39,8 @@ extern char keyWords[128]; // psp2chThread.c
 
 S_2CH_FAVORITE* favList = NULL;
 S_2CH_SCREEN fav;
+S_2CH_FAV_ITA* favItaList;
+S_2CH_SCREEN favIta;
 
 /**********************
  Favorite
@@ -45,15 +49,25 @@ int psp2chFavorite(void)
 {
     static int scrollX = 0;
     static char* menuStr = "";
+    static int focus = 1;
     int lineEnd, rMenu;
+    int i;
 
     if (favList == NULL)
     {
-        if (psp2chLoadFavorite() < 0)
+        psp2chLoadFavorite();
+    }
+    if (favItaList == NULL)
+    {
+        if (psp2chLoadFavoriteIta() < 0)
         {
-            sel = 2;
-            return 0;
+            focus = 0;
         }
+    }
+    if (favList == NULL && favItaList == NULL)
+    {
+        sel = 2;
+        return -1;
     }
     if (tateFlag)
     {
@@ -65,7 +79,14 @@ int psp2chFavorite(void)
     }
     if(sceCtrlPeekBufferPositive(&pad, 1))
     {
-        rMenu = psp2chCursorSet(&fav, lineEnd);
+        if (focus)
+        {
+            rMenu = psp2chCursorSet(&favIta, lineEnd);
+        }
+        else
+        {
+            rMenu = psp2chCursorSet(&fav, lineEnd);
+        }
         if (rMenu)
         {
             menuStr = "　↑ : 先頭　　　↓ : 最後　　　　□ : 全板検索";
@@ -74,11 +95,25 @@ int psp2chFavorite(void)
         {
             if (tateFlag)
             {
-                menuStr = "　L : 決定　　　　　× : 板一覧　　　　　　□ : 削除　　　　　R : メニュー切替";
+                if (focus)
+                {
+                    menuStr = "　L : 決定　　　　　× : 板一覧　　　　　△ : お気にスレ　　□ : 削除　　　　　R : メニュー切替";
+                }
+                else
+                {
+                    menuStr = "　L : 決定　　　　　× : 板一覧　　　　　△ : お気に板　　　□ : 削除　　　　　R : メニュー切替";
+                }
             }
             else
             {
-                menuStr = "　○ : 決定　　　　　× : 板一覧　　　　　　□ : 削除　　　　　R : メニュー切替";
+                if (focus)
+                {
+                    menuStr = "　○ : 決定　　　　　× : 板一覧　　　　△ : お気にスレ　　　□ : 削除　　　　R : メニュー切替";
+                }
+                else
+                {
+                    menuStr = "　○ : 決定　　　　　× : 板一覧　　　　△ : お気に板　　　　□ : 削除　　　　R : メニュー切替";
+                }
             }
         }
         if (pad.Buttons != oldPad.Buttons)
@@ -100,12 +135,40 @@ int psp2chFavorite(void)
                 }
                 else
                 {
-                    free(resList);
-                    resList = NULL;
-                    preLine = -2;
-                    pgFillvram(WHITE, 0, 0, SCR_WIDTH, BUF_HEIGHT);
-                    sel = 4;
-                    return 0;
+                    if (focus)
+                    {
+                        if (itaList == NULL)
+                        {
+                            if (psp2chItaList() < 0)
+                            {
+                                return 0;
+                            }
+                        }
+                        for (i = 0; i < ita.count; i++)
+                        {
+                            if (strcmp(itaList[i].title, favItaList[favIta.select].title) == 0)
+                            {
+                                if (psp2chThreadList(i) < 0)
+                                {
+                                    return 0;
+                                }
+                                ita.select = i;
+                                thread.start = 0;
+                                thread.select = 0;
+                                sel = 3;
+                                return 0;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        free(resList);
+                        resList = NULL;
+                        preLine = -2;
+                        pgFillvram(WHITE, 0, 0, SCR_WIDTH, BUF_HEIGHT);
+                        sel = 4;
+                        return 0;
+                    }
                 }
             }
             else if(pad.Buttons & PSP_CTRL_CROSS)
@@ -125,6 +188,15 @@ int psp2chFavorite(void)
                 }
                 else
                 {
+                    focus = focus ? 0 : 1;
+                    if (focus && favItaList == NULL)
+                    {
+                        focus = 0;
+                    }
+                    else if (focus == 0 && favList == NULL)
+                    {
+                        focus = 1;
+                    }
                 }
             }
             else if(pad.Buttons & PSP_CTRL_SQUARE)
@@ -143,12 +215,25 @@ int psp2chFavorite(void)
                 }
                 else
                 {
-                    psp2chDelFavorite(favList[fav.select].title, favList[fav.select].dat);
+                    if (focus)
+                    {
+                    }
+                    else
+                    {
+                        psp2chDelFavorite(favList[fav.select].title, favList[fav.select].dat);
+                    }
                 }
             }
         }
         scrollX = psp2chPadSet(scrollX);
-        psp2chDrawFavorite(scrollX);
+        if (focus)
+        {
+            psp2chDrawFavoriteIta();
+        }
+        else
+        {
+            psp2chDrawFavorite(scrollX);
+        }
         pgCopy(scrollX, 0);
         pgMenuBar(menuStr);
         sceDisplayWaitVblankStart();
@@ -245,6 +330,81 @@ int psp2chLoadFavorite(void)
 }
 
 /**********************
+favoriteita.brdがあれば読み込んで
+favItaListのメモリ再確保とデータ作成
+**********************/
+int psp2chLoadFavoriteIta(void)
+{
+    SceUID fd;
+    SceIoStat st;
+    char path[256];
+    char *buf, *p, *r;
+    int i;
+
+    sprintf(path, "%s/%s/favoriteita.brd", cwDir, logDir);
+    i = sceIoGetstat(path, &st);
+    if (i < 0)
+    {
+        return -1;
+    }
+    buf = (char*)malloc(st.st_size + 1);
+    if (buf == NULL)
+    {
+        memset(&mh,0,sizeof(MESSAGE_HELPER));
+        strcpy(mh.message, "memorry error");
+        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
+        return -1;
+    }
+    fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
+    if (fd < 0)
+    {
+        free(buf);
+        return -1;
+    }
+    sceIoRead(fd, buf, st.st_size);
+    sceIoClose(fd);
+    buf[st.st_size] = '\0';
+    p = buf;
+    favIta.count = 0;
+    while (*p)
+    {
+        if (*p++ == '\n')
+        {
+            favIta.count++;
+        }
+    }
+    if (favIta.count <= 0)
+    {
+        free(buf);
+        return -1;
+    }
+    favItaList = (S_2CH_FAV_ITA*)realloc(favItaList, sizeof(S_2CH_FAV_ITA) * favIta.count);
+    if (favItaList == NULL)
+    {
+        memset(&mh,0,sizeof(MESSAGE_HELPER));
+        strcpy(mh.message, "memorry error");
+        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
+        return -1;
+    }
+    r = buf;
+    i = 0;
+    while (*r)
+    {
+        p = strchr(r, '\t');
+        *p= '\0';
+        strcpy(favItaList[i].cate, r);
+        r = ++p;
+        p = strchr(r, '\n');
+        *p= '\0';
+        strcpy(favItaList[i].title, r);
+        r = ++p;
+        i++;
+    }
+    free(buf);
+    return 0;
+}
+
+/**********************
 表示中のスレッドをfavorite.brdの最後に追加
 psp2chLoadFavorite()でリストを作成しなおす
 **********************/
@@ -278,6 +438,42 @@ int psp2chAddFavorite(char* host, char* dir, char* title, int dat)
     sceIoWrite(fd, path, strlen(path));
     sceIoClose(fd);
     return psp2chLoadFavorite();
+}
+
+/**********************
+favoriteita.brdの最後に追加
+psp2chLoadFavoriteIta()でリストを作成しなおす
+**********************/
+int psp2chAddFavoriteIta(char* cate, char* title)
+{
+    SceUID fd;
+    char path[256];
+    int i;
+
+    if (favIta.count == 0)
+    {
+        psp2chLoadFavoriteIta();
+    }
+    for (i = 0; i < favIta.count; i++)
+    {
+        if (strcmp(favItaList[i].cate, cate) == 0 && strcmp(favItaList[i].title, title) == 0)
+        {
+            memset(&mh,0,sizeof(MESSAGE_HELPER));
+            strcpy(mh.message, TEXT_8);
+            pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
+            return -1;
+        }
+    }
+    sprintf(path, "%s/%s/favoriteita.brd", cwDir, logDir);
+    fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777);
+    if (fd < 0)
+    {
+        return -1;
+    }
+    sprintf(path, "%s\t%s\n", cate, title);
+    sceIoWrite(fd, path, strlen(path));
+    sceIoClose(fd);
+    return psp2chLoadFavoriteIta();
 }
 
 /**********************
@@ -325,12 +521,12 @@ int psp2chDelFavorite(char* title, int dat)
 }
 
 /**********************
+お気に入りスレの描画
 **********************/
 void psp2chDrawFavorite(int scrollX)
 {
     int start;
     int i;
-    char buf[32];
     int lineEnd, scrW, scrH;
 
     if (tateFlag)
@@ -363,7 +559,6 @@ void psp2chDrawFavorite(int scrollX)
             return;
         }
         pgCursorX = 0;
-        sprintf(buf, "%4d", i + 1);
         if (i == fav.select)
         {
             pgFillvram(threadColor.s_bg, 0, pgCursorY, BUF_WIDTH, LINE_PITCH);
@@ -385,6 +580,71 @@ void psp2chDrawFavorite(int scrollX)
             pgPrint(favList[i].title, threadColor.category, threadColor.bg, scrW);
             pgCursorX += 8;
             pgPrint(favList[i].subject, threadColor.text1, threadColor.bg, scrW);
+        }
+        pgCursorY += LINE_PITCH;
+    }
+}
+
+/**********************
+お気に入り板の描画
+**********************/
+void psp2chDrawFavoriteIta(void)
+{
+    int start;
+    int i;
+    int lineEnd, scrW, scrH;
+
+    if (tateFlag)
+    {
+        lineEnd = 35;
+        scrW = SCR_HEIGHT;
+        scrH = SCR_WIDTH;
+    }
+    else
+    {
+        lineEnd = 20;
+        scrW = SCR_WIDTH;
+        scrH = SCR_HEIGHT;
+    }
+    start = favIta.start;
+    if (start + lineEnd > favIta.count)
+    {
+        start = favIta.count - lineEnd;
+    }
+    if (start < 0)
+    {
+        start = 0;
+    }
+    pgFillvram(threadColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
+    pgCursorY = 0;
+    for (i = start; i < start + lineEnd; i++)
+    {
+        if (i >= favIta.count)
+        {
+            return;
+        }
+        pgCursorX = 0;
+        if (i == favIta.select)
+        {
+            pgFillvram(threadColor.s_bg, 0, pgCursorY, BUF_WIDTH, LINE_PITCH);
+            pgPrintNumber(i + 1, threadColor.s_num, threadColor.s_bg);
+        }
+        else
+        {
+            pgPrintNumber(i + 1, threadColor.num, threadColor.bg);
+        }
+        pgCursorX = 30;
+        if (i == favIta.select)
+        {
+            pgPrint(favItaList[i].cate, threadColor.s_category, threadColor.s_bg, scrW);
+            pgCursorX = 100;
+            pgPrint(favItaList[i].title, threadColor.s_text1, threadColor.s_bg, scrW);
+        }
+        else
+        {
+            pgPrint(favItaList[i].cate, threadColor.category, threadColor.bg, scrW);
+            pgCursorX = 100;
+            pgPrint(favItaList[i].title, threadColor.text1, threadColor.bg, scrW);
         }
         pgCursorY += LINE_PITCH;
     }

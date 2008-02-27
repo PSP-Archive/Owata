@@ -89,13 +89,13 @@ int psp2chIta(void)
             psp2chDrawIta(ita.start, ita.select, cateOffColor);
             if (rMenu)
             {
-                menuStr = "　↑ : 先頭　　　↓ : 最後　　　□ : 全板検索";
+                menuStr = "　↑ : 先頭　　　　↓ : 最後　　　　□ : 全板検索　　　　　△ : お気に入りに追加";
             }
             else
             {
                 if (tateFlag)
                 {
-                    menuStr = "　L : 決定　　　　　× : 戻る　　　　□ : お気に入り　　　△ : 更新　　　　　R : メニュー切替";
+                    menuStr = "　L : 決定　　　　　× : 戻る　　　　□ : お気に入り　　　　△ : 更新　　　　　R : メニュー切替";
                 }
                 else
                 {
@@ -112,13 +112,13 @@ int psp2chIta(void)
             psp2chDrawIta(ita.start, ita.select, cateOnColor);
             if (rMenu)
             {
-                menuStr = "　↑ : 先頭　　　↓ : 最後　　　□ : 全板検索";
+                menuStr = "　↑ : 先頭　　　　↓ : 最後　　　　□ : 全板検索";
             }
             else
             {
                 if (tateFlag)
                 {
-                    menuStr = "　L : 決定　　　　　× : 終了　　　　□ : お気に入り　　　△ : 更新　　　　　R : メニュー切替";
+                    menuStr = "　L : 決定　　　　　× : 終了　　　　□ : お気に入り　　　　△ : 更新　　　　　R : メニュー切替";
                 }
                 else
                 {
@@ -188,6 +188,7 @@ int psp2chIta(void)
             {
                 if (rMenu)
                 {
+                    psp2chAddFavoriteIta(categoryList[category.select].name, itaList[ita.select].title);
                 }
                 else
                 {
