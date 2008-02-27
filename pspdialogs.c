@@ -1,5 +1,4 @@
 #include "pspdialogs.h"
-#include "pg.h"
 
 /* pspdlg list */
 extern unsigned int list[];
@@ -161,7 +160,7 @@ void pspShowOSK(OSK_HELPER *oskhelper, u8 language)
                 break;
         }
 
-        pgWaitVn(2);
+        sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
     }
 }

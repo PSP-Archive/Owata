@@ -26,7 +26,6 @@
 #define GRAY RGB(0xCC,0xCC,0xCC)
 
 #include "psp2ch.h"
-#include "psp2chRes.h"
 
 void pgSetupGu(void);
 void pgTermGu(void);

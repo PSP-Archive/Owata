@@ -2,12 +2,10 @@
 * $Id$
 */
 
-#include "pspdialogs.h"
 #include <stdio.h>
 #include <malloc.h>
 #include <time.h>
 #include <pspdebug.h>
-#include <pspctrl.h>
 #include "psp2ch.h"
 #include "psp2chIta.h"
 #include "psp2chThread.h"
@@ -17,30 +15,9 @@
 #include "utf8.h"
 #include "pg.h"
 
-extern int running; //main.c
-extern char cwDir[256]; //main.c
-extern unsigned long pgCursorX, pgCursorY; // pg.c
-extern void* framebuffer; // pg.c
-extern char* logDir; // psp2ch.c
-extern int sel; // psp2ch.c
-extern int tateFlag; // psp2ch.c
-extern SceCtrlData pad; // psp2ch.c
-extern SceCtrlData oldPad; // psp2ch.c
-extern MESSAGE_HELPER mh; // psp2ch.c
-extern S_2CH_ITA* itaList; // psp2chIta.c
-extern S_2CH_SCREEN ita; // psp2chIta.c
-extern S_2CH_THREAD* threadList; // psp2chThread.c
-extern S_2CH_SCREEN thread; // psp2chThread.c
-extern S_2CH_RES* resList; // psp2chRes.c
+extern S_2CH s2ch; // psp2ch.c
 extern int preLine; // psp2chRes.c
-extern S_2CH_THREAD_COLOR threadColor; // psp2ch.c
-extern S_2CH_FAVORITE* findList; // psp2chSearch.c
 extern char keyWords[128]; // psp2chThread.c
-
-S_2CH_FAVORITE* favList = NULL;
-S_2CH_SCREEN fav;
-S_2CH_FAV_ITA* favItaList;
-S_2CH_SCREEN favIta;
 
 /**********************
  Favorite
@@ -53,23 +30,23 @@ int psp2chFavorite(void)
     int lineEnd, rMenu;
     int i;
 
-    if (favList == NULL)
+    if (s2ch.favList == NULL)
     {
         psp2chLoadFavorite();
     }
-    if (favItaList == NULL)
+    if (s2ch.favItaList == NULL)
     {
         if (psp2chLoadFavoriteIta() < 0)
         {
             focus = 0;
         }
     }
-    if (favList == NULL && favItaList == NULL)
+    if (s2ch.favList == NULL && s2ch.favItaList == NULL)
     {
-        sel = 2;
+        s2ch.sel = 2;
         return -1;
     }
-    if (tateFlag)
+    if (s2ch.tateFlag)
     {
         lineEnd = 35;
     }
@@ -77,15 +54,15 @@ int psp2chFavorite(void)
     {
         lineEnd = 20;
     }
-    if(sceCtrlPeekBufferPositive(&pad, 1))
+    if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
     {
         if (focus)
         {
-            rMenu = psp2chCursorSet(&favIta, lineEnd);
+            rMenu = psp2chCursorSet(&s2ch.favIta, lineEnd);
         }
         else
         {
-            rMenu = psp2chCursorSet(&fav, lineEnd);
+            rMenu = psp2chCursorSet(&s2ch.fav, lineEnd);
         }
         if (rMenu)
         {
@@ -93,7 +70,7 @@ int psp2chFavorite(void)
         }
         else
         {
-            if (tateFlag)
+            if (s2ch.tateFlag)
             {
                 if (focus)
                 {
@@ -116,19 +93,19 @@ int psp2chFavorite(void)
                 }
             }
         }
-        if (pad.Buttons != oldPad.Buttons)
+        if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
-            oldPad = pad;
-            if (pad.Buttons & PSP_CTRL_SELECT)
+            s2ch.oldPad = s2ch.pad;
+            if (s2ch.pad.Buttons & PSP_CTRL_SELECT)
             {
-                tateFlag = (tateFlag) ? 0 : 1;
+                s2ch.tateFlag = (s2ch.tateFlag) ? 0 : 1;
             }
             // STARTボタン
-            else if(pad.Buttons & PSP_CTRL_START)
+            else if(s2ch.pad.Buttons & PSP_CTRL_START)
             {
                 psp2chMenu(scrollX, 0);
             }
-            else if((!tateFlag && pad.Buttons & PSP_CTRL_CIRCLE) || (tateFlag && pad.Buttons & PSP_CTRL_LTRIGGER))
+            else if((!s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_CIRCLE) || (s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_LTRIGGER))
             {
                 if (rMenu)
                 {
@@ -137,51 +114,51 @@ int psp2chFavorite(void)
                 {
                     if (focus)
                     {
-                        if (itaList == NULL)
+                        if (s2ch.itaList == NULL)
                         {
                             if (psp2chItaList() < 0)
                             {
                                 return 0;
                             }
                         }
-                        for (i = 0; i < ita.count; i++)
+                        for (i = 0; i < s2ch.ita.count; i++)
                         {
-                            if (strcmp(itaList[i].title, favItaList[favIta.select].title) == 0)
+                            if (strcmp(s2ch.itaList[i].title, s2ch.favItaList[s2ch.favIta.select].title) == 0)
                             {
                                 if (psp2chThreadList(i) < 0)
                                 {
                                     return 0;
                                 }
-                                ita.select = i;
-                                thread.start = 0;
-                                thread.select = 0;
-                                sel = 3;
+                                s2ch.ita.select = i;
+                                s2ch.thread.start = 0;
+                                s2ch.thread.select = 0;
+                                s2ch.sel = 3;
                                 return 0;
                             }
                         }
                     }
                     else
                     {
-                        free(resList);
-                        resList = NULL;
+                        free(s2ch.resList);
+                        s2ch.resList = NULL;
                         preLine = -2;
                         pgFillvram(WHITE, 0, 0, SCR_WIDTH, BUF_HEIGHT);
-                        sel = 4;
+                        s2ch.sel = 4;
                         return 0;
                     }
                 }
             }
-            else if(pad.Buttons & PSP_CTRL_CROSS)
+            else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
             {
                 if (rMenu)
                 {
                 }
                 else
                 {
-                    sel = 2;
+                    s2ch.sel = 2;
                 }
             }
-            else if(pad.Buttons & PSP_CTRL_TRIANGLE)
+            else if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
             {
                 if (rMenu)
                 {
@@ -189,28 +166,28 @@ int psp2chFavorite(void)
                 else
                 {
                     focus = focus ? 0 : 1;
-                    if (focus && favItaList == NULL)
+                    if (focus && s2ch.favItaList == NULL)
                     {
                         focus = 0;
                     }
-                    else if (focus == 0 && favList == NULL)
+                    else if (focus == 0 && s2ch.favList == NULL)
                     {
                         focus = 1;
                     }
                 }
             }
-            else if(pad.Buttons & PSP_CTRL_SQUARE)
+            else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
             {
                 if (rMenu)
                 {
                     if (psp2chThreadSearch() == 0 && keyWords[0])
                     {
-                        if (findList)
+                        if (s2ch.findList)
                         {
-                            free(findList);
-                            findList = NULL;
+                            free(s2ch.findList);
+                            s2ch.findList = NULL;
                         }
-                        sel = 7;
+                        s2ch.sel = 7;
                     }
                 }
                 else
@@ -220,7 +197,7 @@ int psp2chFavorite(void)
                     }
                     else
                     {
-                        psp2chDelFavorite(favList[fav.select].title, favList[fav.select].dat);
+                        psp2chDelFavorite(s2ch.favList[s2ch.fav.select].title, s2ch.favList[s2ch.fav.select].dat);
                     }
                 }
             }
@@ -244,7 +221,7 @@ int psp2chFavorite(void)
 
 /**********************
 favorite.brdがあれば読み込んで
-favListのメモリ再確保とデータ作成
+s2ch.favListのメモリ再確保とデータ作成
 **********************/
 int psp2chLoadFavorite(void)
 {
@@ -254,7 +231,7 @@ int psp2chLoadFavorite(void)
     char *buf, *p, *r;
     int i;
 
-    sprintf(path, "%s/%s/favorite.brd", cwDir, logDir);
+    sprintf(path, "%s/%s/favorite.brd", s2ch.cwDir, s2ch.logDir);
     i = sceIoGetstat(path, &st);
     if (i < 0)
     {
@@ -263,9 +240,9 @@ int psp2chLoadFavorite(void)
     buf = (char*)malloc(st.st_size + 1);
     if (buf == NULL)
     {
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(mh.message, "memorry error");
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        strcpy(s2ch.mh.message, "memorry error");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         return -1;
     }
     fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
@@ -278,25 +255,25 @@ int psp2chLoadFavorite(void)
     sceIoClose(fd);
     buf[st.st_size] = '\0';
     p = buf;
-    fav.count = 0;
+    s2ch.fav.count = 0;
     while (*p)
     {
         if (*p++ == '\n')
         {
-            fav.count++;
+            s2ch.fav.count++;
         }
     }
-    if (fav.count <= 0)
+    if (s2ch.fav.count <= 0)
     {
         free(buf);
         return -1;
     }
-    favList = (S_2CH_FAVORITE*)realloc(favList, sizeof(S_2CH_FAVORITE) * fav.count);
-    if (favList == NULL)
+    s2ch.favList = (S_2CH_FAVORITE*)realloc(s2ch.favList, sizeof(S_2CH_FAVORITE) * s2ch.fav.count);
+    if (s2ch.favList == NULL)
     {
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(mh.message, "memorry error");
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        strcpy(s2ch.mh.message, "memorry error");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         return -1;
     }
     r = buf;
@@ -305,23 +282,23 @@ int psp2chLoadFavorite(void)
     {
         p = strchr(r, '\t');
         *p= '\0';
-        strcpy(favList[i].host, r);
+        strcpy(s2ch.favList[i].host, r);
         r = ++p;
         p = strchr(r, '\t');
         *p= '\0';
-        strcpy(favList[i].dir, r);
+        strcpy(s2ch.favList[i].dir, r);
         r = ++p;
         p = strchr(r, '\t');
         *p= '\0';
-        strcpy(favList[i].title, r);
+        strcpy(s2ch.favList[i].title, r);
         r = ++p;
         p = strchr(r, '\t');
         *p= '\0';
-        sscanf(r, "%d", &favList[i].dat);
+        sscanf(r, "%d", &s2ch.favList[i].dat);
         r = ++p;
         p = strchr(r, '\n');
         *p= '\0';
-        strcpy(favList[i].subject, r);
+        strcpy(s2ch.favList[i].subject, r);
         r = ++p;
         i++;
     }
@@ -331,7 +308,7 @@ int psp2chLoadFavorite(void)
 
 /**********************
 favoriteita.brdがあれば読み込んで
-favItaListのメモリ再確保とデータ作成
+s2ch.favItaListのメモリ再確保とデータ作成
 **********************/
 int psp2chLoadFavoriteIta(void)
 {
@@ -341,7 +318,7 @@ int psp2chLoadFavoriteIta(void)
     char *buf, *p, *r;
     int i;
 
-    sprintf(path, "%s/%s/favoriteita.brd", cwDir, logDir);
+    sprintf(path, "%s/%s/favoriteita.brd", s2ch.cwDir, s2ch.logDir);
     i = sceIoGetstat(path, &st);
     if (i < 0)
     {
@@ -350,9 +327,9 @@ int psp2chLoadFavoriteIta(void)
     buf = (char*)malloc(st.st_size + 1);
     if (buf == NULL)
     {
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(mh.message, "memorry error");
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        strcpy(s2ch.mh.message, "memorry error");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         return -1;
     }
     fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
@@ -365,25 +342,25 @@ int psp2chLoadFavoriteIta(void)
     sceIoClose(fd);
     buf[st.st_size] = '\0';
     p = buf;
-    favIta.count = 0;
+    s2ch.favIta.count = 0;
     while (*p)
     {
         if (*p++ == '\n')
         {
-            favIta.count++;
+            s2ch.favIta.count++;
         }
     }
-    if (favIta.count <= 0)
+    if (s2ch.favIta.count <= 0)
     {
         free(buf);
         return -1;
     }
-    favItaList = (S_2CH_FAV_ITA*)realloc(favItaList, sizeof(S_2CH_FAV_ITA) * favIta.count);
-    if (favItaList == NULL)
+    s2ch.favItaList = (S_2CH_FAV_ITA*)realloc(s2ch.favItaList, sizeof(S_2CH_FAV_ITA) * s2ch.favIta.count);
+    if (s2ch.favItaList == NULL)
     {
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(mh.message, "memorry error");
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        strcpy(s2ch.mh.message, "memorry error");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         return -1;
     }
     r = buf;
@@ -392,11 +369,11 @@ int psp2chLoadFavoriteIta(void)
     {
         p = strchr(r, '\t');
         *p= '\0';
-        strcpy(favItaList[i].cate, r);
+        strcpy(s2ch.favItaList[i].cate, r);
         r = ++p;
         p = strchr(r, '\n');
         *p= '\0';
-        strcpy(favItaList[i].title, r);
+        strcpy(s2ch.favItaList[i].title, r);
         r = ++p;
         i++;
     }
@@ -414,27 +391,27 @@ int psp2chAddFavorite(char* host, char* dir, char* title, int dat)
     char path[256];
     int i;
 
-    if (fav.count == 0)
+    if (s2ch.fav.count == 0)
     {
         psp2chLoadFavorite();
     }
-    for (i = 0; i < fav.count; i++)
+    for (i = 0; i < s2ch.fav.count; i++)
     {
-        if (favList[i].dat == dat && strcmp(favList[i].title, title) == 0)
+        if (s2ch.favList[i].dat == dat && strcmp(s2ch.favList[i].title, title) == 0)
         {
-            memset(&mh,0,sizeof(MESSAGE_HELPER));
-            strcpy(mh.message, TEXT_8);
-            pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
+            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+            strcpy(s2ch.mh.message, TEXT_8);
+            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
             return -1;
         }
     }
-    sprintf(path, "%s/%s/favorite.brd", cwDir, logDir);
+    sprintf(path, "%s/%s/favorite.brd", s2ch.cwDir, s2ch.logDir);
     fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777);
     if (fd < 0)
     {
         return -1;
     }
-    sprintf(path, "%s\t%s\t%s\t%d\t%s\n", host, dir, title, dat, resList[0].title);
+    sprintf(path, "%s\t%s\t%s\t%d\t%s\n", host, dir, title, dat, s2ch.resList[0].title);
     sceIoWrite(fd, path, strlen(path));
     sceIoClose(fd);
     return psp2chLoadFavorite();
@@ -450,21 +427,21 @@ int psp2chAddFavoriteIta(char* cate, char* title)
     char path[256];
     int i;
 
-    if (favIta.count == 0)
+    if (s2ch.favIta.count == 0)
     {
         psp2chLoadFavoriteIta();
     }
-    for (i = 0; i < favIta.count; i++)
+    for (i = 0; i < s2ch.favIta.count; i++)
     {
-        if (strcmp(favItaList[i].cate, cate) == 0 && strcmp(favItaList[i].title, title) == 0)
+        if (strcmp(s2ch.favItaList[i].cate, cate) == 0 && strcmp(s2ch.favItaList[i].title, title) == 0)
         {
-            memset(&mh,0,sizeof(MESSAGE_HELPER));
-            strcpy(mh.message, TEXT_8);
-            pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
+            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+            strcpy(s2ch.mh.message, TEXT_8);
+            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
             return -1;
         }
     }
-    sprintf(path, "%s/%s/favoriteita.brd", cwDir, logDir);
+    sprintf(path, "%s/%s/favoriteita.brd", s2ch.cwDir, s2ch.logDir);
     fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777);
     if (fd < 0)
     {
@@ -477,7 +454,7 @@ int psp2chAddFavoriteIta(char* cate, char* title)
 }
 
 /**********************
-favListからtitleとdatの一致する項目以外のリストのみをfavorite.brdに書き出す
+s2ch.favListからtitleとdatの一致する項目以外のリストのみをfavorite.brdに書き出す
 psp2chLoadFavorite()でリストを作成しなおす
 **********************/
 int psp2chDelFavorite(char* title, int dat)
@@ -486,35 +463,35 @@ int psp2chDelFavorite(char* title, int dat)
     char path[256];
     int i;
 
-    if (favList == NULL || fav.count <= 0)
+    if (s2ch.favList == NULL || s2ch.fav.count <= 0)
     {
         return -1;
     }
-    memset(&mh,0,sizeof(MESSAGE_HELPER));
-    mh.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT | PSP_UTILITY_MSGDIALOG_OPTION_YESNO_BUTTONS;
-    strcpy(mh.message, TEXT_9);
-    pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-    sceCtrlPeekBufferPositive(&oldPad, 1);
-    if (mh.buttonPressed == PSP_UTILITY_MSGDIALOG_RESULT_YES)
+    memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+    s2ch.mh.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT | PSP_UTILITY_MSGDIALOG_OPTION_YESNO_BUTTONS;
+    strcpy(s2ch.mh.message, TEXT_9);
+    pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+    sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+    if (s2ch.mh.buttonPressed == PSP_UTILITY_MSGDIALOG_RESULT_YES)
     {
-        sprintf(path, "%s/%s/favorite.brd", cwDir, logDir);
+        sprintf(path, "%s/%s/favorite.brd", s2ch.cwDir, s2ch.logDir);
         fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
         if (fd < 0)
         {
             return -1;
         }
-        for (i = 0; i < fav.count; i++)
+        for (i = 0; i < s2ch.fav.count; i++)
         {
-            if (favList[i].dat == dat && strcmp(favList[i].title, title) == 0)
+            if (s2ch.favList[i].dat == dat && strcmp(s2ch.favList[i].title, title) == 0)
             {
                 continue;
             }
-            sprintf(path, "%s\t%s\t%s\t%d\t%s\n", favList[i].host, favList[i].dir, favList[i].title, favList[i].dat, favList[i].subject);
+            sprintf(path, "%s\t%s\t%s\t%d\t%s\n", s2ch.favList[i].host, s2ch.favList[i].dir, s2ch.favList[i].title, s2ch.favList[i].dat, s2ch.favList[i].subject);
             sceIoWrite(fd, path, strlen(path));
         }
         sceIoClose(fd);
-        fav.start = 0;
-        fav.select = 0;
+        s2ch.fav.start = 0;
+        s2ch.fav.select = 0;
         return psp2chLoadFavorite();
     }
     return 0;
@@ -529,7 +506,7 @@ void psp2chDrawFavorite(int scrollX)
     int i;
     int lineEnd, scrW, scrH;
 
-    if (tateFlag)
+    if (s2ch.tateFlag)
     {
         lineEnd = 35;
         scrW = SCR_HEIGHT + scrollX;
@@ -541,47 +518,47 @@ void psp2chDrawFavorite(int scrollX)
         scrW = SCR_WIDTH + scrollX;
         scrH = SCR_HEIGHT;
     }
-    start = fav.start;
-    if (start + lineEnd > fav.count)
+    start = s2ch.fav.start;
+    if (start + lineEnd > s2ch.fav.count)
     {
-        start = fav.count - lineEnd;
+        start = s2ch.fav.count - lineEnd;
     }
     if (start < 0)
     {
         start = 0;
     }
-    pgFillvram(threadColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
-    pgCursorY = 0;
+    pgFillvram(s2ch.threadColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
+    s2ch.pgCursorY = 0;
     for (i = start; i < start + lineEnd; i++)
     {
-        if (i >= fav.count)
+        if (i >= s2ch.fav.count)
         {
             return;
         }
-        pgCursorX = 0;
-        if (i == fav.select)
+        s2ch.pgCursorX = 0;
+        if (i == s2ch.fav.select)
         {
-            pgFillvram(threadColor.s_bg, 0, pgCursorY, BUF_WIDTH, LINE_PITCH);
-            pgPrintNumber(i + 1, threadColor.s_num, threadColor.s_bg);
+            pgFillvram(s2ch.threadColor.s_bg, 0, s2ch.pgCursorY, BUF_WIDTH, LINE_PITCH);
+            pgPrintNumber(i + 1, s2ch.threadColor.s_num, s2ch.threadColor.s_bg);
         }
         else
         {
-            pgPrintNumber(i + 1, threadColor.num, threadColor.bg);
+            pgPrintNumber(i + 1, s2ch.threadColor.num, s2ch.threadColor.bg);
         }
-        pgCursorX = THREAD_ID;
-        if (i == fav.select)
+        s2ch.pgCursorX = THREAD_ID;
+        if (i == s2ch.fav.select)
         {
-            pgPrint(favList[i].title, threadColor.s_category, threadColor.s_bg, scrW);
-            pgCursorX += 8;
-            pgPrint(favList[i].subject, threadColor.s_text1, threadColor.s_bg, scrW);
+            pgPrint(s2ch.favList[i].title, s2ch.threadColor.s_category, s2ch.threadColor.s_bg, scrW);
+            s2ch.pgCursorX += 8;
+            pgPrint(s2ch.favList[i].subject, s2ch.threadColor.s_text1, s2ch.threadColor.s_bg, scrW);
         }
         else
         {
-            pgPrint(favList[i].title, threadColor.category, threadColor.bg, scrW);
-            pgCursorX += 8;
-            pgPrint(favList[i].subject, threadColor.text1, threadColor.bg, scrW);
+            pgPrint(s2ch.favList[i].title, s2ch.threadColor.category, s2ch.threadColor.bg, scrW);
+            s2ch.pgCursorX += 8;
+            pgPrint(s2ch.favList[i].subject, s2ch.threadColor.text1, s2ch.threadColor.bg, scrW);
         }
-        pgCursorY += LINE_PITCH;
+        s2ch.pgCursorY += LINE_PITCH;
     }
 }
 
@@ -594,7 +571,7 @@ void psp2chDrawFavoriteIta(void)
     int i;
     int lineEnd, scrW, scrH;
 
-    if (tateFlag)
+    if (s2ch.tateFlag)
     {
         lineEnd = 35;
         scrW = SCR_HEIGHT;
@@ -606,46 +583,46 @@ void psp2chDrawFavoriteIta(void)
         scrW = SCR_WIDTH;
         scrH = SCR_HEIGHT;
     }
-    start = favIta.start;
-    if (start + lineEnd > favIta.count)
+    start = s2ch.favIta.start;
+    if (start + lineEnd > s2ch.favIta.count)
     {
-        start = favIta.count - lineEnd;
+        start = s2ch.favIta.count - lineEnd;
     }
     if (start < 0)
     {
         start = 0;
     }
-    pgFillvram(threadColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
-    pgCursorY = 0;
+    pgFillvram(s2ch.threadColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
+    s2ch.pgCursorY = 0;
     for (i = start; i < start + lineEnd; i++)
     {
-        if (i >= favIta.count)
+        if (i >= s2ch.favIta.count)
         {
             return;
         }
-        pgCursorX = 0;
-        if (i == favIta.select)
+        s2ch.pgCursorX = 0;
+        if (i == s2ch.favIta.select)
         {
-            pgFillvram(threadColor.s_bg, 0, pgCursorY, BUF_WIDTH, LINE_PITCH);
-            pgPrintNumber(i + 1, threadColor.s_num, threadColor.s_bg);
+            pgFillvram(s2ch.threadColor.s_bg, 0, s2ch.pgCursorY, BUF_WIDTH, LINE_PITCH);
+            pgPrintNumber(i + 1, s2ch.threadColor.s_num, s2ch.threadColor.s_bg);
         }
         else
         {
-            pgPrintNumber(i + 1, threadColor.num, threadColor.bg);
+            pgPrintNumber(i + 1, s2ch.threadColor.num, s2ch.threadColor.bg);
         }
-        pgCursorX = 30;
-        if (i == favIta.select)
+        s2ch.pgCursorX = 30;
+        if (i == s2ch.favIta.select)
         {
-            pgPrint(favItaList[i].cate, threadColor.s_category, threadColor.s_bg, scrW);
-            pgCursorX = 100;
-            pgPrint(favItaList[i].title, threadColor.s_text1, threadColor.s_bg, scrW);
+            pgPrint(s2ch.favItaList[i].cate, s2ch.threadColor.s_category, s2ch.threadColor.s_bg, scrW);
+            s2ch.pgCursorX = 100;
+            pgPrint(s2ch.favItaList[i].title, s2ch.threadColor.s_text1, s2ch.threadColor.s_bg, scrW);
         }
         else
         {
-            pgPrint(favItaList[i].cate, threadColor.category, threadColor.bg, scrW);
-            pgCursorX = 100;
-            pgPrint(favItaList[i].title, threadColor.text1, threadColor.bg, scrW);
+            pgPrint(s2ch.favItaList[i].cate, s2ch.threadColor.category, s2ch.threadColor.bg, scrW);
+            s2ch.pgCursorX = 100;
+            pgPrint(s2ch.favItaList[i].title, s2ch.threadColor.text1, s2ch.threadColor.bg, scrW);
         }
-        pgCursorY += LINE_PITCH;
+        s2ch.pgCursorY += LINE_PITCH;
     }
 }

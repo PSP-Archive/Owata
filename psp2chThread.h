@@ -5,15 +5,6 @@
 #ifndef __PSP2CH_THREAD_H__
 #define __PSP2CH_THREAD_H__
 
-
-typedef struct {
-    int id;
-    int dat;
-    char title[128];
-    int res;
-    int old;
-} S_2CH_THREAD;
-
 int psp2chThread(int retSel);
 int psp2chThreadList(int ita);
 int psp2chGetSubject(int ita);

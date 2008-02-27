@@ -2,22 +2,13 @@
 * $Id$
 */
 
-#include "pspdialogs.h"
 #include <stdio.h>
 #include <malloc.h>
-#include <pspctrl.h>
 #include "pg.h"
+#include "psp2ch.h"
 #include "utf8.h"
 
-extern int running; //main.c
-extern char cwDir[256]; //main.c
-extern char* logDir; // psp2ch.c
-extern SceCtrlData pad; // psp2ch.c
-extern SceCtrlData oldPad; // psp2ch.c
-extern MESSAGE_HELPER mh; // psp2ch.c
-extern unsigned long pgCursorX, pgCursorY; // pg.c
-extern void* framebuffer; // pg.c
-extern S_2CH_FORM_COLOR formColor; // psp2ch.c
+extern S_2CH s2ch; // psp2ch.c
 extern char cookie[128]; // psp2ch.c
 
 /*********************
@@ -66,26 +57,26 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
     encode = (char*)malloc(2048*4);
     if (encode == NULL)
     {
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(mh.message, "memorry error\n");
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&oldPad, 1);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        sprintf(s2ch.mh.message, "memorry error\n");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return -1;
     }
     buffer = (char*)malloc(2048*2);
     if (buffer == NULL)
     {
         free(encode);
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(mh.message, "memorry error\n");
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&oldPad, 1);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        sprintf(s2ch.mh.message, "memorry error\n");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return -1;
     }
     focus = 0;
     if (mail[0] == '\0' && name[0] == '\0')
     {
-        sprintf(buf, "%s/%s/form.ini", cwDir, logDir);
+        sprintf(buf, "%s/%s/form.ini", s2ch.cwDir, s2ch.logDir);
         fd = sceIoOpen(buf, PSP_O_RDONLY, 0777);
         if (fd >= 0)
         {
@@ -108,14 +99,14 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
     {
         sage = 1;
     }
-    while (running)
+    while (s2ch.running)
     {
-        if(sceCtrlPeekBufferPositive(&pad, 1))
+        if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
         {
-            if (pad.Buttons != oldPad.Buttons)
+            if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
             {
-                oldPad = pad;
-                if(pad.Buttons & PSP_CTRL_UP)
+                s2ch.oldPad = s2ch.pad;
+                if(s2ch.pad.Buttons & PSP_CTRL_UP)
                 {
                     focus--;
                     if (focus < 0)
@@ -123,7 +114,7 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
                         focus = 0;
                     }
                 }
-                if(pad.Buttons & PSP_CTRL_DOWN)
+                if(s2ch.pad.Buttons & PSP_CTRL_DOWN)
                 {
                     focus++;
                     if (focus > 2)
@@ -131,21 +122,21 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
                         focus = 2;
                     }
                 }
-                if(pad.Buttons & PSP_CTRL_LEFT)
+                if(s2ch.pad.Buttons & PSP_CTRL_LEFT)
                 {
                     if (focus == 1)
                     {
                         sage = sage ? 0 : 1;
                     }
                 }
-                if(pad.Buttons & PSP_CTRL_RIGHT)
+                if(s2ch.pad.Buttons & PSP_CTRL_RIGHT)
                 {
                     if (focus == 1)
                     {
                         sage = sage ? 0 : 1;
                     }
                 }
-                if(pad.Buttons & PSP_CTRL_CIRCLE)
+                if(s2ch.pad.Buttons & PSP_CTRL_CIRCLE)
                 {
                     switch (focus)
                     {
@@ -160,24 +151,24 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
                         break;
                     }
                 }
-                else if(pad.Buttons & PSP_CTRL_CROSS)
+                else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
                 {
                     break;
                 }
-                else if(pad.Buttons & PSP_CTRL_TRIANGLE)
+                else if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
                 {
-                    memset(&mh,0,sizeof(MESSAGE_HELPER));
-                    mh.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT |
+                    memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+                    s2ch.mh.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT |
                         PSP_UTILITY_MSGDIALOG_OPTION_YESNO_BUTTONS | PSP_UTILITY_MSGDIALOG_OPTION_DEFAULT_NO;
-                    strcpy(mh.message, TEXT_6);
-                    pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-                    sceCtrlPeekBufferPositive(&oldPad, 1);
-                    if (mh.buttonPressed == PSP_UTILITY_MSGDIALOG_RESULT_YES)
+                    strcpy(s2ch.mh.message, TEXT_6);
+                    pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+                    sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+                    if (s2ch.mh.buttonPressed == PSP_UTILITY_MSGDIALOG_RESULT_YES)
                     {
                         sendOk = 1;
                     }
                 }
-                else if(pad.Buttons & PSP_CTRL_SQUARE)
+                else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
                 {
                 }
             }
@@ -186,24 +177,24 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
                 strcpy(mail, "sage");
             }
             pgFillvram(RGB(0xCC, 0xFF, 0xCC), 0, 0, SCR_WIDTH, SCR_HEIGHT);
-            pgFillvram(formColor.title_bg, 0, 0, SCR_WIDTH, 15);
-            pgCursorX = 10;
-            pgCursorY = 1;
-            pgPrint(subject, formColor.title, formColor.title_bg, SCR_WIDTH);
-            pgCursorX = 10;
-            pgCursorY = 30;
+            pgFillvram(s2ch.formColor.title_bg, 0, 0, SCR_WIDTH, 15);
+            s2ch.pgCursorX = 10;
+            s2ch.pgCursorY = 1;
+            pgPrint(subject, s2ch.formColor.title, s2ch.formColor.title_bg, SCR_WIDTH);
+            s2ch.pgCursorX = 10;
+            s2ch.pgCursorY = 30;
             pgPrint("　名前：", GRAY, RGB(0xCC, 0xFF, 0xCC), 58);
-            pgCursorX = 60;
+            s2ch.pgCursorX = 60;
             pgEditBox(GRAY, 58, 28, 400, 44);
             pgPrint(name, BLACK, GRAY, 400);
-            pgCursorX = 10;
-            pgCursorY = 60;
+            s2ch.pgCursorX = 10;
+            s2ch.pgCursorY = 60;
             pgPrint("メール：", GRAY, RGB(0xCC, 0xFF, 0xCC), 58);
-            pgCursorX = 60;
+            s2ch.pgCursorX = 60;
             pgEditBox(GRAY, 58, 58, 300, 74);
             pgPrint(mail, BLACK, GRAY, 400);
-            pgCursorX = 310;
-            pgCursorY = 60;
+            s2ch.pgCursorX = 310;
+            s2ch.pgCursorY = 60;
             if (sage)
             {
                 pgPrint("●", GRAY, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
@@ -213,15 +204,15 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
                 pgPrint("○", GRAY, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
             }
             pgPrint("sage (← →キーで切替)", GRAY, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
-            pgCursorX = 10;
-            pgCursorY = 90;
+            s2ch.pgCursorX = 10;
+            s2ch.pgCursorY = 90;
             pgEditBox(GRAY, 8, 88, 470, 250);
             str = message;
             while ((str = pgPrint(str, BLACK, GRAY, 470)))
             {
-                pgCursorX = 10;
-                pgCursorY += LINE_PITCH;
-                if (pgCursorY >= 250)
+                s2ch.pgCursorX = 10;
+                s2ch.pgCursorY += LINE_PITCH;
+                if (s2ch.pgCursorY >= 250)
                 {
                     break;
                 }
@@ -229,22 +220,22 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
             switch (focus)
             {
             case 0:
-                pgCursorX = 10;
-                pgCursorY = 30;
+                s2ch.pgCursorX = 10;
+                s2ch.pgCursorY = 30;
                 pgPrint("　名前：", BLACK, RGB(0xCC, 0xFF, 0xCC), 58);
-                pgCursorX = 60;
+                s2ch.pgCursorX = 60;
                 pgEditBox(WHITE, 58, 28, 400, 44);
                 pgPrint(name, BLACK, WHITE, 400);
                 break;
             case 1:
-                pgCursorX = 10;
-                pgCursorY = 60;
+                s2ch.pgCursorX = 10;
+                s2ch.pgCursorY = 60;
                 pgPrint("メール：", BLACK, RGB(0xCC, 0xFF, 0xCC), 58);
-                pgCursorX = 60;
+                s2ch.pgCursorX = 60;
                 pgEditBox(WHITE, 58, 58, 300, 74);
                 pgPrint(mail, BLACK, WHITE, 300);
-                pgCursorX = 310;
-                pgCursorY = 60;
+                s2ch.pgCursorX = 310;
+                s2ch.pgCursorY = 60;
                 if (sage)
                 {
                     pgPrint("●", BLACK, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
@@ -256,15 +247,15 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
                 pgPrint("sage (← →キーで切替)", BLACK, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
                 break;
             case 2:
-                pgCursorX = 10;
-                pgCursorY = 90;
+                s2ch.pgCursorX = 10;
+                s2ch.pgCursorY = 90;
                 pgEditBox(WHITE, 8, 88, 470, 250);
                 str = message;
                 while ((str = pgPrint(str, BLACK, WHITE, 470)))
                 {
-                    pgCursorX = 10;
-                    pgCursorY += LINE_PITCH;
-                    if (pgCursorY >= 250)
+                    s2ch.pgCursorX = 10;
+                    s2ch.pgCursorY += LINE_PITCH;
+                    if (s2ch.pgCursorY >= 250)
                     {
                         break;
                     }
@@ -300,10 +291,10 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
                 {
                     free(buffer);
                     free(encode);
-                    memset(&mh,0,sizeof(MESSAGE_HELPER));
-                    sprintf(mh.message, "POST error");
-                    pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-                    sceCtrlPeekBufferPositive(&oldPad, 1);
+                    memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+                    sprintf(s2ch.mh.message, "POST error");
+                    pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+                    sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
                     return mySocket;
                 }
                 ret = psp2chGetStatusLine(mySocket);
@@ -314,10 +305,10 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
                     default:
                         free(buffer);
                         free(encode);
-                        memset(&mh,0,sizeof(MESSAGE_HELPER));
-                        sprintf(mh.message, "Status code %d", ret);
-                        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-                        sceCtrlPeekBufferPositive(&oldPad, 1);
+                        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+                        sprintf(s2ch.mh.message, "Status code %d", ret);
+                        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+                        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
                         psp2chCloseSocket(mySocket);
                         return -1;
                 }
@@ -331,10 +322,10 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
             {
                 free(buffer);
                 free(encode);
-                memset(&mh,0,sizeof(MESSAGE_HELPER));
-                sprintf(mh.message, "POST error");
-                pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-                sceCtrlPeekBufferPositive(&oldPad, 1);
+                memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+                sprintf(s2ch.mh.message, "POST error");
+                pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+                sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
                 return -1;
             }
             ret = psp2chGetStatusLine(mySocket);
@@ -345,10 +336,10 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
                 default:
                     free(buffer);
                     free(encode);
-                    memset(&mh,0,sizeof(MESSAGE_HELPER));
-                    sprintf(mh.message, "Status code %d", ret);
-                    pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-                    sceCtrlPeekBufferPositive(&oldPad, 1);
+                    memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+                    sprintf(s2ch.mh.message, "Status code %d", ret);
+                    pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+                    sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
                     psp2chCloseSocket(mySocket);
                     return -1;
             }
@@ -392,11 +383,11 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
                 pgMenuBar("　× : 戻る");
                 sceDisplayWaitVblankStart();
                 framebuffer = sceGuSwapBuffers();
-                sceCtrlPeekBufferPositive(&pad, 1);
-                if (pad.Buttons != oldPad.Buttons)
+                sceCtrlPeekBufferPositive(&s2ch.pad, 1);
+                if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
                 {
-                    oldPad = pad;
-                    if(pad.Buttons & PSP_CTRL_CROSS)
+                    s2ch.oldPad = s2ch.pad;
+                    if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
                     {
                         break;
                     }
@@ -405,7 +396,7 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
 #endif
             free(buffer);
             free(encode);
-            sprintf(buf, "%s/%s/form.ini", cwDir, logDir);
+            sprintf(buf, "%s/%s/form.ini", s2ch.cwDir, s2ch.logDir);
             fd = sceIoOpen(buf, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
             if (fd >= 0)
             {

@@ -17,18 +17,11 @@ unsigned int __attribute__((aligned(16))) list[512*512];
 unsigned int __attribute__((aligned(16))) winPixels[BUF_WIDTH*BUF_HEIGHT];
 unsigned int __attribute__((aligned(16))) pixels[BUF_WIDTH*BUF_HEIGHT];
 unsigned int __attribute__((aligned(16))) barPixels[BUF_WIDTH*25];
-unsigned long pgCursorX = 0, pgCursorY = 0;
 unsigned int* printBuf;
 void* framebuffer;
 intraFont* jpn0;
 
-extern S_2CH_SCREEN res; // psp2chRes.c
-extern S_2CH_RES_ANCHOR resAnchor[50]; // psp2chRes.c
-extern int resAnchorCount; //psp2chRes.c
-extern S_2CH_URL_ANCHOR urlAnchor[50]; // psp2chRes.c
-extern int urlAnchorCount; //psp2chRes.c
-extern S_2CH_MENU_COLOR menuColor;
-extern int tateFlag;
+extern S_2CH s2ch; // psp2chRes.c
 
 const int cursorImgB[48] = {
         0,
@@ -247,50 +240,50 @@ void pgMenuBar(char* str)
 
     temp = printBuf;
     printBuf = barPixels;
-    pgCursorX = 0;
-    if (tateFlag)
+    s2ch.pgCursorX = 0;
+    if (s2ch.tateFlag)
     {
-        pgFillvram(menuColor.bg, 0, 0, SCR_HEIGHT, 25);
-        pgCursorY = 0;
-        str = pgPrint(str, menuColor.text, menuColor.bg, SCR_HEIGHT);
-        pgCursorY += LINE_PITCH;
+        pgFillvram(s2ch.menuColor.bg, 0, 0, SCR_HEIGHT, 25);
+        s2ch.pgCursorY = 0;
+        str = pgPrint(str, s2ch.menuColor.text, s2ch.menuColor.bg, SCR_HEIGHT);
+        s2ch.pgCursorY += LINE_PITCH;
         if (str)
         {
-            pgCursorX = 0;
-            pgPrint(str, menuColor.text, menuColor.bg, SCR_WIDTH);
+            s2ch.pgCursorX = 0;
+            pgPrint(str, s2ch.menuColor.text, s2ch.menuColor.bg, SCR_WIDTH);
         }
-        pgCursorX = SCR_HEIGHT - 32;
+        s2ch.pgCursorX = SCR_HEIGHT - 32;
     }
     else
     {
-        pgFillvram(menuColor.bg, 0, 0, SCR_WIDTH, 13);
-        pgCursorY = 1;
-        pgPrint(str, menuColor.text, menuColor.bg, SCR_WIDTH);
-        pgCursorX = SCR_WIDTH - 32;
+        pgFillvram(s2ch.menuColor.bg, 0, 0, SCR_WIDTH, 13);
+        s2ch.pgCursorY = 1;
+        pgPrint(str, s2ch.menuColor.text, s2ch.menuColor.bg, SCR_WIDTH);
+        s2ch.pgCursorX = SCR_WIDTH - 32;
     }
     battery = scePowerGetBatteryLifePercent();
     if (battery < 0)
     {
-        pgPrint("  ---", menuColor.bat1, menuColor.bg, SCR_WIDTH);
+        pgPrint("  ---", s2ch.menuColor.bat1, s2ch.menuColor.bg, SCR_WIDTH);
     }
     else
     {
         if (battery > 40)
         {
-            batteryColor = menuColor.bat1;
+            batteryColor = s2ch.menuColor.bat1;
         }
         else if (battery > 20)
         {
-            batteryColor = menuColor.bat2;
+            batteryColor = s2ch.menuColor.bat2;
         }
         else
         {
-            batteryColor = menuColor.bat3;
+            batteryColor = s2ch.menuColor.bat3;
         }
-        pgPrintNumber(battery, batteryColor, menuColor.bg);
-        pgPrint("%", batteryColor, menuColor.bg, SCR_WIDTH);
+        pgPrintNumber(battery, batteryColor, s2ch.menuColor.bg);
+        pgPrint("%", batteryColor, s2ch.menuColor.bg, SCR_WIDTH);
     }
-    if (tateFlag)
+    if (s2ch.tateFlag)
     {
         src = printBuf;
         dst0 = (unsigned int*)(0x04000000+framebuffer) + 24;
@@ -388,7 +381,7 @@ void pgWindowFrame(int x1, int y1, int x2, int y2)
     unsigned long i, j;
     int tmp;
 
-    if (tateFlag)
+    if (s2ch.tateFlag)
     {
         tmp = x1;
         x1 = SCR_WIDTH - y2 + 1;
@@ -459,7 +452,7 @@ void pgScrollbar(S_SCROLLBAR bar, S_2CH_BAR_COLOR c)
     if (sliderY >= (bar.y+bar.h-1)) {
         sliderY = bar.y+bar.h-2;
     }
-    if (tateFlag)
+    if (s2ch.tateFlag)
     {
         pgFillvram(c.bg, SCR_WIDTH - bar.y - bar.h, bar.x, bar.h, bar.w);
         pgFillvram(c.slider, SCR_WIDTH - sliderY - sliderH, bar.x + 1, sliderH, bar.w - 1);
@@ -480,7 +473,7 @@ void pgPadCursor(int x, int y)
     unsigned int *vptr;
     int i;
 
-    if (tateFlag)
+    if (s2ch.tateFlag)
     {
         vptr = (unsigned int*)(0x04000000+framebuffer) + x * BUF_WIDTH + SCR_WIDTH - y - 18;
         for (i = 0; i < 48; i++)
@@ -515,7 +508,7 @@ void pgCopyWindow(int offset, int x, int y, int w, int h)
     unsigned int *src;
     unsigned int *dst, *dst0;
 
-    if (tateFlag)
+    if (s2ch.tateFlag)
     {
         src = printBuf + ((offset + y) & 0x01FF) * BUF_WIDTH + x;
         dst0 = (unsigned int*)(0x04000000 + framebuffer) + SCR_WIDTH;
@@ -564,7 +557,7 @@ void pgCopy(int offsetX, int offsetY)
     unsigned int *dst, *dst0;
 
     offsetY &= 0x01FF;
-    if (tateFlag)
+    if (s2ch.tateFlag)
     {
         src = printBuf + offsetX + (offsetY * BUF_WIDTH);
         dst0 = (unsigned int*)(0x04000000+framebuffer) + SCR_WIDTH;
@@ -612,12 +605,12 @@ void pgPrintNumber(int num, int color,int bgcolor)
     int i, j, cy, b;
     unsigned short* font;
 
-    pgCursorY &= 0x01FF;
+    s2ch.pgCursorY &= 0x01FF;
     sprintf(buf, "%4d", num);
     for (j = 0; j < 4;j++) {
         font = (unsigned short*)(monafontA + ((buf[j] - 0x20) << 5)) + 1;
-        vptr0 = pgGetVramAddr(pgCursorX, pgCursorY);
-        pgCursorX += 6;
+        vptr0 = pgGetVramAddr(s2ch.pgCursorX, s2ch.pgCursorY);
+        s2ch.pgCursorX += 6;
         for (cy = 0; cy < 12; cy++) {
             vptr = vptr0;
             b = 0x8000;
@@ -656,12 +649,12 @@ int pgPutChar(unsigned char *cfont,int ch,int color,int bgcolor, int width)
 
     font = (unsigned short*)(cfont + (ch<<5));
     cx = *font++;
-    if ((pgCursorX + cx) >= width) {
+    if ((s2ch.pgCursorX + cx) >= width) {
         return 1;
     }
-    pgCursorY &= 0x01FF;
-    vptr0 = pgGetVramAddr(pgCursorX, pgCursorY);
-    pgCursorX += cx;
+    s2ch.pgCursorY &= 0x01FF;
+    vptr0 = pgGetVramAddr(s2ch.pgCursorX, s2ch.pgCursorY);
+    s2ch.pgCursorX += cx;
     for (cy = 0; cy < 12; cy++) {
         vptr = vptr0;
         b = 0x8000;
@@ -830,22 +823,22 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
             if (((ch>=0x80) && (ch<0xa0)) || (ch>=0xe0)) {
                 bef = ch;
                 if (anchorOn == 2) {
-                    resAnchor[resAnchorCount].x2 = pgCursorX + 6;
-                    resAnchorCount++;
-                    if (resAnchorCount >= 50)
+                    s2ch.resAnchor[s2ch.resAnchorCount].x2 = s2ch.pgCursorX + 6;
+                    s2ch.resAnchorCount++;
+                    if (s2ch.resAnchorCount >= 50)
                     {
-                        resAnchorCount = 0;
+                        s2ch.resAnchorCount = 0;
                     }
-                    resAnchor[resAnchorCount].x1 = 0;
+                    s2ch.resAnchor[s2ch.resAnchorCount].x1 = 0;
                 }
                 else if (anchorOn == 1) {
-                    urlAnchor[urlAnchorCount].x2 = pgCursorX + 6;
-                    urlAnchorCount++;
-                    if (urlAnchorCount >= 50)
+                    s2ch.urlAnchor[s2ch.urlAnchorCount].x2 = s2ch.pgCursorX + 6;
+                    s2ch.urlAnchorCount++;
+                    if (s2ch.urlAnchorCount >= 50)
                     {
-                        urlAnchorCount = 0;
+                        s2ch.urlAnchorCount = 0;
                     }
-                    urlAnchor[urlAnchorCount].x1 = 0;
+                    s2ch.urlAnchor[s2ch.urlAnchorCount].x1 = 0;
                 }
                 anchorOn = 0;
                 tcolor = c.text;
@@ -858,13 +851,13 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
                     if ((ch < '0' || ch > '9') && ch != '-' && ch != ',' && ch !='<') {
                         anchorOn = 0;
                         tcolor = c.text;
-                        resAnchor[resAnchorCount].x2 = pgCursorX + 6;
-                        resAnchorCount++;
-                        if (resAnchorCount >= 50)
+                        s2ch.resAnchor[s2ch.resAnchorCount].x2 = s2ch.pgCursorX + 6;
+                        s2ch.resAnchorCount++;
+                        if (s2ch.resAnchorCount >= 50)
                         {
-                            resAnchorCount = 0;
+                            s2ch.resAnchorCount = 0;
                         }
-                        resAnchor[resAnchorCount].x1 = 0;
+                        s2ch.resAnchor[s2ch.resAnchorCount].x1 = 0;
                     }
                 }
                 else if (anchorOn == 1) {
@@ -874,25 +867,25 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
                     else {
                         anchorOn = 0;
                         tcolor = c.text;
-                        urlAnchor[urlAnchorCount].x2 = pgCursorX + 6;
-                        urlAnchorCount++;
-                        if (urlAnchorCount >= 50)
+                        s2ch.urlAnchor[s2ch.urlAnchorCount].x2 = s2ch.pgCursorX + 6;
+                        s2ch.urlAnchorCount++;
+                        if (s2ch.urlAnchorCount >= 50)
                         {
-                            urlAnchorCount = 0;
+                            s2ch.urlAnchorCount = 0;
                         }
-                        urlAnchor[urlAnchorCount].x1 = 0;
+                        s2ch.urlAnchor[s2ch.urlAnchorCount].x1 = 0;
                     }
                 }
 
                 if (strstr(str, "http://") == str) {
-                    urlAnchor[urlAnchorCount].x1 = pgCursorX;
-                    urlAnchor[urlAnchorCount].line = drawLine;
+                    s2ch.urlAnchor[s2ch.urlAnchorCount].x1 = s2ch.pgCursorX;
+                    s2ch.urlAnchor[s2ch.urlAnchorCount].line = drawLine;
                     tcolor = c.link;
                 }
                 else if (strstr(str, "ttp://") == str) {
-                    if (urlAnchor[urlAnchorCount].x1 == 0) {
-                        urlAnchor[urlAnchorCount].x1 = pgCursorX;
-                        urlAnchor[urlAnchorCount].line = drawLine;
+                    if (s2ch.urlAnchor[s2ch.urlAnchorCount].x1 == 0) {
+                        s2ch.urlAnchor[s2ch.urlAnchorCount].x1 = s2ch.pgCursorX;
+                        s2ch.urlAnchor[s2ch.urlAnchorCount].line = drawLine;
                     }
                     p = str + 6;
                     j = 0;
@@ -902,25 +895,25 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
                             p++;
                             break;
                         }
-                        urlAnchor[urlAnchorCount].host[j] = *p++;
+                        s2ch.urlAnchor[s2ch.urlAnchorCount].host[j] = *p++;
                         j++;
                         if (j >= 63) {
                             break;
                         }
                     }
                     if (j < 64) {
-                        urlAnchor[urlAnchorCount].host[j] = '\0';
+                        s2ch.urlAnchor[s2ch.urlAnchorCount].host[j] = '\0';
                         j = 0;
                         while ((*p >= '#' && *p <= '+') || (*p >= '-' && *p <= ';') || (*p >= '?' && *p <= 'Z') ||
                                 (*p >= 'a' && *p <= 'z') || *p == '!' || *p == '=' || *p == '_' || *p == '~') {
-                            urlAnchor[urlAnchorCount].path[j] = *p++;
+                            s2ch.urlAnchor[s2ch.urlAnchorCount].path[j] = *p++;
                             j++;
                             if (j >= 255) {
                                 break;
                             }
                         }
                         if (j < 256) {
-                            urlAnchor[urlAnchorCount].path[j] = '\0';
+                            s2ch.urlAnchor[s2ch.urlAnchorCount].path[j] = '\0';
                         }
                         anchorOn = 1;
                         tcolor = c.link;
@@ -943,14 +936,14 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
                 else if (ch == '&') {
                     if (strstr(str, "&gt;") == str) {
                         if ((strstr((str + 4), "&gt;") == (str + 4)) && *(str + 8) >= '0' && *(str + 8) <= '9') {
-                            resAnchor[resAnchorCount].x1 = pgCursorX;
-                            resAnchor[resAnchorCount].line = drawLine;
+                            s2ch.resAnchor[s2ch.resAnchorCount].x1 = s2ch.pgCursorX;
+                            s2ch.resAnchor[s2ch.resAnchorCount].line = drawLine;
                             tcolor = c.link;
                         }
                         else if (*(str + 4) >= '0' && *(str + 4) <= '9') {
-                            if (resAnchor[resAnchorCount].x1 == 0) {
-                                resAnchor[resAnchorCount].x1 = pgCursorX;
-                                resAnchor[resAnchorCount].line = drawLine;
+                            if (s2ch.resAnchor[s2ch.resAnchorCount].x1 == 0) {
+                                s2ch.resAnchor[s2ch.resAnchorCount].x1 = s2ch.pgCursorX;
+                                s2ch.resAnchor[s2ch.resAnchorCount].line = drawLine;
                             }
                             j = 0;
                             p = str + 4;
@@ -960,8 +953,8 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
                                     start = start * 10 + *p - '0';
                                     p++;
                                 }
-                                if (start <= res.count && start > 0) {
-                                    resAnchor[resAnchorCount].res[j] = start - 1;
+                                if (start <= s2ch.res.count && start > 0) {
+                                    s2ch.resAnchor[s2ch.resAnchorCount].res[j] = start - 1;
                                     j++;
                                 }
                                 if (*p == '-') {
@@ -972,11 +965,11 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
                                         p++;
                                     }
                                     for (i = start; i < end; i++) {
-                                        if (i >= res.count) {
+                                        if (i >= s2ch.res.count) {
                                             break;
                                         }
                                         if (i > 1) {
-                                            resAnchor[resAnchorCount].res[j] = i;
+                                            s2ch.resAnchor[s2ch.resAnchorCount].res[j] = i;
                                             j++;
                                         }
                                     }
@@ -990,7 +983,7 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
                                 }
                                 p++;
                             }
-                            resAnchor[resAnchorCount].resCount = j;
+                            s2ch.resAnchor[s2ch.resAnchorCount].resCount = j;
                             anchorOn = 2;
                             tcolor = c.link;
                         }
@@ -1011,28 +1004,28 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
                 }
                 if (ret) {
                     if (anchorOn == 2) {
-                        resAnchor[resAnchorCount].x2 = pgCursorX;
-                        resAnchorCount++;
-                        if (resAnchorCount >= 50) {
-                            resAnchorCount = 0;
+                        s2ch.resAnchor[s2ch.resAnchorCount].x2 = s2ch.pgCursorX;
+                        s2ch.resAnchorCount++;
+                        if (s2ch.resAnchorCount >= 50) {
+                            s2ch.resAnchorCount = 0;
                         }
-                        for (i = 0; i < resAnchor[resAnchorCount-1].resCount; i++) {
-                            resAnchor[resAnchorCount].res[i] = resAnchor[resAnchorCount-1].res[i];
+                        for (i = 0; i < s2ch.resAnchor[s2ch.resAnchorCount-1].resCount; i++) {
+                            s2ch.resAnchor[s2ch.resAnchorCount].res[i] = s2ch.resAnchor[s2ch.resAnchorCount-1].res[i];
                         }
-                        resAnchor[resAnchorCount].resCount = resAnchor[resAnchorCount-1].resCount;
-                        resAnchor[resAnchorCount].line = drawLine+1;
-                        resAnchor[resAnchorCount].x1 = startX;
+                        s2ch.resAnchor[s2ch.resAnchorCount].resCount = s2ch.resAnchor[s2ch.resAnchorCount-1].resCount;
+                        s2ch.resAnchor[s2ch.resAnchorCount].line = drawLine+1;
+                        s2ch.resAnchor[s2ch.resAnchorCount].x1 = startX;
                     }
                     else if (anchorOn == 1) {
-                        urlAnchor[urlAnchorCount].x2 = pgCursorX;
-                        urlAnchorCount++;
-                        if (urlAnchorCount >= 50) {
-                            urlAnchorCount = 0;
+                        s2ch.urlAnchor[s2ch.urlAnchorCount].x2 = s2ch.pgCursorX;
+                        s2ch.urlAnchorCount++;
+                        if (s2ch.urlAnchorCount >= 50) {
+                            s2ch.urlAnchorCount = 0;
                         }
-                        urlAnchor[urlAnchorCount].line = drawLine+1;
-                        urlAnchor[urlAnchorCount].x1 = startX;
-                        strcpy(urlAnchor[urlAnchorCount].host, urlAnchor[urlAnchorCount-1].host);
-                        strcpy(urlAnchor[urlAnchorCount].path, urlAnchor[urlAnchorCount-1].path);
+                        s2ch.urlAnchor[s2ch.urlAnchorCount].line = drawLine+1;
+                        s2ch.urlAnchor[s2ch.urlAnchorCount].x1 = startX;
+                        strcpy(s2ch.urlAnchor[s2ch.urlAnchorCount].host, s2ch.urlAnchor[s2ch.urlAnchorCount-1].host);
+                        strcpy(s2ch.urlAnchor[s2ch.urlAnchorCount].path, s2ch.urlAnchor[s2ch.urlAnchorCount-1].path);
                     }
                     return str;
                 }
@@ -1062,10 +1055,10 @@ int pgCountCharA(const unsigned char c, int width)
         index = '?' - 0x20;
     }
     font = (unsigned short*)(monafontA + (index<<5));
-    if ((pgCursorX + *font) >= width) {
+    if ((s2ch.pgCursorX + *font) >= width) {
         return 1;
     }
-    pgCursorX += *font;
+    s2ch.pgCursorX += *font;
     return 0;
 }
 
@@ -1096,10 +1089,10 @@ int pgCountCharW(unsigned char hi,unsigned char lo, int width)
         index = 8; // 'ÅH'
     }
     font = (unsigned short*)(monafontW + (index<<5));
-    if ((pgCursorX + *font) >= width) {
+    if ((s2ch.pgCursorX + *font) >= width) {
         return 1;
     }
-    pgCursorX += *font;
+    s2ch.pgCursorX += *font;
     return 0;
 }
 
@@ -1178,149 +1171,149 @@ char* pgCountHtml(char *str, int width, int specialchar)
 
 void pgHome(void)
 {
-    pgCursorX = 0;
-    pgCursorY = 0;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY = 0;
 }
 
 void pgPrintMona(void)
 {
     pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT);
-    pgCursorY = LINE_PITCH;
-    pgCursorX = 60;
+    s2ch.pgCursorY = LINE_PITCH;
+    s2ch.pgCursorX = 60;
     pgPrint("µ‹¿ÉuÉâÉEÉU", RED, WHITE, SCR_WIDTH);
-    pgCursorX = 24;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 24;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint(" 2ÇøÇ·ÇÒÇÀÇÈÉuÉâÉEÉU for PSP ", BLUE, GREEN, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH*2;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH*2;
     pgPrint("Å@Å@Å@ Å»ÅQÅ»Å@Å@Å^ÅPÅPÅPÅPÅPÅPÅPÅPÅPÅP", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("Å@Å@Å@ÅiÅ@ÅLÅÕÅMÅjÅÉÅ@", BLACK, WHITE, SCR_WIDTH);
     pgPrint("ÉXÉ^Å[Ég", RED, WHITE, SCR_WIDTH);
     pgPrint("É{É^ÉìÇ≈énÇ‹ÇÈÇÊ", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("Å@Å@Å@ÅiÅ@Å@Å@Å@Åj Å@Å_ÅQÅQÅQÅQÅQÅQÅQÅQÅQÅQ", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("Å@Å@Å@Åb ÅbÅ@|", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("Å@Å@Å@ÅiÅQ_ÅjÅQÅj", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 200;
+    s2ch.pgCursorX = 200;
     pgPrint("Å@ (ﬂÑtﬂ) < ", BLACK, WHITE, SCR_WIDTH);
     pgPrint("Åõ", RED, WHITE, SCR_WIDTH);
     pgPrint("É{É^ÉìÇ≈Ç®ãCÇ…ì¸ÇË", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 200;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 200;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("Å@ﬂ(Å@)Å|", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 200;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 200;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("./Å@>", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH * 2;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH * 2;
     pgPrint("Å@Å@Å@ÅQÅQÅQ_Å»Å»Å@Å@Å^ÅPÅPÅPÅPÅPÅPÅPÅP", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("Å@Å`'Å@ÅQÅQ__(,,ﬂÑDﬂ)ÅÉÅ@", BLACK, WHITE, SCR_WIDTH);
     pgPrint("Å~", RED, WHITE, SCR_WIDTH);
     pgPrint("É{É^ÉìÇ≈ê¿Ç¡ÇƒÇÊÇµ", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("Å@Å@ ÇtU Å@ Å@Çt UÅ@Å@Å@Å_ÅQÅQÅQÅQÅQÅQÅQÅQ", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
 }
 
 void pgPrintMonaWait(void)
 {
     pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT);
-    pgCursorY = LINE_PITCH;
-    pgCursorX = 60;
+    s2ch.pgCursorY = LINE_PITCH;
+    s2ch.pgCursorX = 60;
     pgPrint("µ‹¿ÉuÉâÉEÉU", RED, WHITE, SCR_WIDTH);
-    pgCursorX = 24;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 24;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint(" 2ÇøÇ·ÇÒÇÀÇÈÉuÉâÉEÉU for PSP ", BLUE, GREEN, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH*2;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH*2;
     pgPrint("  Å@Å@ Å»ÅQÅ»Å@Å@Å^ÅPÅPÅPÅPÅPÅPÅPÅPÅPÅP", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("  Å@Å@ÅiÅ@ÅLÅÕÅMÅjÅÉÅ@", BLACK, WHITE, SCR_WIDTH);
     pgPrint("ÉtÉHÉìÉgÉçÅ[ÉhíÜ", RED, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("  Å@Å@ÅiÅ@Å@Å@Å@Åj Å@Å_ÅQÅQÅQÅQÅQÅQÅQÅQÅQÅQ", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("  Å@Å@Åb ÅbÅ@|", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("  Å@Å@ÅiÅQ_ÅjÅQÅj", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH * 4;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH * 4;
     pgPrint("Å@Å@Å@ÅQÅQÅQ_Å»Å»Å@Å@Å^ÅPÅPÅPÅPÅPÅPÅPÅP", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("Å@Å`'Å@ÅQÅQ__(,,ﬂÑDﬂ)ÅÉÅ@", BLACK, WHITE, SCR_WIDTH);
     pgPrint("ÇøÇÂÇ¡Ç∆ë“Çƒ", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("Å@Å@ ÇtU Å@ Å@Çt UÅ@Å@Å@Å_ÅQÅQÅQÅQÅQÅQÅQÅQ", BLACK, WHITE, SCR_WIDTH);
 }
 
 void pgPrintOwata(void)
 {
     pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT);
-    pgCursorX = 160;
-    pgCursorY = 80;
+    s2ch.pgCursorX = 160;
+    s2ch.pgCursorY = 80;
     pgPrint("êlê∂µ‹¿Å_(^o^)Å^", BLACK, WHITE, SCR_WIDTH);
 }
 
 void pgPrintTate(void)
 {
     pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT);
-    pgCursorY = LINE_PITCH;
-    pgCursorX = 60;
+    s2ch.pgCursorY = LINE_PITCH;
+    s2ch.pgCursorX = 60;
     pgPrint("µ‹¿ÉuÉâÉEÉU", RED, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH*4;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH*4;
     pgPrint("Å@Å@ _,,....,,_Å@ ÅQêlêlêlêlêlêlêlêlêlêlêlêlêlêlêlêlêlÅQ", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("-''\":::::::::::::ÅM''ÅÑÅ@SELECTÉ{É^ÉìÇ≈ècï\\é¶êÿÇËë÷Ç¶Ç≈Ç∑ÅIÅÉ", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("ÅR:::::::::::::::::::::ÅP^Çx^Çx^Çx^Çx^Çx^Çx^Çx^Çx^Çx^Çx^Çx^Çx^Çx^Çx^Çx^Çx^ÅP", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("Å@|::::::;ÉmÅLÅPÅ_:::::::::::Å__,. -Å]ßÅ@Å@Å@Å@Å@ÅQ_Å@Å@ _____Å@Å@ ÅQ_____", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("Å@|::::…Å@Å@Å@ÅR§ÅRr-r'\"ÅLÅ@Å@Åi.__Å@Å@Å@Å@,ÅLÅ@_,, '-ÅLÅPÅPÅM-ÅT ÅA_ ÉCÅA", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("_,.!ÉC_Å@Å@_,.Õ∞ß'ìÒ ìÒÅR§Ç÷,_7Å@Å@Å@'r ÅLÅ@Å@Å@Å@Å@Å@Å@Å@Å@Å@ÅRÅA›ÅA", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("::::::r∞''7∫-Å]'\"ÅLÅ@ Å@ ;Å@ ',Å@ÅMÅR/ÅM7Å@,'ÅÅ=Ñü-Å@Å@Å@ Å@ -Ñü=ÅÅ',Å@i", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("r-'ß'\"ÅL/Å@ /!Å@  Å@ÉnÅ@ !Å@Å@iÅS_…Å@iÅ@≤Å@iÅTÅA≤êlÉåÅ^_ÉãÅR≤ iÅ@|", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("!ÉCÅL ,' |Å@/__,.!/Å@VÅ@§!__ Å@ ,'Å@,ÅTÅ@⁄ÿ≤i (À_] Å@Å@ Å@À_› ).| .|ÅAi .||", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("`! Å@!/⁄i'Å@(À_] Å@Å@ Å@À_› ⁄'iÅ@…Å@Å@Å@!Y!\"\"Å@ ,ÅQ__, Å@ \"\" Åu !… iÅ@|", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint(",'Å@ … Å@ !'\"Å@ Å@ ,ÅQ__,Å@ \"' i .⁄'Å@Å@Å@Å@L.',.Å@ Å@ÅR _›Å@Å@Å@Å@LÅv …| .|", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint("Å@ÅiÅ@Å@, Å@Å@Å@Å@ÅR _›Å@ Å@êl! Å@Å@Å@Å@ | ||ÅRÅAÅ@Å@Å@Å@Å@Å@ ,≤| ||≤| /", BLACK, WHITE, SCR_WIDTH);
-    pgCursorX = 0;
-    pgCursorY += LINE_PITCH;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY += LINE_PITCH;
     pgPrint(",.Õ,Åj§Å@Å@ÅjÅÑ,§ _____,Å@,.ÉCÅ@ ÉnÅ@Å@Å@Å@Éå ÉãÅM Å[--Ñü ÅLÉã⁄Å@⁄ÅL", BLACK, WHITE, SCR_WIDTH);
 }

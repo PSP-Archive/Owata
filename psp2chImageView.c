@@ -2,23 +2,20 @@
 * $Id$
 */
 
-#include "pspdialogs.h"
 #include <stdio.h>
 #include <malloc.h>
 #include <jpeglib.h>
 #include <png.h>
-#include <pspctrl.h>
 #include <pspdebug.h>
 #include <pspgu.h>
 #include "psp2ch.h"
 #include "pg.h"
 #include "psp2chImageView.h"
 
-extern int running; //main.c
-extern void* framebuffer; // pg.c
+extern S_2CH s2ch; //psp2ch.c
 extern unsigned int list[BUF_WIDTH*BUF_HEIGHT]; // pg.c
 extern unsigned int pixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
-extern int preLine;
+extern int preLine; // psp2chRes.c
 
 void psp2chImageViewJpeg(char* fname)
 {
@@ -234,7 +231,7 @@ void psp2chImageViewer(int* img[], int width, int height)
     startX = 0;
     startY = 0;
     sceCtrlPeekBufferPositive(&oldPad, 1);
-    while (running)
+    while (s2ch.running)
     {
         if(sceCtrlPeekBufferPositive(&pad, 1))
         {

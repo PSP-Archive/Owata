@@ -10,6 +10,8 @@
 #include <pspnet_inet.h>
 #include <pspnet_resolver.h>
 #include <sys/socket.h>
+#include <pspctrl.h>
+#include "pspdialogs.h"
 
 //#define DEBUG
 #define RES_BAR_WIDTH (8)
@@ -30,6 +32,51 @@
 #define RES_A_LINE_V 30
 
 #define PAD_CUTOFF 35
+
+typedef struct {
+    char name[32];
+    int itaId;
+} S_2CH_CATEGORY;
+
+typedef struct {
+    char host[32];
+    char dir[32];
+    char title[32];
+} S_2CH_ITA;
+
+typedef struct {
+    char host[32];
+    char dir[32];
+    char title[32];
+    int dat;
+    char subject[128];
+} S_2CH_FAVORITE;
+
+typedef struct {
+    char cate[32];
+    char title[32];
+} S_2CH_FAV_ITA;
+
+typedef struct {
+    int id;
+    int dat;
+    char title[128];
+    int res;
+    int old;
+} S_2CH_THREAD;
+
+typedef struct {
+    int num;
+    char* name;
+    char* mail;
+    char* date;
+    char* id;
+    char* text;
+    char* title;
+    char* be;
+    int line;
+    int ng;
+} S_2CH_RES;
 
 typedef struct {
     int Content_Length;
@@ -109,6 +156,92 @@ typedef struct {
     int title;
     int title_bg;
 } S_2CH_FORM_COLOR;
+
+typedef struct {
+    int x;
+    int y;
+    int w;
+    int h;
+    int total;
+    int view;
+    int start;
+} S_SCROLLBAR;
+
+typedef struct {
+    int x1;
+    int x2;
+    int line;
+    int res[1001];
+    int resCount;
+} S_2CH_RES_ANCHOR;
+
+typedef struct {
+    int x1;
+    int x2;
+    int line;
+    char host[64];
+    char path[256];
+} S_2CH_URL_ANCHOR;
+
+typedef struct {
+    int x1;
+    int x2;
+    int line;
+    char id[12];
+} S_2CH_ID_ANCHOR;
+
+typedef struct {
+    int x1;
+    int x2;
+    int line;
+    int num;
+} S_2CH_NUM_ANCHOR;
+
+typedef struct {
+    S_2CH_CATEGORY* categoryList;
+    S_2CH_ITA* itaList;
+    S_2CH_FAVORITE* favList;
+    S_2CH_FAVORITE* findList;
+    S_2CH_FAV_ITA* favItaList;
+    S_2CH_THREAD* threadList;
+    S_2CH_RES* resList;
+    S_2CH_SCREEN category;
+    S_2CH_SCREEN ita;
+    S_2CH_SCREEN fav;
+    S_2CH_SCREEN find;
+    S_2CH_SCREEN favIta;
+    S_2CH_SCREEN thread;
+    S_2CH_SCREEN res;
+    S_2CH_URL_ANCHOR urlAnchor[50];
+    S_2CH_RES_ANCHOR resAnchor[50];
+    S_2CH_ID_ANCHOR idAnchor[40];
+    S_2CH_NUM_ANCHOR numAnchor[40];
+    int urlAnchorCount;
+    int resAnchorCount;
+    int idAnchorCount;
+    int numAnchorCount;
+    S_2CH_HEADER_COLOR resHeaderColor;
+    S_2CH_RES_COLOR resColor;
+    S_2CH_BAR_COLOR resBarColor;
+    S_2CH_HEADER_COLOR resAHeaderColor;
+    S_2CH_RES_COLOR resAColor;
+    S_2CH_BAR_COLOR resABarColor;
+    S_2CH_MENU_COLOR menuColor;
+    S_2CH_THREAD_COLOR threadColor;
+    S_2CH_ITA_COLOR cateOnColor;
+    S_2CH_ITA_COLOR cateOffColor;
+    S_2CH_FORM_COLOR formColor;
+    S_2CH_TXT_COLOR menuWinColor;
+    int running;
+    int sel;
+    int tateFlag;
+    char cwDir[256];
+    char* logDir;
+    int pgCursorX, pgCursorY;
+    SceCtrlData pad;
+    SceCtrlData oldPad;
+    MESSAGE_HELPER mh;
+} S_2CH;
 
 int psp2ch(void);
 void psp2chStart(void);

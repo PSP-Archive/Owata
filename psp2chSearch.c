@@ -2,12 +2,11 @@
 * $Id$
 */
 
-#include "pspdialogs.h"
 #include <stdio.h>
 #include <malloc.h>
 #include <time.h>
-#include <pspctrl.h>
 #include "pg.h"
+#include "psp2ch.h"
 #include "psp2chSearch.h"
 #include "psp2chIta.h"
 #include "psp2chThread.h"
@@ -15,22 +14,9 @@
 #include "psp2chRes.h"
 #include "psp2chForm.h"
 
-extern int sel; // psp2ch.c
-extern int tateFlag; // psp2ch.c
-extern SceCtrlData pad; // psp2ch.c
-extern SceCtrlData oldPad; // psp2ch.c
-extern MESSAGE_HELPER mh; // psp2ch.c
-extern void* framebuffer; // pg.c
-extern unsigned long pgCursorX, pgCursorY; // pg.c
+extern S_2CH s2ch; // psp2ch.c
 extern char keyWords[128]; // psp2chThread.c
 extern int preLine; // psp2chRes.c
-extern S_2CH_RES* resList; // psp2chRes.c
-extern S_2CH_ITA* itaList; // psp2chIta.c
-extern S_2CH_SCREEN ita; // psp2chIta.c
-extern S_2CH_THREAD_COLOR threadColor; // psp2ch.c
-
-S_2CH_FAVORITE* findList;
-S_2CH_SCREEN find;
 
 int psp2chSearch(int retSel)
 {
@@ -39,18 +25,18 @@ int psp2chSearch(int retSel)
     static int ret = 0;
     int lineEnd, rMenu;
 
-    if (findList == NULL)
+    if (s2ch.findList == NULL)
     {
         if (psp2chSearchList() < 0)
         {
-            sel = retSel;
+            s2ch.sel = retSel;
             return 0;
         }
         ret = retSel;
-        find.start = 0;
-        find.select = 0;
+        s2ch.find.start = 0;
+        s2ch.find.select = 0;
     }
-    if (tateFlag)
+    if (s2ch.tateFlag)
     {
         lineEnd = 35;
     }
@@ -58,16 +44,16 @@ int psp2chSearch(int retSel)
     {
         lineEnd = 20;
     }
-    if(sceCtrlPeekBufferPositive(&pad, 1))
+    if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
     {
-        rMenu = psp2chCursorSet(&find, lineEnd);
+        rMenu = psp2chCursorSet(&s2ch.find, lineEnd);
         if (rMenu)
         {
             menuStr = "　↑ : 先頭　　　↓ : 最後　　　　□ : 全板検索";
         }
         else
         {
-            if (tateFlag)
+            if (s2ch.tateFlag)
             {
                 menuStr = "　L : 決定　　　　　□ : 板一覧　　　　△ : お気に入り　　　　× : 戻る　　　R : メニュー切替";
             }
@@ -76,65 +62,65 @@ int psp2chSearch(int retSel)
                 menuStr = "　○ : 決定　　　　　□ : 板一覧　　　　△ : お気に入り　　　　× : 戻る　　　R : メニュー切替";
             }
         }
-        if (pad.Buttons != oldPad.Buttons)
+        if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
-            oldPad = pad;
-            if (pad.Buttons & PSP_CTRL_SELECT)
+            s2ch.oldPad = s2ch.pad;
+            if (s2ch.pad.Buttons & PSP_CTRL_SELECT)
             {
-                tateFlag = (tateFlag) ? 0 : 1;
+                s2ch.tateFlag = (s2ch.tateFlag) ? 0 : 1;
             }
-            else if((!tateFlag && pad.Buttons & PSP_CTRL_CIRCLE) || (tateFlag && pad.Buttons & PSP_CTRL_LTRIGGER))
+            else if((!s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_CIRCLE) || (s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_LTRIGGER))
             {
                 if (rMenu)
                 {
                 }
                 else
                 {
-                    free(resList);
-                    resList = NULL;
+                    free(s2ch.resList);
+                    s2ch.resList = NULL;
                     preLine = -2;
                     pgFillvram(WHITE, 0, 0, SCR_WIDTH, BUF_HEIGHT);
-                    sel = 8;
+                    s2ch.sel = 8;
                     return 0;
                 }
             }
-            else if(pad.Buttons & PSP_CTRL_CROSS)
+            else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
             {
                 if (rMenu)
                 {
                 }
                 else
                 {
-                    sel = ret;
+                    s2ch.sel = ret;
                 }
             }
-            else if(pad.Buttons & PSP_CTRL_TRIANGLE)
+            else if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
             {
                 if (rMenu)
                 {
                 }
                 else
                 {
-                    sel = 1;
+                    s2ch.sel = 1;
                 }
             }
-            else if(pad.Buttons & PSP_CTRL_SQUARE)
+            else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
             {
                 if (rMenu)
                 {
                     if (psp2chThreadSearch() == 0 && keyWords[0])
                     {
-                        if (findList)
+                        if (s2ch.findList)
                         {
-                            free(findList);
-                            findList = NULL;
+                            free(s2ch.findList);
+                            s2ch.findList = NULL;
                         }
                         return 0;
                     }
                 }
                 else
                 {
-                    sel = 2;
+                    s2ch.sel = 2;
                 }
             }
         }
@@ -263,25 +249,25 @@ int psp2chSearchList(void)
         case 200: // OK
             break;
         default:
-            memset(&mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(mh.message, "HTTP error\nhost %s\nStatus code %d", findHost, ret);
-            pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&oldPad, 1);
+            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+            sprintf(s2ch.mh.message, "HTTP error\nhost %s\nStatus code %d", findHost, ret);
+            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
             psp2chCloseSocket(mySocket);
             return -1;
     }
     ret = psp2chGetHttpHeaders(mySocket, &resHeader);
-    findList = (S_2CH_FAVORITE*)realloc(findList, sizeof(S_2CH_FAVORITE) * FIND_MAX_COUNT);
-    if (findList == NULL)
+    s2ch.findList = (S_2CH_FAVORITE*)realloc(s2ch.findList, sizeof(S_2CH_FAVORITE) * FIND_MAX_COUNT);
+    if (s2ch.findList == NULL)
     {
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(mh.message, "memorry error");
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&oldPad, 1);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        strcpy(s2ch.mh.message, "memorry error");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         psp2chCloseSocket(mySocket);
         return -1;
     }
-    find.count = 0;
+    s2ch.find.count = 0;
     sprintf(buf, "http://%s/ からデータを転送しています...", findHost);
     pgMenuBar(buf);
     sceDisplayWaitVblankStart();
@@ -319,7 +305,7 @@ int psp2chSearchList(void)
         q = strchr(p, '/');
         if (q == NULL) break;
         *q = '\0';
-        strcpy(findList[find.count].host, p);
+        strcpy(s2ch.findList[s2ch.find.count].host, p);
         // dir
         q++;
         p = strstr(q, "read.cgi/");
@@ -328,10 +314,10 @@ int psp2chSearchList(void)
         q = strchr(p, '/');
         if (q == NULL) break;
         *q = '\0';
-        strcpy(findList[find.count].dir, p);
+        strcpy(s2ch.findList[s2ch.find.count].dir, p);
         // dat
         q++;
-        sscanf(q, "%d", &findList[find.count].dat);
+        sscanf(q, "%d", &s2ch.findList[s2ch.find.count].dat);
         // subject
         p = strchr(q, '>');
         if (p == NULL) break;
@@ -339,7 +325,7 @@ int psp2chSearchList(void)
         q = strchr(p, '<');
         if (q == NULL) break;
         *q = '\0';
-        psp2chEucToSjis(findList[find.count].subject, p);
+        psp2chEucToSjis(s2ch.findList[s2ch.find.count].subject, p);
         // ita title
         q++;
         p = strstr(q, "<a");
@@ -351,9 +337,9 @@ int psp2chSearchList(void)
         if (q == NULL) break;
         q -= 2; // 板を削除
         *q = '\0';
-        psp2chEucToSjis(findList[find.count].title, p);
-        find.count++;
-        if (find.count >= FIND_MAX_COUNT)
+        psp2chEucToSjis(s2ch.findList[s2ch.find.count].title, p);
+        s2ch.find.count++;
+        if (s2ch.find.count >= FIND_MAX_COUNT)
         {
             break;
         }
@@ -371,7 +357,7 @@ void psp2chDrawSearch(int scrollX)
     char buf[32];
     int lineEnd, scrW, scrH;
 
-    if (tateFlag)
+    if (s2ch.tateFlag)
     {
         lineEnd = 35;
         scrW = SCR_HEIGHT + scrollX;
@@ -383,47 +369,47 @@ void psp2chDrawSearch(int scrollX)
         scrW = SCR_WIDTH + scrollX;
         scrH = SCR_HEIGHT;
     }
-    start = find.start;
-    if (start + lineEnd > find.count)
+    start = s2ch.find.start;
+    if (start + lineEnd > s2ch.find.count)
     {
-        start = find.count - lineEnd;
+        start = s2ch.find.count - lineEnd;
     }
     if (start < 0)
     {
         start = 0;
     }
-    pgFillvram(threadColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
-    pgCursorY = 0;
+    pgFillvram(s2ch.threadColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
+    s2ch.pgCursorY = 0;
     for (i = start; i < start + lineEnd; i++)
     {
-        if (i >= find.count)
+        if (i >= s2ch.find.count)
         {
             return;
         }
-        pgCursorX = 0;
+        s2ch.pgCursorX = 0;
         sprintf(buf, "%4d", i + 1);
-        if (i == find.select)
+        if (i == s2ch.find.select)
         {
-            pgFillvram(threadColor.s_bg, 0, pgCursorY, BUF_WIDTH, LINE_PITCH);
-            pgPrintNumber(i + 1, threadColor.s_num, threadColor.s_bg);
+            pgFillvram(s2ch.threadColor.s_bg, 0, s2ch.pgCursorY, BUF_WIDTH, LINE_PITCH);
+            pgPrintNumber(i + 1, s2ch.threadColor.s_num, s2ch.threadColor.s_bg);
         }
         else
         {
-            pgPrintNumber(i + 1, threadColor.num, threadColor.bg);
+            pgPrintNumber(i + 1, s2ch.threadColor.num, s2ch.threadColor.bg);
         }
-        pgCursorX = THREAD_ID;
-        if (i == find.select)
+        s2ch.pgCursorX = THREAD_ID;
+        if (i == s2ch.find.select)
         {
-            pgPrint(findList[i].title, threadColor.s_category, threadColor.s_bg, scrW);
-            pgCursorX += 8;
-            pgPrint(findList[i].subject, threadColor.s_text1, threadColor.s_bg, scrW);
+            pgPrint(s2ch.findList[i].title, s2ch.threadColor.s_category, s2ch.threadColor.s_bg, scrW);
+            s2ch.pgCursorX += 8;
+            pgPrint(s2ch.findList[i].subject, s2ch.threadColor.s_text1, s2ch.threadColor.s_bg, scrW);
         }
         else
         {
-            pgPrint(findList[i].title, threadColor.category, threadColor.bg, scrW);
-            pgCursorX += 8;
-            pgPrint(findList[i].subject, threadColor.text1, threadColor.bg, scrW);
+            pgPrint(s2ch.findList[i].title, s2ch.threadColor.category, s2ch.threadColor.bg, scrW);
+            s2ch.pgCursorX += 8;
+            pgPrint(s2ch.findList[i].subject, s2ch.threadColor.text1, s2ch.threadColor.bg, scrW);
         }
-        pgCursorY += LINE_PITCH;
+        s2ch.pgCursorY += LINE_PITCH;
     }
 }

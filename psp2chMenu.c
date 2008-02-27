@@ -2,31 +2,19 @@
 * $Id$
 */
 
-#include "pspdialogs.h"
 #include <stdio.h>
 #include <malloc.h>
 #include <pspdebug.h>
-#include <pspctrl.h>
 #include "pg.h"
+#include "psp2ch.h"
 #include "psp2chMenu.h"
+#include "psp2chRes.h"
 
-extern int running; //main.c
-extern char cwDir[256]; //main.c
-extern unsigned long pgCursorX, pgCursorY; // pg.c
+extern S_2CH s2ch; // psp2ch.c
+extern char keyWords[128]; //psp2ch.c
 extern unsigned int pixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
 extern unsigned int winPixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
 extern unsigned int* printBuf; // pg.c
-extern void* framebuffer; // pg.c
-extern char* logDir; // psp2ch.c
-extern int sel; // psp2ch.c
-extern int tateFlag; // psp2ch.c
-extern SceCtrlData pad; // psp2ch.c
-extern SceCtrlData oldPad; // psp2ch.c
-extern MESSAGE_HELPER mh; // psp2ch.c
-extern S_2CH_TXT_COLOR menuWinColor; // psp2ch.c
-extern char keyWords[128]; //psp2ch.c
-extern S_2CH_RES* resList;
-extern S_2CH_SCREEN res;
 
 const char* ngNameFile = "ngname.txt";
 const char* ngIDFile = "ngid.txt";
@@ -45,7 +33,7 @@ int psp2chMenu(int pixelsX, int pixelsY)
     static S_2CH_SCREEN menu;
     int startX, startY, scrX, scrY;
 
-    if (tateFlag)
+    if (s2ch.tateFlag)
     {
         startX = (SCR_HEIGHT - MENU_WIDTH) / 2;
         startY = (SCR_WIDTH - MENU_HEIGHT) / 2;    }
@@ -59,15 +47,15 @@ int psp2chMenu(int pixelsX, int pixelsY)
     lineEnd = MENU_ITEM;
     menu.count = 2;
     printBuf = winPixels;
-    while (running)
+    while (s2ch.running)
     {
-        if(sceCtrlPeekBufferPositive(&pad, 1))
+        if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
         {
             psp2chCursorSet(&menu, lineEnd);
-            if (pad.Buttons != oldPad.Buttons)
+            if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
             {
-                oldPad = pad;
-                if((!tateFlag && pad.Buttons & PSP_CTRL_CIRCLE) || (tateFlag && pad.Buttons & PSP_CTRL_LTRIGGER))
+                s2ch.oldPad = s2ch.pad;
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_CIRCLE) || (s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_LTRIGGER))
                 {
                     switch (menu.select)
                     {
@@ -84,19 +72,19 @@ int psp2chMenu(int pixelsX, int pixelsY)
                     pgCopy(pixelsX, pixelsY);
                     printBuf = winPixels;
                 }
-                else if(pad.Buttons & PSP_CTRL_CROSS)
+                else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
                 {
                     printBuf = pixels;
                     break;
                 }
-                else if(pad.Buttons & PSP_CTRL_TRIANGLE)
+                else if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
                 {
                 }
-                else if(pad.Buttons & PSP_CTRL_SQUARE)
+                else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
                 {
                 }
             }
-            if (tateFlag)
+            if (s2ch.tateFlag)
             {
                 menuStr = "　L : 決定　　　　× : 戻る　　　";
             }
@@ -131,7 +119,7 @@ void psp2chMenuNG(int pixelsX, int pixelsY)
     static S_2CH_SCREEN menu;
     int startX, startY, scrX, scrY;
 
-    if (tateFlag)
+    if (s2ch.tateFlag)
     {
         startX = (SCR_HEIGHT - MENU_NG_WIDTH) / 2;
         startY = (SCR_WIDTH - MENU_NG_HEIGHT) / 2;    }
@@ -149,20 +137,20 @@ void psp2chMenuNG(int pixelsX, int pixelsY)
     framebuffer = sceGuSwapBuffers();
     pgCopy(pixelsX, pixelsY);
     printBuf = winPixels;
-    while (running)
+    while (s2ch.running)
     {
-        if(sceCtrlPeekBufferPositive(&pad, 1))
+        if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
         {
             psp2chCursorSet(&menu, lineEnd);
-            if (pad.Buttons != oldPad.Buttons)
+            if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
             {
-                oldPad = pad;
-                if(pad.Buttons & PSP_CTRL_CIRCLE)
+                s2ch.oldPad = s2ch.pad;
+                if(s2ch.pad.Buttons & PSP_CTRL_CIRCLE)
                 {
                     switch (menu.select)
                     {
                     case 0: // NG name add
-                        pgFillvram(menuWinColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
+                        pgFillvram(s2ch.menuWinColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
                         pgCopy(0,0);
                         framebuffer = sceGuSwapBuffers();
                         if (psp2chInputDialog(text1, text2) == 0 && keyWords[0])
@@ -183,7 +171,7 @@ void psp2chMenuNG(int pixelsX, int pixelsY)
                     pgCopy(pixelsX, pixelsY);
                     printBuf = winPixels;
                 }
-                else if(pad.Buttons & PSP_CTRL_CROSS)
+                else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
                 {
                     break;
                 }
@@ -210,7 +198,7 @@ char* psp2chGetNGBuf(const char* file, char* buf)
     char path[256];
     int ret;
 
-    sprintf(path, "%s/%s/%s", cwDir, logDir, file);
+    sprintf(path, "%s/%s/%s", s2ch.cwDir, s2ch.logDir, file);
     ret = sceIoGetstat(path, &st);
     if (ret < 0)
     {
@@ -219,20 +207,20 @@ char* psp2chGetNGBuf(const char* file, char* buf)
     buf = (char*)malloc(st.st_size + 1);
     if (buf == NULL)
     {
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(mh.message, "memorry error\npsp2chNGDel() buf");
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&oldPad, 1);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        strcpy(s2ch.mh.message, "memorry error\npsp2chNGDel() buf");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return NULL;
     }
     fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
     if (fd < 0)
     {
         free(buf);
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(mh.message, "NG File open error\n%s", path);
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&oldPad, 1);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        sprintf(s2ch.mh.message, "NG File open error\n%s", path);
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return NULL;
     }
     sceIoRead(fd, buf, st.st_size);
@@ -255,7 +243,7 @@ int psp2chNGDel(const char* file, int pixelsX, int pixelsY)
     static S_2CH_SCREEN menu;
     int startX, startY, scrX, scrY;
 
-    if (tateFlag)
+    if (s2ch.tateFlag)
     {
         startX = (SCR_HEIGHT - MENU_NGLIST_WIDTH) / 2;
         startY = (SCR_WIDTH - 400) / 2;
@@ -294,10 +282,10 @@ int psp2chNGDel(const char* file, int pixelsX, int pixelsY)
     if (list == NULL)
     {
         free(buf);
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(mh.message, "memorry error\npsp2chNGDel() list");
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&oldPad, 1);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        sprintf(s2ch.mh.message, "memorry error\npsp2chNGDel() list");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return -1;
     }
     p = buf;
@@ -312,26 +300,26 @@ int psp2chNGDel(const char* file, int pixelsX, int pixelsY)
         list[i] = p;
         p = q + 1;
     }
-    sprintf(path, "%s/%s/%s", cwDir, logDir, file);
-    while (running)
+    sprintf(path, "%s/%s/%s", s2ch.cwDir, s2ch.logDir, file);
+    while (s2ch.running)
     {
-        if(sceCtrlPeekBufferPositive(&pad, 1))
+        if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
         {
             psp2chCursorSet(&menu, lineEnd);
-            if (pad.Buttons != oldPad.Buttons)
+            if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
             {
-                oldPad = pad;
-                if(pad.Buttons & PSP_CTRL_CIRCLE)
+                s2ch.oldPad = s2ch.pad;
+                if(s2ch.pad.Buttons & PSP_CTRL_CIRCLE)
                 {
                     fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
                     if (fd < 0)
                     {
                         free(list);
                         free(buf);
-                        memset(&mh,0,sizeof(MESSAGE_HELPER));
-                        sprintf(mh.message, "NG File open error\n%s", path);
-                        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-                        sceCtrlPeekBufferPositive(&oldPad, 1);
+                        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+                        sprintf(s2ch.mh.message, "NG File open error\n%s", path);
+                        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+                        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
                         return -1;
                     }
                     for (i = 0; i < menu.count; i++)
@@ -343,11 +331,11 @@ int psp2chNGDel(const char* file, int pixelsX, int pixelsY)
                     psp2chResCheckNG();
                     break;
                 }
-                else if(pad.Buttons & PSP_CTRL_CROSS)
+                else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
                 {
                     break;
                 }
-                else if(pad.Buttons & PSP_CTRL_SQUARE)
+                else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
                 {
                     menu.count--;
                     for (i = menu.select; i < menu.count; i++)
@@ -378,14 +366,14 @@ int psp2chNGAdd(const char* file, char* val)
     SceUID fd;
     char path[256];
 
-    sprintf(path, "%s/%s/%s", cwDir, logDir, file);
+    sprintf(path, "%s/%s/%s", s2ch.cwDir, s2ch.logDir, file);
     fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777);
     if (fd < 0)
     {
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(mh.message, "NG File open error\n%s", path);
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&oldPad, 1);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        sprintf(s2ch.mh.message, "NG File open error\n%s", path);
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return -1;
     }
     sceIoWrite(fd, val, strlen(val));
@@ -406,8 +394,8 @@ void psp2chDrawMenu(char** menuList, S_2CH_SCREEN menu, int x, int y, int width,
 {
     int i, start, lineEnd;
 
-    pgCursorX = x;
-    pgCursorY = y;
+    s2ch.pgCursorX = x;
+    s2ch.pgCursorY = y;
     lineEnd = height / LINE_PITCH;
     start = menu.start;
     if (start + lineEnd > menu.count)
@@ -418,7 +406,7 @@ void psp2chDrawMenu(char** menuList, S_2CH_SCREEN menu, int x, int y, int width,
     {
         start = 0;
     }
-    pgFillvram(menuWinColor.bg, x, y, width, height);
+    pgFillvram(s2ch.menuWinColor.bg, x, y, width, height);
     for (i = start; i < start + lineEnd; i++)
     {
         if (i >= menu.count)
@@ -427,14 +415,14 @@ void psp2chDrawMenu(char** menuList, S_2CH_SCREEN menu, int x, int y, int width,
         }
         if (i == menu.select)
         {
-            pgFillvram(menuWinColor.s_bg, x, pgCursorY, width, LINE_PITCH);
-            pgPrint(menuList[i], menuWinColor.s_text, menuWinColor.s_bg, x + width);
+            pgFillvram(s2ch.menuWinColor.s_bg, x, s2ch.pgCursorY, width, LINE_PITCH);
+            pgPrint(menuList[i], s2ch.menuWinColor.s_text, s2ch.menuWinColor.s_bg, x + width);
         }
         else
         {
-            pgPrint(menuList[i], menuWinColor.text, menuWinColor.bg, x + width);
+            pgPrint(menuList[i], s2ch.menuWinColor.text, s2ch.menuWinColor.bg, x + width);
         }
-        pgCursorX = x;
-        pgCursorY += LINE_PITCH;
+        s2ch.pgCursorX = x;
+        s2ch.pgCursorY += LINE_PITCH;
     }
 }

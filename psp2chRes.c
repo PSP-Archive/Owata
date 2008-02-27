@@ -2,13 +2,12 @@
 * $Id$
 */
 
-#include "pspdialogs.h"
 #include <stdio.h>
 #include <malloc.h>
 #include <time.h>
 #include <pspdebug.h>
-#include <pspctrl.h>
 #include "pg.h"
+#include "psp2ch.h"
 #include "psp2chIta.h"
 #include "psp2chThread.h"
 #include "psp2chRes.h"
@@ -18,43 +17,13 @@
 #include "psp2chMenu.h"
 #include "utf8.h"
 
-extern int running; //main.c
-extern char cwDir[256]; //main.c
-extern unsigned long pgCursorX, pgCursorY; // pg.c
-extern void* framebuffer; // pg.c
-extern char* logDir; // psp2ch.c
-extern int sel; // psp2ch.c
-extern int tateFlag; // psp2ch.c
-extern SceCtrlData pad; // psp2ch.c
-extern SceCtrlData oldPad; // psp2ch.c
-extern MESSAGE_HELPER mh; // psp2ch.c
-extern S_2CH_FAVORITE* favList; // psp2chFavorite.c
-extern S_2CH_SCREEN fav; // psp2chFavorite.c
-extern S_2CH_ITA* itaList; // psp2chIta.c
-extern S_2CH_SCREEN ita; // psp2chIta.c
-extern S_2CH_THREAD* threadList; // psp2chThread.c
-extern S_2CH_SCREEN thread; // psp2chThread.c
-extern S_2CH_FAVORITE* findList; // psp2chSearch.c
-extern S_2CH_SCREEN find; // psp2chSearch.c
+extern S_2CH s2ch; // psp2ch.c
 extern int* threadSort; // psp2chThread.c
-extern S_2CH_HEADER_COLOR resHeaderColor; // psp2ch.c
-extern S_2CH_RES_COLOR resColor; // psp2ch.c
-extern S_2CH_BAR_COLOR resBarColor; // psp2ch.c
 extern const char* ngNameFile;
 extern const char* ngIDFile;
 
 int preLine = -2;
 char* resBuffer = NULL;
-S_2CH_RES* resList = NULL;
-S_2CH_SCREEN res;
-S_2CH_URL_ANCHOR urlAnchor[50];
-S_2CH_RES_ANCHOR resAnchor[50];
-S_2CH_ID_ANCHOR idAnchor[40];
-S_2CH_NUM_ANCHOR numAnchor[40];
-int urlAnchorCount = 0;
-int resAnchorCount = 0;
-int idAnchorCount = 0;
-int numAnchorCount = 0;
 
 static char jmpHost[32], jmpDir[32], jmpTitle[32];
 static int jmpDat;
@@ -64,11 +33,11 @@ static int jmpDat;
 ***************/
 int psp2chFavoriteRes(int ret)
 {
-    return psp2chRes(favList[fav.select].host, favList[fav.select].dir, favList[fav.select].title, favList[fav.select].dat, ret);
+    return psp2chRes(s2ch.favList[s2ch.fav.select].host, s2ch.favList[s2ch.fav.select].dir, s2ch.favList[s2ch.fav.select].title, s2ch.favList[s2ch.fav.select].dat, ret);
 }
 int psp2chThreadRes(int ret)
 {
-    return psp2chRes(itaList[ita.select].host, itaList[ita.select].dir,itaList[ita.select].title,threadList[threadSort[thread.select]].dat,ret);
+    return psp2chRes(s2ch.itaList[s2ch.ita.select].host, s2ch.itaList[s2ch.ita.select].dir,s2ch.itaList[s2ch.ita.select].title,s2ch.threadList[threadSort[s2ch.thread.select]].dat,ret);
 }
 int psp2chJumpRes(int ret)
 {
@@ -76,7 +45,7 @@ int psp2chJumpRes(int ret)
 }
 int psp2chSearchRes(int ret)
 {
-    return psp2chRes(findList[find.select].host, findList[find.select].dir, findList[find.select].title, findList[find.select].dat, ret);
+    return psp2chRes(s2ch.findList[s2ch.find.select].host, s2ch.findList[s2ch.find.select].dir, s2ch.findList[s2ch.find.select].title, s2ch.findList[s2ch.find.select].dat, ret);
 }
 int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
 {
@@ -91,7 +60,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
     static int resMenu = -1, urlMenu = -1, idMenu = -1, numMenu = -1;
     int lineEnd, rMenu;
 
-    if (tateFlag)
+    if (s2ch.tateFlag)
     {
         lineEnd = 35;
     }
@@ -99,66 +68,61 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
     {
         lineEnd = 20;
     }
-    if (resList == NULL)
+    if (s2ch.resList == NULL)
     {
         if (psp2chResList(host, dir, title, dat) < 0)
         {
-            sel = ret;
+            s2ch.sel = ret;
             return -1;
         }
         totalLine = psp2chResSetLine(&bar);
-        if (res.start > totalLine - lineEnd)
+        if (s2ch.res.start > totalLine - lineEnd)
         {
-            res.start = totalLine - lineEnd;
+            s2ch.res.start = totalLine - lineEnd;
         }
-        if (res.start < 0)
+        if (s2ch.res.start < 0)
         {
-            res.start = 0;
+            s2ch.res.start = 0;
         }
     }
-    if(sceCtrlPeekBufferPositive(&pad, 1))
+    if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
     {
         rMenu = psp2chResCursorMove(&totalLine, &lineEnd, &cursorY, bar.view);
-        if (pad.Buttons != oldPad.Buttons)
+        if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
-            oldPad = pad;
+            s2ch.oldPad = s2ch.pad;
             // SELECTボタン
-            if (pad.Buttons & PSP_CTRL_SELECT)
+            if (s2ch.pad.Buttons & PSP_CTRL_SELECT)
             {
-                tateFlag = (tateFlag) ? 0 : 1;
+                s2ch.tateFlag = (s2ch.tateFlag) ? 0 : 1;
                 totalLine = psp2chResSetLine(&bar);
-                if (res.start > totalLine - lineEnd)
+                if (s2ch.res.start > totalLine - lineEnd)
                 {
-                    res.start = totalLine - lineEnd;
+                    s2ch.res.start = totalLine - lineEnd;
                 }
-                if (res.start < 0)
+                if (s2ch.res.start < 0)
                 {
-                    res.start = 0;
+                    s2ch.res.start = 0;
                 }
-                for (i = 0; i < 50; i++)
-                {
-                    resAnchor[i].x2 = 0;
-                    urlAnchor[i].x2 = 0;
-                }
-                preLine = -2;
+                psp2chResResetAnchors();
             }
             // STARTボタン
-            else if(pad.Buttons & PSP_CTRL_START)
+            else if(s2ch.pad.Buttons & PSP_CTRL_START)
             {
-                psp2chMenu(0, res.start*LINE_PITCH);
+                psp2chMenu(0, s2ch.res.start*LINE_PITCH);
                 totalLine = psp2chResSetLine(&bar);
-                if (res.start > totalLine - lineEnd)
+                if (s2ch.res.start > totalLine - lineEnd)
                 {
-                    res.start = totalLine - lineEnd;
+                    s2ch.res.start = totalLine - lineEnd;
                 }
-                if (res.start < 0)
+                if (s2ch.res.start < 0)
                 {
-                    res.start = 0;
+                    s2ch.res.start = 0;
                 }
                 preLine = -2;
             }
             // ○ボタン
-            else if((!tateFlag && pad.Buttons & PSP_CTRL_CIRCLE) || (tateFlag && pad.Buttons & PSP_CTRL_LTRIGGER))
+            else if((!s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_CIRCLE) || (s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_LTRIGGER))
             {
                 /* レスアンカー表示 */
                 if (resMenu >= 0)
@@ -170,17 +134,17 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                 {
                     psp2chSaveIdx(title, dat);
                     /* 2ちゃんリンク移動 */
-                    if ((p = strstr(urlAnchor[urlMenu].host, ".2ch.net")) && p[8] == '\0')
+                    if ((p = strstr(s2ch.urlAnchor[urlMenu].host, ".2ch.net")) && p[8] == '\0')
                     {
-                        if (itaList == NULL)
+                        if (s2ch.itaList == NULL)
                         {
                             if (psp2chItaList() < 0)
                             {
                                 return ret;
                             }
                         }
-                        strcpy(jmpHost, urlAnchor[urlMenu].host);
-                        memcpy(path, urlAnchor[urlMenu].path, 256);
+                        strcpy(jmpHost, s2ch.urlAnchor[urlMenu].host);
+                        memcpy(path, s2ch.urlAnchor[urlMenu].path, 256);
                         path[255] = '\0';
                         if ((p = strstr(path, "test/read.cgi/")))
                         {
@@ -196,12 +160,12 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                             q++;
                             sscanf(q, "%d", &jmpDat);
                             jmpTitle[0] = '\0';
-                            for (i = 0; i < ita.count; i++)
+                            for (i = 0; i < s2ch.ita.count; i++)
                             {
-                                if (strcmp(itaList[i].host, urlAnchor[urlMenu].host) == 0 &&
-                                        strcmp(itaList[i].dir, jmpDir) == 0)
+                                if (strcmp(s2ch.itaList[i].host, s2ch.urlAnchor[urlMenu].host) == 0 &&
+                                        strcmp(s2ch.itaList[i].dir, jmpDir) == 0)
                                 {
-                                    strcpy(jmpTitle, itaList[i].title);
+                                    strcpy(jmpTitle, s2ch.itaList[i].title);
                                     break;
                                 }
                             }
@@ -214,25 +178,25 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                         {
                             return ret;
                         }
-                        memset(&mh,0,sizeof(MESSAGE_HELPER));
-                        mh.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT |
+                        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+                        s2ch.mh.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT |
                             PSP_UTILITY_MSGDIALOG_OPTION_YESNO_BUTTONS | PSP_UTILITY_MSGDIALOG_OPTION_DEFAULT_NO;
-                        strcpy(mh.message, TEXT_11);
-                        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-                        sceCtrlPeekBufferPositive(&oldPad, 1);
-                        if (mh.buttonPressed == PSP_UTILITY_MSGDIALOG_RESULT_YES)
+                        strcpy(s2ch.mh.message, TEXT_11);
+                        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+                        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+                        if (s2ch.mh.buttonPressed == PSP_UTILITY_MSGDIALOG_RESULT_YES)
                         {
-                            free(resList);
-                            resList = NULL;
-                            res.start = 0;
-                            sel = 6;
+                            free(s2ch.resList);
+                            s2ch.resList = NULL;
+                            s2ch.res.start = 0;
+                            s2ch.sel = 6;
                             return ret;
                         }
                     }
                     /* 外部リンク */
                     else
                     {
-                        psp2chUrlAnchor(urlMenu, title, dat, res.start*LINE_PITCH);
+                        psp2chUrlAnchor(urlMenu, title, dat, s2ch.res.start*LINE_PITCH);
                     }
                 }
                 /* ID抽出表示 */
@@ -248,40 +212,40 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                 /* 投稿フォーム */
                 else
                 {
-                    tmp = tateFlag;
-                    tateFlag = 0;
+                    tmp = s2ch.tateFlag;
+                    s2ch.tateFlag = 0;
                     if (message == NULL)
                     {
                         message = (char*)calloc(1, 2048);
                     }
                     if (message == NULL)
                     {
-                        memset(&mh,0,sizeof(MESSAGE_HELPER));
-                        sprintf(mh.message, "memorry error\nForm message");
-                        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-                        sceCtrlPeekBufferPositive(&oldPad, 1);
+                        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+                        sprintf(s2ch.mh.message, "memorry error\nForm message");
+                        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+                        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
                         return 0;
                     }
                     if (numMenu >= 0 && message[0] == '\0')
                     {
-                        sprintf(message, ">>%d\n", numAnchor[numMenu].num + 1);
+                        sprintf(message, ">>%d\n", s2ch.numAnchor[numMenu].num + 1);
                     }
-                    if (psp2chForm(host, dir, dat, resList[0].title, message) == 1)
+                    if (psp2chForm(host, dir, dat, s2ch.resList[0].title, message) == 1)
                     {
                         free(message);
                         message = NULL;
                         psp2chSaveIdx(title, dat);
                         psp2chGetDat(host, dir, title, dat);
                         psp2chResList(host, dir, title, dat);
-                        res.start++;
+                        s2ch.res.start++;
                         totalLine = psp2chResSetLine(&bar);
                     }
-                    tateFlag = tmp;
+                    s2ch.tateFlag = tmp;
                 }
                 preLine = -2;
             }
             // ×ボタン
-            else if(pad.Buttons & PSP_CTRL_CROSS)
+            else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
             {
                 if (rMenu)
                 {
@@ -289,34 +253,34 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                 else
                 {
                     psp2chSaveIdx(title, dat);
-                    if (threadList)
+                    if (s2ch.threadList)
                     {
                         psp2chSort(-1); // 前回のソート順で再ソート
                     }
-                    sel = ret;
+                    s2ch.sel = ret;
                     return ret;
                 }
             }
             // △ボタン
-            else if(pad.Buttons & PSP_CTRL_TRIANGLE)
+            else if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
             {
                 if (resMenu >= 0)
                 {
-                    if (resList[resAnchor[resMenu].res[0]].ng == 0)
+                    if (s2ch.resList[s2ch.resAnchor[resMenu].res[0]].ng == 0)
                     {
-                        for (i = 0, j = 0; i < resAnchor[resMenu].res[0]; i++)
+                        for (i = 0, j = 0; i < s2ch.resAnchor[resMenu].res[0]; i++)
                         {
-                            j += resList[i].line;
+                            j += s2ch.resList[i].line;
                             j++;
                         }
-                        res.start = j;
-                        if (res.start > totalLine - lineEnd)
+                        s2ch.res.start = j;
+                        if (s2ch.res.start > totalLine - lineEnd)
                         {
-                            res.start = totalLine - lineEnd;
+                            s2ch.res.start = totalLine - lineEnd;
                         }
-                        if (res.start < 0)
+                        if (s2ch.res.start < 0)
                         {
-                            res.start = 0;
+                            s2ch.res.start = 0;
                         }
                     }
                 }
@@ -326,19 +290,19 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                     psp2chGetDat(host, dir, title, dat);
                     psp2chResList(host, dir, title, dat);
                     totalLine = psp2chResSetLine(&bar);
-                    res.start++;
-                    if (res.start > totalLine - lineEnd)
+                    s2ch.res.start++;
+                    if (s2ch.res.start > totalLine - lineEnd)
                     {
-                        res.start = totalLine - lineEnd;
+                        s2ch.res.start = totalLine - lineEnd;
                     }
-                    if (res.start < 0)
+                    if (s2ch.res.start < 0)
                     {
-                        res.start = 0;
+                        s2ch.res.start = 0;
                     }
                 }
             }
             // □ボタン
-            else if(pad.Buttons & PSP_CTRL_SQUARE)
+            else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
             {
                 if (rMenu)
                 {
@@ -348,35 +312,35 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                 {
                     if (idMenu >= 0)
                     {
-                        psp2chNGAdd(ngIDFile, idAnchor[idMenu].id);
+                        psp2chNGAdd(ngIDFile, s2ch.idAnchor[idMenu].id);
                         psp2chResCheckNG();
                         totalLine = psp2chResSetLine(&bar);
-                        if (res.start > totalLine - lineEnd)
+                        if (s2ch.res.start > totalLine - lineEnd)
                         {
-                            res.start = totalLine - lineEnd;
+                            s2ch.res.start = totalLine - lineEnd;
                         }
                         preLine = -2;
                     }
                     else
                     {
-                        memset(&mh,0,sizeof(MESSAGE_HELPER));
-                        mh.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT |
+                        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+                        s2ch.mh.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT |
                             PSP_UTILITY_MSGDIALOG_OPTION_YESNO_BUTTONS | PSP_UTILITY_MSGDIALOG_OPTION_DEFAULT_NO;
-                        strcpy(mh.message, TEXT_5);
-                        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-                        sceCtrlPeekBufferPositive(&oldPad, 1);
-                        if (mh.buttonPressed == PSP_UTILITY_MSGDIALOG_RESULT_YES)
+                        strcpy(s2ch.mh.message, TEXT_5);
+                        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+                        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+                        if (s2ch.mh.buttonPressed == PSP_UTILITY_MSGDIALOG_RESULT_YES)
                         {
-                            sprintf(path, "%s/%s/%s/%d.dat", cwDir, logDir, title, dat);
+                            sprintf(path, "%s/%s/%s/%d.dat", s2ch.cwDir, s2ch.logDir, title, dat);
                             sceIoRemove(path);
-                            sprintf(path, "%s/%s/%s/%d.idx", cwDir, logDir, title, dat);
+                            sprintf(path, "%s/%s/%s/%d.idx", s2ch.cwDir, s2ch.logDir, title, dat);
                             sceIoRemove(path);
-                            if (threadList)
+                            if (s2ch.threadList)
                             {
-                                threadList[threadSort[thread.select]].old = 0;
+                                s2ch.threadList[threadSort[s2ch.thread.select]].old = 0;
                                 psp2chSort(-1);
                             }
-                            sel = ret;
+                            s2ch.sel = ret;
                             return 0;
                         }
                     }
@@ -387,8 +351,8 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         // 矢印カーソルにレスアンカーリンクがあるか
         for (i = 0; i < 50; i++)
         {
-            if (cursorY/LINE_PITCH+res.start == resAnchor[i].line &&
-                cursorX > resAnchor[i].x1 && cursorX < resAnchor[i].x2)
+            if (cursorY/LINE_PITCH+s2ch.res.start == s2ch.resAnchor[i].line &&
+                cursorX > s2ch.resAnchor[i].x1 && cursorX < s2ch.resAnchor[i].x2)
             {
                 resMenu = i;
                 break;
@@ -401,8 +365,8 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         // URLリンクがあるか
         for (i = 0; i < 50; i++)
         {
-            if (cursorY/LINE_PITCH+res.start == urlAnchor[i].line &&
-                cursorX > urlAnchor[i].x1 && cursorX < urlAnchor[i].x2)
+            if (cursorY/LINE_PITCH+s2ch.res.start == s2ch.urlAnchor[i].line &&
+                cursorX > s2ch.urlAnchor[i].x1 && cursorX < s2ch.urlAnchor[i].x2)
             {
                 urlMenu = i;
                 break;
@@ -415,8 +379,8 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         // IDの場所か
         for (i = 0; i < 40; i++)
         {
-            if (cursorY/LINE_PITCH+res.start == idAnchor[i].line &&
-                cursorX > idAnchor[i].x1 && cursorX < idAnchor[i].x2)
+            if (cursorY/LINE_PITCH+s2ch.res.start == s2ch.idAnchor[i].line &&
+                cursorX > s2ch.idAnchor[i].x1 && cursorX < s2ch.idAnchor[i].x2)
             {
                 idMenu = i;
                 break;
@@ -429,8 +393,8 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         // 番号の場所か
         for (i = 0; i < 40; i++)
         {
-            if (cursorY/LINE_PITCH+res.start == numAnchor[i].line &&
-                cursorX > numAnchor[i].x1 && cursorX < numAnchor[i].x2)
+            if (cursorY/LINE_PITCH+s2ch.res.start == s2ch.numAnchor[i].line &&
+                cursorX > s2ch.numAnchor[i].x1 && cursorX < s2ch.numAnchor[i].x2)
             {
                 numMenu = i;
                 break;
@@ -442,7 +406,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         }
         if (resMenu >= 0)
         {
-            if (tateFlag)
+            if (s2ch.tateFlag)
             {
                 menuStr = "　L : レス表\示　　　△ : レスに移動";
             }
@@ -453,7 +417,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         }
         else if (urlMenu >= 0)
         {
-            if (tateFlag)
+            if (s2ch.tateFlag)
             {
                 menuStr = "　L : リンク表\示　　　";
             }
@@ -464,7 +428,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         }
         else if (idMenu >= 0)
         {
-            if (tateFlag)
+            if (s2ch.tateFlag)
             {
                 menuStr = "　L : ID抽出　　　□ : NGID登録";
             }
@@ -475,7 +439,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         }
         else if (numMenu >= 0)
         {
-            if (tateFlag)
+            if (s2ch.tateFlag)
             {
                 menuStr = "　L : レスをする";
             }
@@ -488,11 +452,11 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         {
             // お気に入りリストにあるかチェック
             j = 0;
-            if (fav.count)
+            if (s2ch.fav.count)
             {
-                for (i = 0; i < fav.count; i++)
+                for (i = 0; i < s2ch.fav.count; i++)
                 {
-                    if (favList[i].dat == dat && strcmp(favList[i].title, title) == 0)
+                    if (s2ch.favList[i].dat == dat && strcmp(s2ch.favList[i].title, title) == 0)
                     {
                         j = 1;
                         break;
@@ -512,7 +476,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         }
         else
         {
-            if (tateFlag)
+            if (s2ch.tateFlag)
             {
                 menuStr = "　L : 書き込み　　　× : 戻る　　　　　△ : 更新　　　　　□ : 削除　　　R : メニュー切替";
             }
@@ -521,10 +485,10 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                 menuStr = "　○ : 書き込み　　　× : 戻る　　　　　△ : 更新　　　　　□ : 削除　　　R : メニュー切替";
             }
         }
-        psp2chDrawRes(res.start);
-        pgCopy(0, res.start*LINE_PITCH);
-        bar.start = res.start * LINE_PITCH;
-        pgScrollbar(bar, resBarColor);
+        psp2chDrawRes(s2ch.res.start);
+        pgCopy(0, s2ch.res.start*LINE_PITCH);
+        bar.start = s2ch.res.start * LINE_PITCH;
+        pgScrollbar(bar, s2ch.resBarColor);
         pgMenuBar(menuStr);
         pgPadCursor(cursorX,cursorY);
         sceDisplayWaitVblankStart();
@@ -537,35 +501,59 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
 上下左右キーでの移動
 アナログパッドの移動も追加
 *****************************/
+void psp2chResResetAnchors(void)
+{
+    int i;
+
+    for (i = 0; i < 50; i++)
+    {
+        s2ch.resAnchor[i].x1 = 0;
+        s2ch.resAnchor[i].x2 = 0;
+        s2ch.urlAnchor[i].x1 = 0;
+        s2ch.urlAnchor[i].x2 = 0;
+    }
+    for (i = 0; i < 40; i++)
+    {
+        s2ch.idAnchor[i].x1 = 0;
+        s2ch.idAnchor[i].x2 = 0;
+        s2ch.numAnchor[i].x1 = 0;
+        s2ch.numAnchor[i].x2 = 0;
+    }
+}
+
+/*****************************
+上下左右キーでの移動
+アナログパッドの移動も追加
+*****************************/
 int psp2chResCursorMove(int* totalLine, int* lineEnd, int* cursorY, int limitY)
 {
     static int keyStart = 0, keyRepeat = 0, rMenu = 0;
     static clock_t keyTime = 0;
     int padUp = 0, padDown = 0;
 
-    if (tateFlag)
+    if (s2ch.tateFlag)
     {
-        if (*cursorY == 0 && pad.Lx == 255)
+        if (*cursorY == 0 && s2ch.pad.Lx == 255)
         {
             padUp = 1;
         }
-        else if (*cursorY == limitY && pad.Lx == 0)
+        else if (*cursorY == limitY && s2ch.pad.Lx == 0)
         {
             padDown = 1;
         }
     }
     else
     {
-        if (*cursorY == 0 && pad.Ly == 0)
+        if (*cursorY == 0 && s2ch.pad.Ly == 0)
         {
             padUp = 1;
         }
-        else if (*cursorY == limitY && pad.Ly == 255)
+        else if (*cursorY == limitY && s2ch.pad.Ly == 255)
         {
             padDown = 1;
         }
     }
-    if(pad.Buttons & PSP_CTRL_RTRIGGER)
+    if(s2ch.pad.Buttons & PSP_CTRL_RTRIGGER)
     {
         rMenu = 1;
     }
@@ -573,9 +561,9 @@ int psp2chResCursorMove(int* totalLine, int* lineEnd, int* cursorY, int limitY)
     {
         rMenu = 0;
     }
-    if (pad.Buttons != oldPad.Buttons || keyRepeat)
+    if (s2ch.pad.Buttons != s2ch.oldPad.Buttons || keyRepeat)
     {
-        if (pad.Buttons != oldPad.Buttons)
+        if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
             keyStart = 1;
         }
@@ -585,58 +573,58 @@ int psp2chResCursorMove(int* totalLine, int* lineEnd, int* cursorY, int limitY)
         }
         keyTime = clock();
         keyRepeat = 0;
-        if((pad.Buttons & PSP_CTRL_UP && !tateFlag) || (pad.Buttons & PSP_CTRL_RIGHT && tateFlag) || padUp)
+        if((s2ch.pad.Buttons & PSP_CTRL_UP && !s2ch.tateFlag) || (s2ch.pad.Buttons & PSP_CTRL_RIGHT && s2ch.tateFlag) || padUp)
         {
             if (rMenu && !padUp)
             {
-                res.start = 0;
+                s2ch.res.start = 0;
             }
             else
             {
-                res.start--;
-                if (res.start < 0)
+                s2ch.res.start--;
+                if (s2ch.res.start < 0)
                 {
-                    res.start = 0;
+                    s2ch.res.start = 0;
                 }
             }
         }
-        if((pad.Buttons & PSP_CTRL_DOWN && !tateFlag) || (pad.Buttons & PSP_CTRL_LEFT && tateFlag) || padDown)
+        if((s2ch.pad.Buttons & PSP_CTRL_DOWN && !s2ch.tateFlag) || (s2ch.pad.Buttons & PSP_CTRL_LEFT && s2ch.tateFlag) || padDown)
         {
             if (rMenu && !padDown)
             {
-                res.start = *totalLine - *lineEnd;
+                s2ch.res.start = *totalLine - *lineEnd;
             }
             else
             {
-                res.start++;
-                if (res.start > *totalLine - *lineEnd)
+                s2ch.res.start++;
+                if (s2ch.res.start > *totalLine - *lineEnd)
                 {
-                    res.start = *totalLine - *lineEnd;
+                    s2ch.res.start = *totalLine - *lineEnd;
                 }
-                if (res.start < 0)
+                if (s2ch.res.start < 0)
                 {
-                    res.start = 0;
+                    s2ch.res.start = 0;
                 }
             }
         }
-        if((pad.Buttons & PSP_CTRL_LEFT && !tateFlag) || (pad.Buttons & PSP_CTRL_UP && tateFlag))
+        if((s2ch.pad.Buttons & PSP_CTRL_LEFT && !s2ch.tateFlag) || (s2ch.pad.Buttons & PSP_CTRL_UP && s2ch.tateFlag))
         {
-            res.start -= (*lineEnd - 2);
-            if (res.start < 0)
+            s2ch.res.start -= (*lineEnd - 2);
+            if (s2ch.res.start < 0)
             {
-                res.start = 0;
+                s2ch.res.start = 0;
             }
         }
-        if((pad.Buttons & PSP_CTRL_RIGHT && !tateFlag) || (pad.Buttons & PSP_CTRL_DOWN && tateFlag))
+        if((s2ch.pad.Buttons & PSP_CTRL_RIGHT && !s2ch.tateFlag) || (s2ch.pad.Buttons & PSP_CTRL_DOWN && s2ch.tateFlag))
         {
-            res.start += (*lineEnd - 2);
-            if (res.start > *totalLine - *lineEnd)
+            s2ch.res.start += (*lineEnd - 2);
+            if (s2ch.res.start > *totalLine - *lineEnd)
             {
-                res.start = *totalLine - *lineEnd;
+                s2ch.res.start = *totalLine - *lineEnd;
             }
-            if (res.start < 0)
+            if (s2ch.res.start < 0)
             {
-                res.start = 0;
+                s2ch.res.start = 0;
             }
         }
     }
@@ -669,19 +657,19 @@ int psp2chResSetLine(S_SCROLLBAR* bar)
 {
     int i, j;
 
-    if (tateFlag)
+    if (s2ch.tateFlag)
     {
         bar->view = 455;
         bar->x = RES_SCR_WIDTH_V;
         bar->y = 0;
         bar->w = RES_BAR_WIDTH_V;
         bar->h = 455;
-        for (i = 0, j = 0; i < res.count; i++)
+        for (i = 0, j = 0; i < s2ch.res.count; i++)
         {
-            resList[i].line = psp2chCountRes(i, RES_SCR_WIDTH_V);
-            if (resList[i].ng == 0)
+            s2ch.resList[i].line = psp2chCountRes(i, RES_SCR_WIDTH_V);
+            if (s2ch.resList[i].ng == 0)
             {
-                j += resList[i].line;
+                j += s2ch.resList[i].line;
                 j++;
             }
         }
@@ -693,12 +681,12 @@ int psp2chResSetLine(S_SCROLLBAR* bar)
         bar->y = 0;
         bar->w = RES_BAR_WIDTH;
         bar->h = 259;
-        for (i = 0, j = 0; i < res.count; i++)
+        for (i = 0, j = 0; i < s2ch.res.count; i++)
         {
-            resList[i].line = psp2chCountRes(i, RES_SCR_WIDTH);
-            if (resList[i].ng == 0)
+            s2ch.resList[i].line = psp2chCountRes(i, RES_SCR_WIDTH);
+            if (s2ch.resList[i].ng == 0)
             {
-                j += resList[i].line;
+                j += s2ch.resList[i].line;
                 j++;
             }
         }
@@ -715,9 +703,9 @@ void psp2chResPadMove(int* cursorX, int* cursorY, int limitX, int limitY)
     int padX, padY;
     int dL, dS;
 
-    padX = pad.Lx - 127;
-    padY = pad.Ly - 127;
-    if(pad.Buttons & PSP_CTRL_RTRIGGER)
+    padX = s2ch.pad.Lx - 127;
+    padY = s2ch.pad.Ly - 127;
+    if(s2ch.pad.Buttons & PSP_CTRL_RTRIGGER)
     {
         dL = 4;
         dS = 2;
@@ -727,7 +715,7 @@ void psp2chResPadMove(int* cursorX, int* cursorY, int limitX, int limitY)
         dL = 16;
         dS = 2;
     }
-    if (tateFlag)
+    if (s2ch.tateFlag)
     {
         if (padX < -PAD_CUTOFF)
         {
@@ -849,13 +837,13 @@ void psp2chResCheckNG(void)
     char* buf, *p, *q;
     int i;
 
-    if (resList == NULL)
+    if (s2ch.resList == NULL)
     {
         return;
     }
-    for (i = 0; i < res.count; i++)
+    for (i = 0; i < s2ch.res.count; i++)
     {
-        resList[i].ng = 0;
+        s2ch.resList[i].ng = 0;
     }
     buf = NULL;
     buf = psp2chGetNGBuf(ngNameFile, buf);
@@ -870,11 +858,11 @@ void psp2chResCheckNG(void)
                 break;
             }
             *q = '\0';
-            for (i = 0; i < res.count; i++)
+            for (i = 0; i < s2ch.res.count; i++)
             {
-                if (strstr(resList[i].name, p))
+                if (strstr(s2ch.resList[i].name, p))
                 {
-                    resList[i].ng = 1;
+                    s2ch.resList[i].ng = 1;
                 }
             }
             p = q + 1;
@@ -894,11 +882,11 @@ void psp2chResCheckNG(void)
                 break;
             }
             *q = '\0';
-            for (i = 0; i < res.count; i++)
+            for (i = 0; i < s2ch.res.count; i++)
             {
-                if (strcmp(resList[i].id, p) == 0)
+                if (strcmp(s2ch.resList[i].id, p) == 0)
                 {
-                    resList[i].ng = 1;
+                    s2ch.resList[i].ng = 1;
                 }
             }
             p = q + 1;
@@ -909,7 +897,7 @@ void psp2chResCheckNG(void)
 
 /*****************************
 datファイルをメモリに読み込みデータの区切りを'\0'（文字列終端）に書き換える
-resList構造体のポインタに各データのアドレスを代入
+s2ch.resList構造体のポインタに各データのアドレスを代入
 *****************************/
 int psp2chResList(char* host, char* dir, char* title, int dat)
 {
@@ -921,12 +909,12 @@ int psp2chResList(char* host, char* dir, char* title, int dat)
     char *buf;
     int ret;
 
-    sprintf(path, "%s/%s/%s/%d.idx", cwDir, logDir, title, dat);
+    sprintf(path, "%s/%s/%s/%d.idx", s2ch.cwDir, s2ch.logDir, title, dat);
     fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
     if (fd < 0)
     {
-        res.start = 0;
-        res.select = 0;
+        s2ch.res.start = 0;
+        s2ch.res.select = 0;
     }
     else
     {
@@ -938,14 +926,14 @@ int psp2chResList(char* host, char* dir, char* title, int dat)
         p++;
         p =  strchr(p, '\n');
         p++;
-        sscanf(p, "%d %d", &res.start, &res.select);
+        sscanf(p, "%d %d", &s2ch.res.start, &s2ch.res.select);
     }
-    sprintf(path, "%s/%s/%s/%d.dat", cwDir, logDir, title, dat);
+    sprintf(path, "%s/%s/%s/%d.dat", s2ch.cwDir, s2ch.logDir, title, dat);
     ret = sceIoGetstat(path, &st);
     if (ret < 0)
     {
-        res.start = 0;
-        res.select = 0;
+        s2ch.res.start = 0;
+        s2ch.res.select = 0;
         ret = psp2chGetDat(host, dir, title, dat);
         if (ret < 0)
         {
@@ -954,10 +942,10 @@ int psp2chResList(char* host, char* dir, char* title, int dat)
         ret = sceIoGetstat(path, &st);
         if (ret < 0)
         {
-            memset(&mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(mh.message, "File stat error\n%s", path);
-            pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&oldPad, 1);
+            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+            sprintf(s2ch.mh.message, "File stat error\n%s", path);
+            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
             return -1;
         }
     }
@@ -965,157 +953,157 @@ int psp2chResList(char* host, char* dir, char* title, int dat)
     resBuffer = (char*)malloc(st.st_size + 1);
     if (resBuffer == NULL)
     {
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(mh.message, "memorry error\nresBuffer");
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&oldPad, 1);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        strcpy(s2ch.mh.message, "memorry error\nresBuffer");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return -1;
     }
     fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
     if (fd < 0)
     {
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(mh.message, "File open error\n%s", path);
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&oldPad, 1);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        sprintf(s2ch.mh.message, "File open error\n%s", path);
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return -1;
     }
     sceIoRead(fd, resBuffer, st.st_size);
     sceIoClose(fd);
     resBuffer[st.st_size] = '\0';
-    res.count = 0;
+    s2ch.res.count = 0;
     p = resBuffer;
     while (*p)
     {
         if (*p++ == '\n')
         {
-            res.count++;
+            s2ch.res.count++;
         }
     }
-    free(resList);
-    resList = (S_2CH_RES*)malloc(sizeof(S_2CH_RES) * res.count);
-    if (resList == NULL)
+    free(s2ch.resList);
+    s2ch.resList = (S_2CH_RES*)malloc(sizeof(S_2CH_RES) * s2ch.res.count);
+    if (s2ch.resList == NULL)
     {
         free(resBuffer);
         resBuffer = NULL;
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(mh.message, "memorry error\nresList");
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&oldPad, 1);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        strcpy(s2ch.mh.message, "memorry error\nresList");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return -1;
     }
     p = resBuffer;
     buf = resBuffer;
-    for (ret = 0; ret < res.count; ret++)
+    for (ret = 0; ret < s2ch.res.count; ret++)
     {
         p =  strstr(buf, delimiter);
         if (p == NULL)
         {
-            free(resList);
-            resList = NULL;
+            free(s2ch.resList);
+            s2ch.resList = NULL;
             free(resBuffer);
             resBuffer = NULL;
-            memset(&mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(mh.message, "DAT log error1\n%d/%d", ret, res.count);
-            pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&oldPad, 1);
+            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+            sprintf(s2ch.mh.message, "DAT log error1\n%d/%d", ret, s2ch.res.count);
+            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
             return -1;
         }
         *p = '\0';
-        resList[ret].name = buf;
+        s2ch.resList[ret].name = buf;
         p += 2;
         buf = p;
         p =  strstr(buf, delimiter);
         if (p == NULL)
         {
-            free(resList);
-            resList = NULL;
+            free(s2ch.resList);
+            s2ch.resList = NULL;
             free(resBuffer);
             resBuffer = NULL;
-            memset(&mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(mh.message, "DAT log error2\n%d", ret);
-            pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&oldPad, 1);
+            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+            sprintf(s2ch.mh.message, "DAT log error2\n%d", ret);
+            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
             return -1;
         }
         *p = '\0';
-        resList[ret].mail = buf;
+        s2ch.resList[ret].mail = buf;
         p += 2;
         buf = p;
         p =  strstr(buf, delimiter);
         if (p == NULL)
         {
-            free(resList);
-            resList = NULL;
+            free(s2ch.resList);
+            s2ch.resList = NULL;
             free(resBuffer);
             resBuffer = NULL;
-            memset(&mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(mh.message, "DAT log error3\n%d", ret);
-            pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&oldPad, 1);
+            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+            sprintf(s2ch.mh.message, "DAT log error3\n%d", ret);
+            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
             return -1;
         }
         *p = '\0';
-        resList[ret].date = buf;
+        s2ch.resList[ret].date = buf;
         q =  strstr(buf, " BE:");
         if (q)
         {
             *q = '\0';
             q += 4;
-            resList[ret].be = q;
+            s2ch.resList[ret].be = q;
         }
         else
         {
-            resList[ret].be = NULL;
+            s2ch.resList[ret].be = NULL;
         }
         q =  strstr(buf, " ID:");
         if (q)
         {
             *q = '\0';
             q += 4;
-            resList[ret].id = q;
+            s2ch.resList[ret].id = q;
         }
         else
         {
-            resList[ret].id = NULL;
+            s2ch.resList[ret].id = NULL;
         }
         p += 2;
         buf = p;
         p =  strstr(buf, delimiter);
         if (p == NULL)
         {
-            free(resList);
-            resList = NULL;
+            free(s2ch.resList);
+            s2ch.resList = NULL;
             free(resBuffer);
             resBuffer = NULL;
-            memset(&mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(mh.message, "DAT log error4\n%d", ret);
-            pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&oldPad, 1);
+            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+            sprintf(s2ch.mh.message, "DAT log error4\n%d", ret);
+            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
             return -1;
         }
         *p = '\0';
-        resList[ret].text = buf;
+        s2ch.resList[ret].text = buf;
         p += 2;
         buf = p;
         p =  strstr(buf, "\n");
         if (p == NULL)
         {
-            free(resList);
-            resList = NULL;
+            free(s2ch.resList);
+            s2ch.resList = NULL;
             free(resBuffer);
             resBuffer = NULL;
-            memset(&mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(mh.message, "DAT log error5\n%d", ret);
-            pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&oldPad, 1);
+            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+            sprintf(s2ch.mh.message, "DAT log error5\n%d", ret);
+            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
             return -1;
         }
         *p = '\0';
-        resList[ret].title = buf;
+        s2ch.resList[ret].title = buf;
         p++;
         buf = p;
-        resList[ret].num = ret;
+        s2ch.resList[ret].num = ret;
     }
     psp2chResCheckNG();
     psp2chSaveIdx(title, dat);
@@ -1137,15 +1125,15 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
     char *p, *q;
 
     // Make ita directory
-    sprintf(path, "%s/%s/%s", cwDir, logDir, title);
+    sprintf(path, "%s/%s/%s", s2ch.cwDir, s2ch.logDir, title);
     if ((fd = sceIoDopen(path)) < 0)
     {
         if (sceIoMkdir(path, 0777) < 0)
         {
-            memset(&mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(mh.message, "Make dir error\n%s", path);
-            pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&oldPad, 1);
+            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+            sprintf(s2ch.mh.message, "Make dir error\n%s", path);
+            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
             return -1;
         }
     }
@@ -1154,14 +1142,14 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
         sceIoDclose(fd);
     }
     // check ita idx
-    sprintf(path, "%s/%s/%s/%d.idx", cwDir, logDir, title, dat);
+    sprintf(path, "%s/%s/%s/%d.idx", s2ch.cwDir, s2ch.logDir, title, dat);
     fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
     if (fd < 0)
     {
         buf[0] = '\0';
         range = 0;
-        res.start = 0;
-        res.select = 0;
+        s2ch.res.start = 0;
+        s2ch.res.select = 0;
     }
     else
     {
@@ -1175,7 +1163,7 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
         *q = 0;
         strcpy(eTag, p);
         q++;
-        sscanf(q, "%d %d %d", &range, &res.start, &res.select);
+        sscanf(q, "%d %d %d", &range, &s2ch.res.start, &s2ch.res.select);
         sprintf(buf, "If-Modified-Since: %s\r\nIf-None-Match: %s\r\nRange: bytes=%d-\r\n", lastModified, eTag, range - 1);
     }
     sprintf(path, "%s/dat/%d.dat", dir, dat);
@@ -1193,10 +1181,10 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
             break;
         case 302: // Found
             /*
-            memset(&mh,0,sizeof(MESSAGE_HELPER));
-            strcpy(mh.message, TEXT_10);
-            pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&oldPad, 1);
+            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+            strcpy(s2ch.mh.message, TEXT_10);
+            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
             */
             psp2chCloseSocket(mySocket);
             pgWaitVn(40);
@@ -1210,11 +1198,11 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
             psp2chCloseSocket(mySocket);
             return 0;
         default:
-            memset(&mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(mh.message, "HTTP error\nhost %s path %s\nStatus code %d", host, path, ret);
-            pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
+            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+            sprintf(s2ch.mh.message, "HTTP error\nhost %s path %s\nStatus code %d", host, path, ret);
+            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
             psp2chCloseSocket(mySocket);
-            sceCtrlPeekBufferPositive(&oldPad, 1);
+            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
             return -1;
     }
     // Receive and Save dat
@@ -1225,15 +1213,15 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
         return -1;
     }
     // save dat.dat
-    sprintf(path, "%s/%s/%s/%d.dat", cwDir, logDir, title, dat);
+    sprintf(path, "%s/%s/%s/%d.dat", s2ch.cwDir, s2ch.logDir, title, dat);
     fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777);
     if (fd < 0)
     {
         psp2chCloseSocket(mySocket);
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(mh.message, "File open error\n%s", path);
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&oldPad, 1);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        sprintf(s2ch.mh.message, "File open error\n%s", path);
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return fd;
     }
     sprintf(buf, "http://%s/%s/dat/%d.dat からデータを転送しています...", host, dir, dat);
@@ -1243,10 +1231,10 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
     if (range && (recv(mySocket, buf, 1, 0) <= 0 || buf[0] !='\n'))
     {
         psp2chCloseSocket(mySocket);
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(mh.message, TEXT_4);
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&oldPad, 1);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        strcpy(s2ch.mh.message, TEXT_4);
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return -1;
     }
     while((ret = recv(mySocket, buf, sizeof(buf), 0)) > 0)
@@ -1257,20 +1245,20 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
     psp2chCloseSocket(mySocket);
     sceIoClose(fd);
     // save dat.idx
-    sprintf(path, "%s/%s/%s/%d.idx", cwDir, logDir, title, dat);
+    sprintf(path, "%s/%s/%s/%d.idx", s2ch.cwDir, s2ch.logDir, title, dat);
     fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
     if (fd < 0)
     {
         psp2chCloseSocket(mySocket);
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(mh.message, "File open error\n%s", path);
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&oldPad, 1);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        sprintf(s2ch.mh.message, "File open error\n%s", path);
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return fd;
     }
     sceIoWrite(fd, resHeader.Last_Modified, strlen(resHeader.Last_Modified));
     sceIoWrite(fd, resHeader.ETag, strlen(resHeader.ETag));
-    sprintf(buf, "%d\n%d\n%d\n", range,res.start, res.select);
+    sprintf(buf, "%d\n%d\n%d\n", range,s2ch.res.start, s2ch.res.select);
     sceIoWrite(fd, buf, strlen(buf));
     sceIoClose(fd);
     return 0;
@@ -1296,7 +1284,7 @@ void psp2chSaveIdx(char* title, int dat)
     char *p, *q;
     int range, r, l;
 
-    sprintf(path, "%s/%s/%s/%d.idx", cwDir, logDir, title, dat);
+    sprintf(path, "%s/%s/%s/%d.idx", s2ch.cwDir, s2ch.logDir, title, dat);
     fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
     if (fd < 0)
     {
@@ -1323,13 +1311,13 @@ void psp2chSaveIdx(char* title, int dat)
     }
     else
     {
-        sprintf(buf, "%s\n%s\n%d\n%d\n%d\n%d\n", lastModified, eTag, range, res.start, res.select, res.count);
+        sprintf(buf, "%s\n%s\n%d\n%d\n%d\n%d\n", lastModified, eTag, range, s2ch.res.start, s2ch.res.select, s2ch.res.count);
         sceIoWrite(fd, buf, strlen(buf));
         sceIoClose(fd);
     }
-    if (threadList)
+    if (s2ch.threadList)
     {
-        threadList[threadSort[thread.select]].old = res.count;
+        s2ch.threadList[threadSort[s2ch.thread.select]].old = s2ch.res.count;
     }
 }
 
@@ -1337,14 +1325,14 @@ int psp2chDrawResStr(char* str, S_2CH_RES_COLOR c, int line, int lineEnd, int st
 {
     while ((str = pgPrintHtml(str, c, startX, endX, *drawLine)))
     {
-        pgCursorX = startX;
-        pgCursorY += LINE_PITCH;
+        s2ch.pgCursorX = startX;
+        s2ch.pgCursorY += LINE_PITCH;
         (*drawLine)++;
         if (++line > lineEnd)
         {
             break;
         }
-        pgFillvram(c.bg, startX, pgCursorY, endX-startX, LINE_PITCH);
+        pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
     }
     return line;
 }
@@ -1360,20 +1348,20 @@ int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, in
     char buf[128];
     int i, j;
 
-    sprintf(buf, " %d ", resList[re].num + 1);
+    sprintf(buf, " %d ", s2ch.resList[re].num + 1);
     str = buf;
     c.text = hc.num;
     if (*skip)
     {
         while ((str = pgCountHtml(str, endX, 1)))
         {
-            pgCursorX = startX;
+            s2ch.pgCursorX = startX;
             if (--(*skip) == 0)
             {
-                numAnchor[numAnchorCount].x1 = pgCursorX;
-                numAnchor[numAnchorCount].line = *drawLine;
-                numAnchor[numAnchorCount].num = resList[re].num;
-                pgFillvram(c.bg, startX, pgCursorY, endX-startX, LINE_PITCH);
+                s2ch.numAnchor[s2ch.numAnchorCount].x1 = s2ch.pgCursorX;
+                s2ch.numAnchor[s2ch.numAnchorCount].line = *drawLine;
+                s2ch.numAnchor[s2ch.numAnchorCount].num = s2ch.resList[re].num;
+                pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
                 line = psp2chDrawResStr(str, c, line, lineEnd, startX, endX, drawLine);
                 break;
             }
@@ -1381,17 +1369,17 @@ int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, in
     }
     else
     {
-        numAnchor[numAnchorCount].x1 = pgCursorX;
-        numAnchor[numAnchorCount].line = *drawLine;
-        numAnchor[numAnchorCount].num = resList[re].num;
-        pgFillvram(c.bg, startX, pgCursorY, endX-startX, LINE_PITCH);
+        s2ch.numAnchor[s2ch.numAnchorCount].x1 = s2ch.pgCursorX;
+        s2ch.numAnchor[s2ch.numAnchorCount].line = *drawLine;
+        s2ch.numAnchor[s2ch.numAnchorCount].num = s2ch.resList[re].num;
+        pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
         line = psp2chDrawResStr(str, c, line, lineEnd, startX, endX, drawLine);
     }
-    numAnchor[numAnchorCount].x2 = pgCursorX;
-    numAnchorCount++;
-    if (numAnchorCount >= 40)
+    s2ch.numAnchor[s2ch.numAnchorCount].x2 = s2ch.pgCursorX;
+    s2ch.numAnchorCount++;
+    if (s2ch.numAnchorCount >= 40)
     {
-        numAnchorCount = 0;
+        s2ch.numAnchorCount = 0;
     }
     sprintf(buf, "名前:");
     str = buf;
@@ -1400,10 +1388,10 @@ int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, in
     {
         while ((str = pgCountHtml(str, endX, 1)))
         {
-            pgCursorX = startX;
+            s2ch.pgCursorX = startX;
             if (--(*skip) == 0)
             {
-                pgFillvram(c.bg, startX, pgCursorY, endX-startX, LINE_PITCH);
+                pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
                 line = psp2chDrawResStr(str, c, line, lineEnd, startX, endX, drawLine);
                 break;
             }
@@ -1417,16 +1405,16 @@ int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, in
     {
         return line;
     }
-    str = resList[re].name;
+    str = s2ch.resList[re].name;
     c.text = hc.name2;
     if (*skip)
     {
         while ((str = pgCountHtml(str, endX, 1)))
         {
-            pgCursorX = startX;
+            s2ch.pgCursorX = startX;
             if (--(*skip) == 0)
             {
-                pgFillvram(c.bg, startX, pgCursorY, endX-startX, LINE_PITCH);
+                pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
                 line = psp2chDrawResStr(str, c, line, lineEnd, startX, endX, drawLine);
                 break;
             }
@@ -1440,17 +1428,17 @@ int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, in
     {
         return line;
     }
-    sprintf(buf, "[%s] ", resList[re].mail);
+    sprintf(buf, "[%s] ", s2ch.resList[re].mail);
     str = buf;
     c.text = hc.mail;
     if (*skip)
     {
         while ((str = pgCountHtml(str, endX, 1)))
         {
-            pgCursorX = startX;
+            s2ch.pgCursorX = startX;
             if (--(*skip) == 0)
             {
-                pgFillvram(c.bg, startX, pgCursorY, endX-startX, LINE_PITCH);
+                pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
                 line = psp2chDrawResStr(str, c, line, lineEnd, startX, endX, drawLine);
                 break;
             }
@@ -1464,16 +1452,16 @@ int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, in
     {
         return line;
     }
-    str = resList[re].date;
+    str = s2ch.resList[re].date;
     c.text = hc.date;
     if (*skip)
     {
         while ((str = pgCountHtml(str, endX, 1)))
         {
-            pgCursorX = startX;
+            s2ch.pgCursorX = startX;
             if (--(*skip) == 0)
             {
-                pgFillvram(c.bg, startX, pgCursorY, endX-startX, LINE_PITCH);
+                pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
                 line = psp2chDrawResStr(str, c, line, lineEnd, startX, endX, drawLine);
                 break;
             }
@@ -1487,14 +1475,14 @@ int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, in
     {
         return line;
     }
-    if (resList[re].id)
+    if (s2ch.resList[re].id)
     {
         sprintf(buf, " ID:");
         str = buf;
         c.text = hc.id1;
-        for (i = 0, j = 0; i < res.count; i++)
+        for (i = 0, j = 0; i < s2ch.res.count; i++)
         {
-            if (resList[i].id && resList[i].id[0] != '?' && (strcmp(resList[i].id, resList[re].id) == 0))
+            if (s2ch.resList[i].id && s2ch.resList[i].id[0] != '?' && (strcmp(s2ch.resList[i].id, s2ch.resList[re].id) == 0))
             {
                 if (++j == ID_COUNT)
                 {
@@ -1507,13 +1495,13 @@ int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, in
         {
             while ((str = pgCountHtml(str, endX, 1)))
             {
-                pgCursorX = startX;
+                s2ch.pgCursorX = startX;
                 if (--(*skip) == 0)
                 {
-                    idAnchor[idAnchorCount].x1 = pgCursorX;
-                    idAnchor[idAnchorCount].line = *drawLine;
-                    strcpy(idAnchor[idAnchorCount].id, resList[re].id);
-                    pgFillvram(c.bg, startX, pgCursorY, endX-startX, LINE_PITCH);
+                    s2ch.idAnchor[s2ch.idAnchorCount].x1 = s2ch.pgCursorX;
+                    s2ch.idAnchor[s2ch.idAnchorCount].line = *drawLine;
+                    strcpy(s2ch.idAnchor[s2ch.idAnchorCount].id, s2ch.resList[re].id);
+                    pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
                     line = psp2chDrawResStr(str, c, line, lineEnd, startX, endX, drawLine);
                     break;
                 }
@@ -1521,81 +1509,81 @@ int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, in
         }
         else
         {
-            idAnchor[idAnchorCount].x1 = pgCursorX;
-            idAnchor[idAnchorCount].line = *drawLine;
-            strcpy(idAnchor[idAnchorCount].id, resList[re].id);
+            s2ch.idAnchor[s2ch.idAnchorCount].x1 = s2ch.pgCursorX;
+            s2ch.idAnchor[s2ch.idAnchorCount].line = *drawLine;
+            strcpy(s2ch.idAnchor[s2ch.idAnchorCount].id, s2ch.resList[re].id);
             line = psp2chDrawResStr(str, c, line, lineEnd, startX, endX, drawLine);
         }
         if (line > lineEnd)
         {
-            idAnchor[idAnchorCount].x2 = endX;
+            s2ch.idAnchor[s2ch.idAnchorCount].x2 = endX;
             return line;
         }
-        str = resList[re].id;
+        str = s2ch.resList[re].id;
         c.text = hc.id3;
         if (*skip)
         {
             while ((str = pgCountHtml(str, endX, 1)))
             {
-                pgCursorX = startX;
+                s2ch.pgCursorX = startX;
                 if (--(*skip) == 0)
                 {
-                    pgFillvram(c.bg, startX, pgCursorY, endX-startX, LINE_PITCH);
+                    pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
                     line = psp2chDrawResStr(str, c, line, lineEnd, startX, endX, drawLine);
                     line++;
                     (*drawLine)++;
-                    pgCursorX = startX;
-                    pgCursorY += LINE_PITCH;
+                    s2ch.pgCursorX = startX;
+                    s2ch.pgCursorY += LINE_PITCH;
                     return line;
                 }
             }
-            pgCursorX = startX;
+            s2ch.pgCursorX = startX;
             (*skip)--;
         }
         else
         {
             line = psp2chDrawResStr(str, c, line, lineEnd, startX, endX, drawLine);
-            if (*drawLine == idAnchor[idAnchorCount].line)
+            if (*drawLine == s2ch.idAnchor[s2ch.idAnchorCount].line)
             {
-                idAnchor[idAnchorCount].x2 = pgCursorX;
+                s2ch.idAnchor[s2ch.idAnchorCount].x2 = s2ch.pgCursorX;
             }
             else
             {
-                idAnchor[idAnchorCount].x2 = endX;
-                idAnchorCount++;
-                if (idAnchorCount >= 40)
+                s2ch.idAnchor[s2ch.idAnchorCount].x2 = endX;
+                s2ch.idAnchorCount++;
+                if (s2ch.idAnchorCount >= 40)
                 {
-                    idAnchorCount = 0;
+                    s2ch.idAnchorCount = 0;
                 }
-                idAnchor[idAnchorCount].x1 = startX;
-                idAnchor[idAnchorCount].line = *drawLine;
-                strcpy(idAnchor[idAnchorCount].id, resList[re].id);
-                idAnchor[idAnchorCount].x2 = pgCursorX;
+                s2ch.idAnchor[s2ch.idAnchorCount].x1 = startX;
+                s2ch.idAnchor[s2ch.idAnchorCount].line = *drawLine;
+                strcpy(s2ch.idAnchor[s2ch.idAnchorCount].id, s2ch.resList[re].id);
+                s2ch.idAnchor[s2ch.idAnchorCount].x2 = s2ch.pgCursorX;
             }
-            idAnchorCount++;
-            if (idAnchorCount >= 40)
+            s2ch.idAnchorCount++;
+            if (s2ch.idAnchorCount >= 40)
             {
-                idAnchorCount = 0;
+                s2ch.idAnchorCount = 0;
             }
             line++;
             (*drawLine)++;
-            pgCursorX = startX;
-            pgCursorY += LINE_PITCH;
+            s2ch.pgCursorX = startX;
+            s2ch.pgCursorY += LINE_PITCH;
         }
     }
     else
     {
         if (*skip)
         {
-            pgCursorX = startX;
+            s2ch.pgCursorX = startX;
             (*skip)--;
         }
         else
         {
             line++;
             (*drawLine)++;
-            pgCursorX = startX;
-            pgCursorY += LINE_PITCH;
+            s2ch.pgCursorX = startX;
+            s2ch.pgCursorY += LINE_PITCH;
         }
     }
     return line;
@@ -1608,49 +1596,49 @@ int psp2chDrawResText(int res, int* skip, int line, int lineEnd, int startX, int
 {
     char* str;
 
-    str = resList[res].text;
+    str = s2ch.resList[res].text;
     if (*skip)
     {
         while (str)
         {
             str = pgCountHtml(str, endX, 1);
-            pgCursorX = startX;
+            s2ch.pgCursorX = startX;
             if (--(*skip) == 0)
             {
                 while (str)
                 {
-                    pgFillvram(c.bg, startX, pgCursorY, endX-startX, LINE_PITCH);
+                    pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
                     str = pgPrintHtml(str, c, startX, endX, *drawLine);
                     (*drawLine)++;
                     if (++line > lineEnd)
                     {
                         return line;
                     }
-                    pgCursorX = startX;
-                    pgCursorY += LINE_PITCH;
+                    s2ch.pgCursorX = startX;
+                    s2ch.pgCursorY += LINE_PITCH;
                 }
             }
         }
-        pgFillvram(c.bg, startX, pgCursorY, endX-startX, LINE_PITCH);
+        pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
     }
     else
     {
         while (str)
         {
-            pgFillvram(c.bg, startX, pgCursorY, endX-startX, LINE_PITCH);
+            pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
             str = pgPrintHtml(str, c, startX, endX, *drawLine);
             (*drawLine)++;
             if (++line > lineEnd)
             {
                 return line;
             }
-            pgCursorX = startX;
-            pgCursorY += LINE_PITCH;
+            s2ch.pgCursorX = startX;
+            s2ch.pgCursorY += LINE_PITCH;
         }
-        pgFillvram(c.bg, startX, pgCursorY, endX-startX, LINE_PITCH);
+        pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
     }
-    pgCursorX = startX;
-    pgCursorY += LINE_PITCH ;
+    s2ch.pgCursorX = startX;
+    s2ch.pgCursorY += LINE_PITCH ;
     line++;
     (*drawLine)++;
     return line;
@@ -1668,7 +1656,7 @@ void psp2chDrawRes(int drawLine)
     int i;
     int endX, lineEnd;
 
-    if (tateFlag)
+    if (s2ch.tateFlag)
     {
         endX = RES_SCR_WIDTH_V;
         lineEnd = 35;
@@ -1692,31 +1680,31 @@ void psp2chDrawRes(int drawLine)
         skip = drawLine;
         while (skip >= 0)
         {
-            if (resList[i].ng == 0)
+            if (s2ch.resList[i].ng == 0)
             {
-                skip -= resList[i].line;
+                skip -= s2ch.resList[i].line;
                 skip--;
             }
             i++;
-            if (i >= res.count)
+            if (i >= s2ch.res.count)
             {
                 break;
             }
         }
         re = --i;
         skip++;
-        skip += resList[i].line;
-        pgCursorX = 0;
-        pgCursorY = (LINE_PITCH*drawLine)&0x01FF;
+        skip += s2ch.resList[i].line;
+        s2ch.pgCursorX = 0;
+        s2ch.pgCursorY = (LINE_PITCH*drawLine)&0x01FF;
         //pspDebugScreenInit();
         //pspDebugScreenPrintf("Y=%d\n", (int)pgCursorY);
         //pgWaitVn(200);
-        line = psp2chDrawResHeader(re, &skip, lineEnd, lineEnd, 0, endX, resColor, resHeaderColor, &drawLine);
+        line = psp2chDrawResHeader(re, &skip, lineEnd, lineEnd, 0, endX, s2ch.resColor, s2ch.resHeaderColor, &drawLine);
         if (line > lineEnd)
         {
             return;
         }
-        line = psp2chDrawResText(re, &skip, lineEnd, lineEnd, 0, endX, resColor, &drawLine);
+        line = psp2chDrawResText(re, &skip, lineEnd, lineEnd, 0, endX, s2ch.resColor, &drawLine);
     }
     // 1行上に移動
     else if (drawLine == preLine-1)
@@ -1726,28 +1714,28 @@ void psp2chDrawRes(int drawLine)
         i = 0;
         while (skip >= 0)
         {
-            if (resList[i].ng == 0)
+            if (s2ch.resList[i].ng == 0)
             {
-                skip -= resList[i].line;
+                skip -= s2ch.resList[i].line;
                 skip--;
             }
             i++;
-            if (i >= res.count)
+            if (i >= s2ch.res.count)
             {
                 break;
             }
         }
         re = --i;
         skip++;
-        skip += resList[i].line;
-        pgCursorX = 0;
-        pgCursorY = (LINE_PITCH*drawLine)&0x01FF;
-        line = psp2chDrawResHeader(re, &skip, lineEnd, lineEnd, 0, endX, resColor, resHeaderColor, &drawLine);
+        skip += s2ch.resList[i].line;
+        s2ch.pgCursorX = 0;
+        s2ch.pgCursorY = (LINE_PITCH*drawLine)&0x01FF;
+        line = psp2chDrawResHeader(re, &skip, lineEnd, lineEnd, 0, endX, s2ch.resColor, s2ch.resHeaderColor, &drawLine);
         if (line > lineEnd)
         {
             return;
         }
-        line = psp2chDrawResText(re, &skip, lineEnd, lineEnd, 0, endX, resColor, &drawLine);
+        line = psp2chDrawResText(re, &skip, lineEnd, lineEnd, 0, endX, s2ch.resColor, &drawLine);
     }
     // 全画面書き直し
     else
@@ -1757,52 +1745,41 @@ void psp2chDrawRes(int drawLine)
         i = 0;
         while (skip >= 0)
         {
-            if (resList[i].ng == 0)
+            if (s2ch.resList[i].ng == 0)
             {
-                skip -= resList[i].line;
+                skip -= s2ch.resList[i].line;
                 skip--;
             }
             i++;
-            if (i >= res.count)
+            if (i >= s2ch.res.count)
             {
                 break;
             }
         }
         re = --i;
         skip++;
-        skip += resList[i].line;
-        pgCursorX = 0;
-        pgCursorY = (LINE_PITCH*drawLine)&0x01FF;
-        resAnchorCount = 0;
-        resAnchor[0].x1 = 0;
-        for (i = 0; i < 50; i++)
-        {
-            urlAnchor[i].x1 = 0;
-            urlAnchor[i].x2 = 0;
-        }
-        for (i = 0; i < 40; i++)
-        {
-            idAnchor[i].x1 = 0;
-            idAnchor[i].x2 = 0;
-            numAnchor[i].x1 = 0;
-            numAnchor[i].x2 = 0;
-        }
+        skip += s2ch.resList[i].line;
+        s2ch.pgCursorX = 0;
+        s2ch.pgCursorY = (LINE_PITCH*drawLine)&0x01FF;
+        s2ch.resAnchorCount = 0;
+        s2ch.resAnchor[0].x1 = 0;
+        psp2chResResetAnchors();
         line = 0;
         while (line <= lineEnd)
         {
-            line = psp2chDrawResHeader(re, &skip, line, lineEnd, 0, endX, resColor, resHeaderColor, &drawLine);
+            line = psp2chDrawResHeader(re, &skip, line, lineEnd, 0, endX, s2ch.resColor, s2ch.resHeaderColor, &drawLine);
             if (line > lineEnd)
             {
                 break;
             }
-            line = psp2chDrawResText(re, &skip, line, lineEnd, 0, endX, resColor, &drawLine);
-            while (++re < res.count && resList[re].ng)
+            line = psp2chDrawResText(re, &skip, line, lineEnd, 0, endX, s2ch.resColor, &drawLine);
+            while (++re < s2ch.res.count && s2ch.resList[re].ng)
             {
                 // NG レスをスキップ
             }
-            if (re >= res.count)
+            if (re >= s2ch.res.count)
             {
-                pgFillvram(resColor.bg, 0, pgCursorY, endX, (lineEnd + 1 - line)*LINE_PITCH);
+                pgFillvram(s2ch.resColor.bg, 0, s2ch.pgCursorY, endX, (lineEnd + 1 - line)*LINE_PITCH);
                 break;
             }
         }
@@ -1821,63 +1798,63 @@ int psp2chCountRes(int res, int width)
     int count = 0;
 
     // NG 対象スレは除外
-    if (resList[res].ng)
+    if (s2ch.resList[res].ng)
     {
         return 0;
     }
-    pgCursorX = 0;
-    pgCursorY = 0;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY = 0;
     sprintf(buf, " %d 名前:", res + 1);
     str = buf;
     while ((str = pgCountHtml(str, width, 1)))
     {
-        pgCursorX = 0;
+        s2ch.pgCursorX = 0;
         count++;
     }
-    str = resList[res].name;
+    str = s2ch.resList[res].name;
     while ((str = pgCountHtml(str, width, 1)))
     {
-        pgCursorX = 0;
+        s2ch.pgCursorX = 0;
         count++;
     }
-    sprintf(buf, "[%s] ", resList[res].mail);
+    sprintf(buf, "[%s] ", s2ch.resList[res].mail);
     str = buf;
     while ((str = pgCountHtml(str, width, 1)))
     {
-        pgCursorX = 0;
+        s2ch.pgCursorX = 0;
         count++;
     }
-    str = resList[res].date;
+    str = s2ch.resList[res].date;
     while ((str = pgCountHtml(str, width, 1)))
     {
-        pgCursorX = 0;
+        s2ch.pgCursorX = 0;
         count++;
     }
-    if (resList[res].id)
+    if (s2ch.resList[res].id)
     {
         sprintf(buf, " ID:");
         str = buf;
         while ((str = pgCountHtml(str, width, 1)))
         {
-            pgCursorX = 0;
+            s2ch.pgCursorX = 0;
             count++;
         }
-        str = resList[res].id;
+        str = s2ch.resList[res].id;
         while ((str = pgCountHtml(str, width, 1)))
         {
-            pgCursorX = 0;
+            s2ch.pgCursorX = 0;
             count++;
         }
     }
-    pgCursorX = 0;
+    s2ch.pgCursorX = 0;
     count++;
-    str = resList[res].text;
+    str = s2ch.resList[res].text;
     while ((str = pgCountHtml(str, width, 1)))
     {
-        pgCursorX = 0;
+        s2ch.pgCursorX = 0;
         count++;
     }
-    pgCursorX = 0;
+    s2ch.pgCursorX = 0;
     count++;
     return count;
 }

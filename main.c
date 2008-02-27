@@ -7,7 +7,6 @@
 #include <pspnet.h>
 #include <psppower.h>
 #include <stdio.h>
-#include "pspdialogs.h"
 #include "pg.h"
 #include "psp2ch.h"
 
@@ -16,13 +15,12 @@ PSP_MODULE_INFO("2ch Browser for PSP", PSP_MODULE_USER, 1, 1);
 PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_USER);
 PSP_HEAP_SIZE_MAX();
 
-int running = 1;
-char cwDir[256];
+extern S_2CH s2ch; // psp2ch.c
 
 /* Exit callback */
 int exit_callback(int arg1, int arg2, void *common)
 {
-    running = 0;
+    s2ch.running = 0;
     sceKernelExitGame();
     return 0;
 }
@@ -68,8 +66,8 @@ int main(int argc, char *argv[])
 {
     char* ch;
 
-    strcpy(cwDir, argv[0]);
-    ch = strrchr(cwDir, '/');
+    strcpy(s2ch.cwDir, argv[0]);
+    ch = strrchr(s2ch.cwDir, '/');
     *ch = '\0';
     SetupCallbacks();
     psp2chInit();

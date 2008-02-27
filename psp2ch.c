@@ -2,7 +2,6 @@
 * $Id$
 */
 
-#include "pspdialogs.h"
 #include <stdio.h>
 #include <string.h>
 #include <malloc.h>
@@ -10,7 +9,6 @@
 #include <sys/unistd.h>
 #include <arpa/inet.h>
 #include <pspdebug.h>
-#include <pspctrl.h>
 #include <pspsdk.h>
 #include <pspwlan.h>
 #include "psp2ch.h"
@@ -26,34 +24,13 @@
 #include "libCat/Cat_Network.h"
 #include "libCat/Cat_Resolver.h"
 
-extern int running; //main.c
-extern char cwDir[256]; //main.c
-extern void* framebuffer; // pg.c
-extern unsigned long pgCursorX, pgCursorY; // pg.c
 extern unsigned int list[512*512]; // pg.c
 extern intraFont* jpn0; // pg.c
 
-int tateFlag = 0;
-int sel = 0;
-const char* userAgent = "Monazilla/1.00 (Compatible; PSP; ja) owata\(^o^)/0.5.1";
-const char* logDir = "log";
+const char* userAgent = "Monazilla/1.00 (Compatible; PSP; ja) owata\(^o^)/0.5.2";
+S_2CH s2ch;
 char cookie[128] = {0};
 char keyWords[128];
-SceCtrlData pad;
-SceCtrlData oldPad;
-MESSAGE_HELPER mh;
-S_2CH_HEADER_COLOR resHeaderColor;
-S_2CH_RES_COLOR resColor;
-S_2CH_BAR_COLOR resBarColor;
-S_2CH_HEADER_COLOR resAHeaderColor;
-S_2CH_RES_COLOR resAColor;
-S_2CH_BAR_COLOR resABarColor;
-S_2CH_MENU_COLOR menuColor;
-S_2CH_THREAD_COLOR threadColor;
-S_2CH_ITA_COLOR cateOnColor;
-S_2CH_ITA_COLOR cateOffColor;
-S_2CH_FORM_COLOR formColor;
-S_2CH_TXT_COLOR menuWinColor;
 
 /*********************************
 メインループ
@@ -69,9 +46,9 @@ int psp2ch(void)
 
     sceCtrlSetSamplingCycle(0);
     sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
-    while (running)
+    while (s2ch.running)
     {
-        switch (sel)
+        switch (s2ch.sel)
         {
         case 1:
             psp2chFavorite();
@@ -114,26 +91,26 @@ int psp2ch(void)
 *****************************/
 void psp2chStart(void)
 {
-    if(sceCtrlPeekBufferPositive(&pad, 1))
+    if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
     {
-        if (pad.Buttons != oldPad.Buttons)
+        if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
-            oldPad = pad;
-            if(pad.Buttons & PSP_CTRL_CROSS)
+            s2ch.oldPad = s2ch.pad;
+            if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
             {
                 if (psp2chOwata())
                 {
                     return;
                 }
             }
-            else if(pad.Buttons & PSP_CTRL_START)
+            else if(s2ch.pad.Buttons & PSP_CTRL_START)
             {
-                sel = 2;
+                s2ch.sel = 2;
                 return;
             }
-            else if(pad.Buttons & PSP_CTRL_CIRCLE)
+            else if(s2ch.pad.Buttons & PSP_CTRL_CIRCLE)
             {
-                sel = 1;
+                s2ch.sel = 1;
                 return;
             }
         }
@@ -149,19 +126,19 @@ void psp2chStart(void)
 *****************************/
 int psp2chOwata(void)
 {
-    memset(&mh,0,sizeof(MESSAGE_HELPER));
-    mh.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT | PSP_UTILITY_MSGDIALOG_OPTION_YESNO_BUTTONS;
-    strcpy(mh.message, TEXT_3);
-    pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-    sceCtrlPeekBufferPositive(&oldPad, 1);
-    if (mh.buttonPressed == PSP_UTILITY_MSGDIALOG_RESULT_YES)
+    memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+    s2ch.mh.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT | PSP_UTILITY_MSGDIALOG_OPTION_YESNO_BUTTONS;
+    strcpy(s2ch.mh.message, TEXT_3);
+    pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+    sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+    if (s2ch.mh.buttonPressed == PSP_UTILITY_MSGDIALOG_RESULT_YES)
     {
-        tateFlag = 0;
+        s2ch.tateFlag = 0;
         pgPrintOwata();
         pgCopy(0, 0);
         framebuffer = sceGuSwapBuffers();
         pgWaitVn(10);
-        running = 0;
+        s2ch.running = 0;
         return 1;
     }
     return 0;
@@ -181,30 +158,30 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd)
     int rMenu;
     int padUp = 0, padDown = 0;
 
-    if (tateFlag)
+    if (s2ch.tateFlag)
     {
-        if (pad.Lx == 255)
+        if (s2ch.pad.Lx == 255)
         {
             padUp = 1;
         }
-        else if (pad.Lx == 0)
+        else if (s2ch.pad.Lx == 0)
         {
             padDown = 1;
         }
     }
     else
     {
-        if (pad.Ly == 0)
+        if (s2ch.pad.Ly == 0)
         {
             padUp = 1;
         }
-        else if (pad.Ly == 255)
+        else if (s2ch.pad.Ly == 255)
         {
             padDown = 1;
         }
     }
 
-    if(pad.Buttons & PSP_CTRL_RTRIGGER)
+    if(s2ch.pad.Buttons & PSP_CTRL_RTRIGGER)
     {
         rMenu = 1;
     }
@@ -212,9 +189,9 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd)
     {
         rMenu = 0;
     }
-    if (pad.Buttons != oldPad.Buttons || keyRepeat || padUp || padDown)
+    if (s2ch.pad.Buttons != s2ch.oldPad.Buttons || keyRepeat || padUp || padDown)
     {
-        if (pad.Buttons != oldPad.Buttons)
+        if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
             keyStart = 1;
         }
@@ -224,7 +201,7 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd)
         }
         keyTime = clock();
         keyRepeat = 0;
-        if((pad.Buttons & PSP_CTRL_UP && !tateFlag) || (pad.Buttons & PSP_CTRL_RIGHT && tateFlag) || padUp)
+        if((s2ch.pad.Buttons & PSP_CTRL_UP && !s2ch.tateFlag) || (s2ch.pad.Buttons & PSP_CTRL_RIGHT && s2ch.tateFlag) || padUp)
         {
             if (rMenu && !padUp)
             {
@@ -244,7 +221,7 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd)
                 }
             }
         }
-        if((pad.Buttons & PSP_CTRL_DOWN && !tateFlag) || (pad.Buttons & PSP_CTRL_LEFT && tateFlag) || padDown)
+        if((s2ch.pad.Buttons & PSP_CTRL_DOWN && !s2ch.tateFlag) || (s2ch.pad.Buttons & PSP_CTRL_LEFT && s2ch.tateFlag) || padDown)
         {
             if (rMenu && !padDown)
             {
@@ -272,7 +249,7 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd)
                 }
             }
         }
-        if((pad.Buttons & PSP_CTRL_LEFT && !tateFlag) || (pad.Buttons & PSP_CTRL_UP && tateFlag))
+        if((s2ch.pad.Buttons & PSP_CTRL_LEFT && !s2ch.tateFlag) || (s2ch.pad.Buttons & PSP_CTRL_UP && s2ch.tateFlag))
         {
             if (line->select == line->start)
             {
@@ -284,7 +261,7 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd)
             }
             line->select = line->start;
         }
-        if((pad.Buttons & PSP_CTRL_RIGHT && !tateFlag) || (pad.Buttons & PSP_CTRL_DOWN && tateFlag))
+        if((s2ch.pad.Buttons & PSP_CTRL_RIGHT && !s2ch.tateFlag) || (s2ch.pad.Buttons & PSP_CTRL_DOWN && s2ch.tateFlag))
         {
             if (line->select == line->start + lineEnd - 1)
             {
@@ -334,13 +311,13 @@ int psp2chPadSet(int scrollX)
 {
     static int xReverse = 1;
 
-    if (tateFlag)
+    if (s2ch.tateFlag)
     {
-        if (pad.Ly == 0)
+        if (s2ch.pad.Ly == 0)
         {
             scrollX += 8 * xReverse;
         }
-        else if (pad.Ly == 255)
+        else if (s2ch.pad.Ly == 255)
         {
             scrollX -= 8 * xReverse;
         }
@@ -351,11 +328,11 @@ int psp2chPadSet(int scrollX)
     }
     else
     {
-        if (pad.Lx == 0)
+        if (s2ch.pad.Lx == 0)
         {
             scrollX += 4 * xReverse;
         }
-        else if (pad.Lx == 255)
+        else if (s2ch.pad.Lx == 255)
         {
             scrollX -= 4 * xReverse;
         }
@@ -395,7 +372,7 @@ void psp2chSetColor(void)
     char *p;
     int ret;
 
-    sprintf(file, "%s/color.ini", cwDir);
+    sprintf(file, "%s/color.ini", s2ch.cwDir);
     ret = sceIoGetstat(file, &st);
     if (ret >= 0)
     {
@@ -408,82 +385,82 @@ void psp2chSetColor(void)
                 sceIoRead(fd, buf, st.st_size);
                 sceIoClose(fd);
                 buf[st.st_size] = '\0';
-                setColor("RES_NUMBER", resHeaderColor.num, RED);
-                setColor("RES_NAME_HEAD", resHeaderColor.name1, BLACK);
-                setColor("RES_NAME_BODY", resHeaderColor.name2, RGB(0x00, 0xCC, 0x00));
-                setColor("RES_MAIL", resHeaderColor.mail, RGB(0x99, 0x99, 0x99));
-                setColor("RES_DATE", resHeaderColor.date, BLACK);
-                setColor("RES_ID_HEAD_1", resHeaderColor.id1, BLUE);
-                setColor("RES_ID_HEAD_2", resHeaderColor.id2, RED);
-                setColor("RES_ID_BODY", resHeaderColor.id3, BLUE);
-                setColor("RES_TEXT", resColor.text, BLACK);
-                setColor("RES_BG", resColor.bg, RGB(0xE0, 0xE0, 0xE0));
-                setColor("RES_LINK", resColor.link, BLUE);
-                setColor("RES_BAR_SLIDER", resBarColor.slider, YELLOW);
-                setColor("RES_BAR_BG", resBarColor.bg, RGB(0x66, 0x66, 0xFF));
+                setColor("RES_NUMBER", s2ch.resHeaderColor.num, RED);
+                setColor("RES_NAME_HEAD", s2ch.resHeaderColor.name1, BLACK);
+                setColor("RES_NAME_BODY", s2ch.resHeaderColor.name2, RGB(0x00, 0xCC, 0x00));
+                setColor("RES_MAIL", s2ch.resHeaderColor.mail, RGB(0x99, 0x99, 0x99));
+                setColor("RES_DATE", s2ch.resHeaderColor.date, BLACK);
+                setColor("RES_ID_HEAD_1", s2ch.resHeaderColor.id1, BLUE);
+                setColor("RES_ID_HEAD_2", s2ch.resHeaderColor.id2, RED);
+                setColor("RES_ID_BODY", s2ch.resHeaderColor.id3, BLUE);
+                setColor("RES_TEXT", s2ch.resColor.text, BLACK);
+                setColor("RES_BG", s2ch.resColor.bg, RGB(0xE0, 0xE0, 0xE0));
+                setColor("RES_LINK", s2ch.resColor.link, BLUE);
+                setColor("RES_BAR_SLIDER", s2ch.resBarColor.slider, YELLOW);
+                setColor("RES_BAR_BG", s2ch.resBarColor.bg, RGB(0x66, 0x66, 0xFF));
 
-                setColor("RES_A_NUMBER", resAHeaderColor.num, RED);
-                setColor("RES_A_NAME_HEAD", resAHeaderColor.name1, BLACK);
-                setColor("RES_A_NAME_BODY", resAHeaderColor.name2, RGB(0x00, 0xCC, 0x00));
-                setColor("RES_A_MAIL", resAHeaderColor.mail, RGB(0x99, 0x99, 0x99));
-                setColor("RES_A_DATE", resAHeaderColor.date, BLACK);
-                setColor("RES_A_ID_HEAD_1", resAHeaderColor.id1, BLUE);
-                setColor("RES_A_ID_HEAD_2", resAHeaderColor.id2, RED);
-                setColor("RES_A_ID_BODY", resAHeaderColor.id3, BLUE);
-                setColor("RES_A_TEXT", resAColor.text, BLACK);
-                setColor("RES_A_BG", resAColor.bg, RGB(0xFF, 0xFF, 0xCC));
-                setColor("RES_A_LINK", resAColor.link, BLUE);
-                setColor("RES_A_BAR_SLIDER", resABarColor.slider, RGB(0x00, 0xFF, 0xCC));
-                setColor("RES_A_BAR_BG", resABarColor.bg, RGB(0xCC, 0xFF, 0xFF));
+                setColor("RES_A_NUMBER", s2ch.resAHeaderColor.num, RED);
+                setColor("RES_A_NAME_HEAD", s2ch.resAHeaderColor.name1, BLACK);
+                setColor("RES_A_NAME_BODY", s2ch.resAHeaderColor.name2, RGB(0x00, 0xCC, 0x00));
+                setColor("RES_A_MAIL", s2ch.resAHeaderColor.mail, RGB(0x99, 0x99, 0x99));
+                setColor("RES_A_DATE", s2ch.resAHeaderColor.date, BLACK);
+                setColor("RES_A_ID_HEAD_1", s2ch.resAHeaderColor.id1, BLUE);
+                setColor("RES_A_ID_HEAD_2", s2ch.resAHeaderColor.id2, RED);
+                setColor("RES_A_ID_BODY", s2ch.resAHeaderColor.id3, BLUE);
+                setColor("RES_A_TEXT", s2ch.resAColor.text, BLACK);
+                setColor("RES_A_BG", s2ch.resAColor.bg, RGB(0xFF, 0xFF, 0xCC));
+                setColor("RES_A_LINK", s2ch.resAColor.link, BLUE);
+                setColor("RES_A_BAR_SLIDER", s2ch.resABarColor.slider, RGB(0x00, 0xFF, 0xCC));
+                setColor("RES_A_BAR_BG", s2ch.resABarColor.bg, RGB(0xCC, 0xFF, 0xFF));
 
-                setColor("MENU_TEXT", menuColor.text, WHITE);
-                setColor("MENU_BG", menuColor.bg, BLACK);
-                setColor("MENU_BATTERY_1", menuColor.bat1, GREEN);
-                setColor("MENU_BATTERY_2", menuColor.bat2, YELLOW);
-                setColor("MENU_BATTERY_3", menuColor.bat3, RED);
+                setColor("MENU_TEXT", s2ch.menuColor.text, WHITE);
+                setColor("MENU_BG", s2ch.menuColor.bg, BLACK);
+                setColor("MENU_BATTERY_1", s2ch.menuColor.bat1, GREEN);
+                setColor("MENU_BATTERY_2", s2ch.menuColor.bat2, YELLOW);
+                setColor("MENU_BATTERY_3", s2ch.menuColor.bat3, RED);
 
-                setColor("THREAD_NUMBER", threadColor.num, RED);
-                setColor("THREAD_CATEGORY", threadColor.category, RED);
-                setColor("THREAD_TEXT_1", threadColor.text1, BLUE);
-                setColor("THREAD_TEXT_2", threadColor.text2, RED);
-                setColor("THREAD_BG", threadColor.bg, RGB(0xCC, 0xFF, 0xCC));
-                setColor("THREAD_COUNT_1", threadColor.count1, BLACK);
-                setColor("THREAD_COUNT_2", threadColor.count2, BLACK);
-                setColor("THREAD_SELECT_NUMBER", threadColor.s_num, RED);
-                setColor("THREAD_SELECT_CATEGORY", threadColor.s_category, RGB(0x99, 0x00, 0x00));
-                setColor("THREAD_SELECT_TEXT_1", threadColor.s_text1, RGB(0x00, 0x00, 0x99));
-                setColor("THREAD_SELECT_TEXT_2", threadColor.s_text2, RGB(0x99, 0x00, 0x00));
-                setColor("THREAD_SELECT_BG", threadColor.s_bg, GRAY);
-                setColor("THREAD_SELECT_COUNT_1", threadColor.s_count1, BLACK);
-                setColor("THREAD_SELECT_COUNT_2", threadColor.s_count2, BLACK);
+                setColor("THREAD_NUMBER", s2ch.threadColor.num, RED);
+                setColor("THREAD_CATEGORY", s2ch.threadColor.category, RED);
+                setColor("THREAD_TEXT_1", s2ch.threadColor.text1, BLUE);
+                setColor("THREAD_TEXT_2", s2ch.threadColor.text2, RED);
+                setColor("THREAD_BG", s2ch.threadColor.bg, RGB(0xCC, 0xFF, 0xCC));
+                setColor("THREAD_COUNT_1", s2ch.threadColor.count1, BLACK);
+                setColor("THREAD_COUNT_2", s2ch.threadColor.count2, BLACK);
+                setColor("THREAD_SELECT_NUMBER", s2ch.threadColor.s_num, RED);
+                setColor("THREAD_SELECT_CATEGORY", s2ch.threadColor.s_category, RGB(0x99, 0x00, 0x00));
+                setColor("THREAD_SELECT_TEXT_1", s2ch.threadColor.s_text1, RGB(0x00, 0x00, 0x99));
+                setColor("THREAD_SELECT_TEXT_2", s2ch.threadColor.s_text2, RGB(0x99, 0x00, 0x00));
+                setColor("THREAD_SELECT_BG", s2ch.threadColor.s_bg, GRAY);
+                setColor("THREAD_SELECT_COUNT_1", s2ch.threadColor.s_count1, BLACK);
+                setColor("THREAD_SELECT_COUNT_2", s2ch.threadColor.s_count2, BLACK);
 
-                setColor("CATE_ON_TEXT", cateOnColor.cate.text, RGB(0xCC, 0x33, 0x00));
-                setColor("CATE_ON_BG", cateOnColor.cate.bg, WHITE);
-                setColor("CATE_ON_S_TEXT", cateOnColor.cate.s_text, WHITE);
-                setColor("CATE_ON_S_BG", cateOnColor.cate.s_bg, RGB(0xCC, 0x33, 0x00));
-                setColor("ITA_OFF_TEXT", cateOnColor.ita.text, RGB(0x66, 0x66, 0xFF));
-                setColor("ITA_OFF_BG", cateOnColor.ita.bg, GRAY);
-                setColor("ITA_OFF_S_TEXT", cateOnColor.ita.s_text, GRAY);
-                setColor("ITA_OFF_S_BG", cateOnColor.ita.s_bg, RGB(0x66, 0x66, 0xFF));
-                setColor("CATE_ON_BASE", cateOnColor.base, WHITE);
+                setColor("CATE_ON_TEXT", s2ch.cateOnColor.cate.text, RGB(0xCC, 0x33, 0x00));
+                setColor("CATE_ON_BG", s2ch.cateOnColor.cate.bg, WHITE);
+                setColor("CATE_ON_S_TEXT", s2ch.cateOnColor.cate.s_text, WHITE);
+                setColor("CATE_ON_S_BG", s2ch.cateOnColor.cate.s_bg, RGB(0xCC, 0x33, 0x00));
+                setColor("ITA_OFF_TEXT", s2ch.cateOnColor.ita.text, RGB(0x66, 0x66, 0xFF));
+                setColor("ITA_OFF_BG", s2ch.cateOnColor.ita.bg, GRAY);
+                setColor("ITA_OFF_S_TEXT", s2ch.cateOnColor.ita.s_text, GRAY);
+                setColor("ITA_OFF_S_BG", s2ch.cateOnColor.ita.s_bg, RGB(0x66, 0x66, 0xFF));
+                setColor("CATE_ON_BASE", s2ch.cateOnColor.base, WHITE);
 
-                setColor("CATE_OFF_TEXT", cateOffColor.cate.text, RGB(0x88, 0x99, 0x66));
-                setColor("CATE_OFF_BG", cateOffColor.cate.bg, GRAY);
-                setColor("CATE_OFF_S_TEXT", cateOffColor.cate.s_text, GRAY);
-                setColor("CATE_OFF_S_BG", cateOffColor.cate.s_bg, RGB(0x88, 0x99, 0x66));
-                setColor("ITA_ON_TEXT", cateOffColor.ita.text, BLUE);
-                setColor("ITA_ON_BG", cateOffColor.ita.bg, WHITE);
-                setColor("ITA_ON_S_TEXT", cateOffColor.ita.s_text, WHITE);
-                setColor("ITA_ON_S_BG", cateOffColor.ita.s_bg, BLUE);
-                setColor("CATE_OFF_BASE", cateOffColor.base, WHITE);
+                setColor("CATE_OFF_TEXT", s2ch.cateOffColor.cate.text, RGB(0x88, 0x99, 0x66));
+                setColor("CATE_OFF_BG", s2ch.cateOffColor.cate.bg, GRAY);
+                setColor("CATE_OFF_S_TEXT", s2ch.cateOffColor.cate.s_text, GRAY);
+                setColor("CATE_OFF_S_BG", s2ch.cateOffColor.cate.s_bg, RGB(0x88, 0x99, 0x66));
+                setColor("ITA_ON_TEXT", s2ch.cateOffColor.ita.text, BLUE);
+                setColor("ITA_ON_BG", s2ch.cateOffColor.ita.bg, WHITE);
+                setColor("ITA_ON_S_TEXT", s2ch.cateOffColor.ita.s_text, WHITE);
+                setColor("ITA_ON_S_BG", s2ch.cateOffColor.ita.s_bg, BLUE);
+                setColor("CATE_OFF_BASE", s2ch.cateOffColor.base, WHITE);
 
-                setColor("FORM_TITLE_TEXT", formColor.title, WHITE);
-                setColor("FORM_TITLE_BG", formColor.title_bg, RED);
+                setColor("FORM_TITLE_TEXT", s2ch.formColor.title, WHITE);
+                setColor("FORM_TITLE_BG", s2ch.formColor.title_bg, RED);
 
-                setColor("MENU_WIN_TEXT", menuWinColor.text, GRAY);
-                setColor("MENU_WIN_BG", menuWinColor.bg, BLACK);
-                setColor("MENU_WIN_S_TEXT", menuWinColor.s_text, WHITE);
-                setColor("MENU_WIN_S_BG", menuWinColor.s_bg, BLUE);
+                setColor("MENU_WIN_TEXT", s2ch.menuWinColor.text, GRAY);
+                setColor("MENU_WIN_BG", s2ch.menuWinColor.bg, BLACK);
+                setColor("MENU_WIN_S_TEXT", s2ch.menuWinColor.s_text, WHITE);
+                setColor("MENU_WIN_S_BG", s2ch.menuWinColor.s_bg, BLUE);
                 free(buf);
                 return;
             }
@@ -495,81 +472,81 @@ void psp2chSetColor(void)
     }
     // iniファイルがない時のデフォルト
     // レス本文
-    resHeaderColor.num = RED;
-    resHeaderColor.name1 = BLACK;
-    resHeaderColor.name2 = RGB(0x00, 0xCC, 0x00);
-    resHeaderColor.mail = RGB(0x99, 0x99, 0x99);
-    resHeaderColor.date = BLACK;
-    resHeaderColor.id1 = BLUE;
-    resHeaderColor.id2 = RED;
-    resHeaderColor.id3 = BLUE;
-    resColor.text = BLACK;
-    resColor.bg = RGB(0xE0, 0xE0, 0xE0);
-    resColor.link = BLUE;
-    resBarColor.slider = YELLOW;
-    resBarColor.bg = RGB(0x66, 0x66, 0xFF);
+    s2ch.resHeaderColor.num = RED;
+    s2ch.resHeaderColor.name1 = BLACK;
+    s2ch.resHeaderColor.name2 = RGB(0x00, 0xCC, 0x00);
+    s2ch.resHeaderColor.mail = RGB(0x99, 0x99, 0x99);
+    s2ch.resHeaderColor.date = BLACK;
+    s2ch.resHeaderColor.id1 = BLUE;
+    s2ch.resHeaderColor.id2 = RED;
+    s2ch.resHeaderColor.id3 = BLUE;
+    s2ch.resColor.text = BLACK;
+    s2ch.resColor.bg = RGB(0xE0, 0xE0, 0xE0);
+    s2ch.resColor.link = BLUE;
+    s2ch.resBarColor.slider = YELLOW;
+    s2ch.resBarColor.bg = RGB(0x66, 0x66, 0xFF);
     // レスアンカー　
-    resAHeaderColor.num = RED;
-    resAHeaderColor.name1 = BLACK;
-    resAHeaderColor.name2 = RGB(0x00, 0xCC, 0x00);
-    resAHeaderColor.mail = RGB(0x99, 0x99, 0x99);
-    resAHeaderColor.date = BLACK;
-    resAHeaderColor.id1 = BLUE;
-    resAHeaderColor.id2 = RED;
-    resAHeaderColor.id3 = BLUE;
-    resAColor.text = BLACK;
-    resAColor.bg = RGB(0xFF, 0xFF, 0xCC);
-    resAColor.link = BLUE;
-    resABarColor.slider = RGB(0x00, 0xFF, 0xCC);
-    resABarColor.bg = RGB(0xCC, 0xFF, 0xFF);
+    s2ch.resAHeaderColor.num = RED;
+    s2ch.resAHeaderColor.name1 = BLACK;
+    s2ch.resAHeaderColor.name2 = RGB(0x00, 0xCC, 0x00);
+    s2ch.resAHeaderColor.mail = RGB(0x99, 0x99, 0x99);
+    s2ch.resAHeaderColor.date = BLACK;
+    s2ch.resAHeaderColor.id1 = BLUE;
+    s2ch.resAHeaderColor.id2 = RED;
+    s2ch.resAHeaderColor.id3 = BLUE;
+    s2ch.resAColor.text = BLACK;
+    s2ch.resAColor.bg = RGB(0xFF, 0xFF, 0xCC);
+    s2ch.resAColor.link = BLUE;
+    s2ch.resABarColor.slider = RGB(0x00, 0xFF, 0xCC);
+    s2ch.resABarColor.bg = RGB(0xCC, 0xFF, 0xFF);
     // メニューバー　
-    menuColor.text = WHITE;
-    menuColor.bg = BLACK;
-    menuColor.bat1 = GREEN;
-    menuColor.bat2 = YELLOW;
-    menuColor.bat3 = RED;
+    s2ch.menuColor.text = WHITE;
+    s2ch.menuColor.bg = BLACK;
+    s2ch.menuColor.bat1 = GREEN;
+    s2ch.menuColor.bat2 = YELLOW;
+    s2ch.menuColor.bat3 = RED;
     // スレッド一覧
-    threadColor.num = RED;
-    threadColor.category = RED;
-    threadColor.text1 = BLUE;
-    threadColor.text2 = RED;
-    threadColor.bg = RGB(0xCC, 0xFF,0xCC);
-    threadColor.count1 = BLACK;
-    threadColor.count2 = BLACK;
-    threadColor.s_num = RED;
-    threadColor.s_category = RGB(0x99, 0x00, 0x00);
-    threadColor.s_text1 = RGB(0x00, 0x00, 0x99);
-    threadColor.s_text2 = RGB(0x99, 0x00, 0x00);
-    threadColor.s_bg = GRAY;
-    threadColor.s_count1 = BLACK;
-    threadColor.s_count2 = BLACK;
+    s2ch.threadColor.num = RED;
+    s2ch.threadColor.category = RED;
+    s2ch.threadColor.text1 = BLUE;
+    s2ch.threadColor.text2 = RED;
+    s2ch.threadColor.bg = RGB(0xCC, 0xFF,0xCC);
+    s2ch.threadColor.count1 = BLACK;
+    s2ch.threadColor.count2 = BLACK;
+    s2ch.threadColor.s_num = RED;
+    s2ch.threadColor.s_category = RGB(0x99, 0x00, 0x00);
+    s2ch.threadColor.s_text1 = RGB(0x00, 0x00, 0x99);
+    s2ch.threadColor.s_text2 = RGB(0x99, 0x00, 0x00);
+    s2ch.threadColor.s_bg = GRAY;
+    s2ch.threadColor.s_count1 = BLACK;
+    s2ch.threadColor.s_count2 = BLACK;
     // カテゴリー・板一覧
-    cateOnColor.cate.text = RGB(0xCC, 0x33, 0x00);
-    cateOnColor.cate.bg = WHITE;
-    cateOnColor.cate.s_text = WHITE;
-    cateOnColor.cate.s_bg = RGB(0xCC, 0x33, 0x00);
-    cateOnColor.ita.text = RGB(0x66, 0x66, 0xFF);
-    cateOnColor.ita.bg = GRAY;
-    cateOnColor.ita.s_text = GRAY;
-    cateOnColor.ita.s_bg = RGB(0x66, 0x66, 0xFF);
-    cateOnColor.base = WHITE;
-    cateOffColor.cate.text = RGB(0x88, 0x99, 0x66);
-    cateOffColor.cate.bg = GRAY;
-    cateOffColor.cate.s_text = GRAY;
-    cateOffColor.cate.s_bg = RGB(0x88, 0x99, 0x66);
-    cateOffColor.ita.text = BLUE;
-    cateOffColor.ita.bg = WHITE;
-    cateOffColor.ita.s_text = WHITE;
-    cateOffColor.ita.s_bg = BLUE;
-    cateOffColor.base = WHITE;
+    s2ch.cateOnColor.cate.text = RGB(0xCC, 0x33, 0x00);
+    s2ch.cateOnColor.cate.bg = WHITE;
+    s2ch.cateOnColor.cate.s_text = WHITE;
+    s2ch.cateOnColor.cate.s_bg = RGB(0xCC, 0x33, 0x00);
+    s2ch.cateOnColor.ita.text = RGB(0x66, 0x66, 0xFF);
+    s2ch.cateOnColor.ita.bg = GRAY;
+    s2ch.cateOnColor.ita.s_text = GRAY;
+    s2ch.cateOnColor.ita.s_bg = RGB(0x66, 0x66, 0xFF);
+    s2ch.cateOnColor.base = WHITE;
+    s2ch.cateOffColor.cate.text = RGB(0x88, 0x99, 0x66);
+    s2ch.cateOffColor.cate.bg = GRAY;
+    s2ch.cateOffColor.cate.s_text = GRAY;
+    s2ch.cateOffColor.cate.s_bg = RGB(0x88, 0x99, 0x66);
+    s2ch.cateOffColor.ita.text = BLUE;
+    s2ch.cateOffColor.ita.bg = WHITE;
+    s2ch.cateOffColor.ita.s_text = WHITE;
+    s2ch.cateOffColor.ita.s_bg = BLUE;
+    s2ch.cateOffColor.base = WHITE;
     // 送信フォーム
-    formColor.title = WHITE;
-    formColor.title_bg = RED;
+    s2ch.formColor.title = WHITE;
+    s2ch.formColor.title_bg = RED;
     // メニューウィンドウ
-    menuWinColor.text = GRAY;
-    menuWinColor.bg = BLACK;
-    menuWinColor.s_text = WHITE;
-    menuWinColor.s_bg = BLUE;
+    s2ch.menuWinColor.text = GRAY;
+    s2ch.menuWinColor.bg = BLACK;
+    s2ch.menuWinColor.s_text = WHITE;
+    s2ch.menuWinColor.s_bg = BLUE;
 }
 
 /***********************************
@@ -582,28 +559,45 @@ int psp2chInit(void)
     ret = sceUtilityLoadNetModule(PSP_NET_MODULE_COMMON);
     if (ret < 0)
     {
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(mh.message, "Load module common errror");
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        strcpy(s2ch.mh.message, "Load module common errror");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         return ret;
     }
     ret = sceUtilityLoadNetModule(PSP_NET_MODULE_INET);
     if (ret < 0)
     {
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(mh.message, "Load module inet errror");
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        strcpy(s2ch.mh.message, "Load module inet errror");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         return ret;
     }
     ret = Cat_NetworkInit();
     if (ret < 0)
     {
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(mh.message, "Cat_NetworkInit errror");
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        strcpy(s2ch.mh.message, "Cat_NetworkInit errror");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         return ret;
     }
     psp2chSetColor();
+    s2ch.running = 1;
+    s2ch.sel = 0;
+    s2ch.tateFlag = 0;
+    s2ch.logDir = "log";
+    s2ch.urlAnchorCount = 0;
+    s2ch.resAnchorCount = 0;
+    s2ch.idAnchorCount = 0;
+    s2ch.numAnchorCount = 0;
+    s2ch.pgCursorX = 0;
+    s2ch.pgCursorY = 0;
+    s2ch.categoryList = NULL;
+    s2ch.itaList = NULL;
+    s2ch.favList = NULL;
+    s2ch.findList = NULL;
+    s2ch.favItaList = NULL;
+    s2ch.threadList = NULL;
+    s2ch.resList = NULL;
     return 0;
 }
 
@@ -662,7 +656,7 @@ int psp2chResolve(const char* host, struct in_addr* addr)
     pgMenuBar(buf);
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
-    sprintf(buf, "%s/hosts", cwDir);
+    sprintf(buf, "%s/hosts", s2ch.cwDir);
     fd = sceIoOpen(buf, PSP_O_RDONLY, 0777);
     if (fd >= 0)
     {
@@ -742,10 +736,10 @@ int psp2chRequest(const char* host, const char* path, const char* header) {
     framebuffer = sceGuSwapBuffers();
     ret = connect(mySocket,(struct sockaddr *)&sain, sizeof(sain) );
     if (ret < 0) {
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(mh.message, "Connect errror");
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&oldPad, 1);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        strcpy(s2ch.mh.message, "Connect errror");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return ret;
     }
     pgMenuBar("接続しました");
@@ -807,9 +801,9 @@ int psp2chPost(char* host, char* dir, int dat, char* cook, char* body)
     framebuffer = sceGuSwapBuffers();
     ret = connect( mySocket,(struct sockaddr *)&sain, sizeof(sain) );
     if (ret < 0) {
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(mh.message, "Can't connect bbs.cgi");
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        sprintf(s2ch.mh.message, "Can't connect bbs.cgi");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         return -1;
     }
 #ifdef DEBUG
@@ -958,9 +952,9 @@ int connect_to_apctl(int config)
     err = sceNetApctlConnect(config);
     if (err != 0)
     {
-        memset(&mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(mh.message, "sceNetApctlConnect error");
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        strcpy(s2ch.mh.message, "sceNetApctlConnect error");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         return 0;
     }
 
@@ -973,9 +967,9 @@ int connect_to_apctl(int config)
         err = sceNetApctlGetState(&state);
         if (err != 0)
         {
-            memset(&mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(mh.message, "sceNetApctlGetState error\n0x%X", err);
-            pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
+            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+            sprintf(s2ch.mh.message, "sceNetApctlGetState error\n0x%X", err);
+            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
             break;
         }
         if (state == 2)
@@ -1031,18 +1025,18 @@ int psp2chApConnect(void)
     int i;
     char buf[32];
 
-    memset(&mh,0,sizeof(MESSAGE_HELPER));
-    mh.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT;
+    memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+    s2ch.mh.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT;
     if (sceWlanGetSwitchState() == 0)
     {
-        strcpy(mh.message, TEXT_1);
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
+        strcpy(s2ch.mh.message, TEXT_1);
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         return -1;
     }
     else if (sceWlanDevIsPowerOn() == 0)
     {
-        strcpy(mh.message, TEXT_2);
-        pspShowMessageDialog(&mh, DIALOG_LANGUAGE_AUTO);
+        strcpy(s2ch.mh.message, TEXT_2);
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         return -1;
     }
     if (sceNetApctlGetInfo(8, buf) == 0)
@@ -1182,26 +1176,26 @@ int psp2chInputDialog(const unsigned short* text1, char* text2)
 {
     int temp;
 
-    temp = tateFlag;
-    tateFlag = 0;
+    temp = s2ch.tateFlag;
+    s2ch.tateFlag = 0;
     keyWords[0] = '\0';
-    while (running)
+    while (s2ch.running)
     {
-        if(sceCtrlPeekBufferPositive(&pad, 1))
+        if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
         {
-            if (pad.Buttons != oldPad.Buttons)
+            if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
             {
-                oldPad = pad;
-                if(pad.Buttons & PSP_CTRL_CIRCLE)
+                s2ch.oldPad = s2ch.pad;
+                if(s2ch.pad.Buttons & PSP_CTRL_CIRCLE)
                 {
                     psp2chGets(text2, keyWords, 128, 1);
                 }
-                if(pad.Buttons & PSP_CTRL_CROSS)
+                if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
                 {
-                    tateFlag = temp;
+                    s2ch.tateFlag = temp;
                     return -1;
                 }
-                if(pad.Buttons & PSP_CTRL_SQUARE)
+                if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
                 {
                     break;
                 }
@@ -1211,21 +1205,21 @@ int psp2chInputDialog(const unsigned short* text1, char* text2)
             sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
             pgFillvram(BLUE, 80, 60, 320, 45);
             pgEditBox(WHITE, 140, 85, 340, 100);
-            pgCursorX = 142;
-            pgCursorY =  87;
+            s2ch.pgCursorX = 142;
+            s2ch.pgCursorY =  87;
             pgPrint(keyWords, BLACK, WHITE, 340);
             pgCopy(0, 0);
             pgMenuBar("　○ : 入力　　　× : 戻る　　　□ : 決定");
-            pgCursorX = 240;
-            pgCursorY =  77;
+            s2ch.pgCursorX = 240;
+            s2ch.pgCursorY =  77;
             intraFontSetStyle(jpn0, 1.0f, YELLOW, 0, INTRAFONT_ALIGN_CENTER);
-            intraFontPrintUCS2(jpn0, pgCursorX, pgCursorY, text1);
+            intraFontPrintUCS2(jpn0, s2ch.pgCursorX, s2ch.pgCursorY, text1);
             sceGuFinish();
             sceGuSync(0,0);
         }
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
     }
-    tateFlag = temp;
+    s2ch.tateFlag = temp;
     return 0;
 }
