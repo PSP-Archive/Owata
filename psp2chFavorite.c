@@ -194,6 +194,7 @@ int psp2chFavorite(void)
                 {
                     if (focus)
                     {
+                        psp2chDelFavoriteIta(s2ch.favIta.select);
                     }
                     else
                     {
@@ -493,6 +494,50 @@ int psp2chDelFavorite(char* title, int dat)
         s2ch.fav.start = 0;
         s2ch.fav.select = 0;
         return psp2chLoadFavorite();
+    }
+    return 0;
+}
+
+/**********************
+s2ch.favItaListからindex以外のリストのみをfavoriteita.brdに書き出す
+psp2chLoadFavoriteIta()でリストを作成しなおす
+**********************/
+int psp2chDelFavoriteIta(int index)
+{
+    SceUID fd;
+    char path[256];
+    int i;
+
+    if (s2ch.favItaList == NULL || s2ch.favIta.count <= 0)
+    {
+        return -1;
+    }
+    memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+    s2ch.mh.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT | PSP_UTILITY_MSGDIALOG_OPTION_YESNO_BUTTONS;
+    strcpy(s2ch.mh.message, TEXT_12);
+    pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+    sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+    if (s2ch.mh.buttonPressed == PSP_UTILITY_MSGDIALOG_RESULT_YES)
+    {
+        sprintf(path, "%s/%s/favoriteIta.brd", s2ch.cwDir, s2ch.logDir);
+        fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
+        if (fd < 0)
+        {
+            return -1;
+        }
+        for (i = 0; i < s2ch.favIta.count; i++)
+        {
+            if (i == index)
+            {
+                continue;
+            }
+            sprintf(path, "%s\t%s\n", s2ch.favItaList[i].cate, s2ch.favItaList[i].title);
+            sceIoWrite(fd, path, strlen(path));
+        }
+        sceIoClose(fd);
+        s2ch.favIta.start = 0;
+        s2ch.favIta.select = 0;
+        return psp2chLoadFavoriteIta();
     }
     return 0;
 }

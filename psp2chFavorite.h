@@ -11,6 +11,7 @@ int psp2chLoadFavoriteIta(void);
 int psp2chAddFavorite(char* host, char* dir, char* title, int dat);
 int psp2chAddFavoriteIta(char* cate, char* title);
 int psp2chDelFavorite(char* title, int dat);
+int psp2chDelFavoriteIta(int index);
 void psp2chDrawFavorite(int scrollX);
 void psp2chDrawFavoriteIta(void);
 

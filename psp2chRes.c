@@ -19,8 +19,8 @@
 
 extern S_2CH s2ch; // psp2ch.c
 extern int* threadSort; // psp2chThread.c
-extern const char* ngNameFile;
-extern const char* ngIDFile;
+extern const char* ngNameFile; // psp2chMenu.c
+extern const char* ngIDFile; // psp2chMenu.c
 
 int preLine = -2;
 char* resBuffer = NULL;
