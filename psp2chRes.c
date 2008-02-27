@@ -105,6 +105,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                     s2ch.res.start = 0;
                 }
                 psp2chResResetAnchors();
+                preLine = -2;
             }
             // STARTƒ{ƒ^ƒ“
             else if(s2ch.pad.Buttons & PSP_CTRL_START)
