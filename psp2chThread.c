@@ -76,46 +76,20 @@ int psp2chThread(int retSel)
             {
                 psp2chMenu(scrollX, 0);
             }
-            else if((!s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_CIRCLE) || (s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_LTRIGGER))
+            if (rMenu)
             {
-                if (rMenu)
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_CIRCLE) || (s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_LTRIGGER))
                 {
                     psp2chThreadSort();
                 }
-                else
-                {
-                    free(s2ch.resList);
-                    s2ch.resList = NULL;
-                    preLine = -2;
-                    s2ch.sel = 5;
-                }
-            }
-            else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
-            {
-                s2ch.sel = ret;
-                ret = 0;
-                return 0;
-            }
-            else if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
-            {
-                if (rMenu)
+                else if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
                 {
                     if (psp2chThreadSearch() == 0 && keyWords[0])
                     {
                         psp2chSort(10);
                     }
                 }
-                else
-                {
-                    psp2chGetSubject(s2ch.ita.select);
-                    psp2chThreadList(s2ch.ita.select);
-                    s2ch.thread.start = 0;
-                    s2ch.thread.select = 0;
-                }
-            }
-            else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
-            {
-                if (rMenu)
+                else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
                 {
                     if (psp2chThreadSearch() == 0 && keyWords[0])
                     {
@@ -127,12 +101,36 @@ int psp2chThread(int retSel)
                         s2ch.sel = 7;
                     }
                 }
-                else
+            }
+            else
+            {
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_CIRCLE) || (s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_LTRIGGER))
+                {
+                    free(s2ch.resList);
+                    s2ch.resList = NULL;
+                    preLine = -2;
+                    s2ch.sel = 5;
+                }
+                else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
+                {
+                    s2ch.sel = ret;
+                    ret = 0;
+                    return 0;
+                }
+                else if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
+                {
+                    psp2chGetSubject(s2ch.ita.select);
+                    psp2chThreadList(s2ch.ita.select);
+                    s2ch.thread.start = 0;
+                    s2ch.thread.select = 0;
+                }
+                else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
                 {
                     s2ch.sel = 1;
                 }
             }
-        }scrollX = psp2chPadSet(scrollX);
+        }
+        scrollX = psp2chPadSet(scrollX);
         psp2chDrawThread(scrollX);
         pgCopy(scrollX, 0);
         pgMenuBar(menuStr);

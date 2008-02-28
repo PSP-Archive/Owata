@@ -105,12 +105,24 @@ int psp2chFavorite(void)
             {
                 psp2chMenu(scrollX, 0);
             }
-            else if((!s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_CIRCLE) || (s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_LTRIGGER))
+            if (rMenu)
             {
-                if (rMenu)
+                if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
                 {
+                    if (psp2chThreadSearch() == 0 && keyWords[0])
+                    {
+                        if (s2ch.findList)
+                        {
+                            free(s2ch.findList);
+                            s2ch.findList = NULL;
+                        }
+                        s2ch.sel = 7;
+                    }
                 }
-                else
+            }
+            else
+            {
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_CIRCLE) || (s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_LTRIGGER))
                 {
                     if (focus)
                     {
@@ -147,23 +159,11 @@ int psp2chFavorite(void)
                         return 0;
                     }
                 }
-            }
-            else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
-            {
-                if (rMenu)
-                {
-                }
-                else
+                else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
                 {
                     s2ch.sel = 2;
                 }
-            }
-            else if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
-            {
-                if (rMenu)
-                {
-                }
-                else
+                else if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
                 {
                     focus = focus ? 0 : 1;
                     if (focus && s2ch.favItaList == NULL)
@@ -175,22 +175,7 @@ int psp2chFavorite(void)
                         focus = 1;
                     }
                 }
-            }
-            else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
-            {
-                if (rMenu)
-                {
-                    if (psp2chThreadSearch() == 0 && keyWords[0])
-                    {
-                        if (s2ch.findList)
-                        {
-                            free(s2ch.findList);
-                            s2ch.findList = NULL;
-                        }
-                        s2ch.sel = 7;
-                    }
-                }
-                else
+                else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
                 {
                     if (focus)
                     {

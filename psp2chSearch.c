@@ -69,44 +69,9 @@ int psp2chSearch(int retSel)
             {
                 s2ch.tateFlag = (s2ch.tateFlag) ? 0 : 1;
             }
-            else if((!s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_CIRCLE) || (s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_LTRIGGER))
+            if (rMenu)
             {
-                if (rMenu)
-                {
-                }
-                else
-                {
-                    free(s2ch.resList);
-                    s2ch.resList = NULL;
-                    preLine = -2;
-                    pgFillvram(WHITE, 0, 0, SCR_WIDTH, BUF_HEIGHT);
-                    s2ch.sel = 8;
-                    return 0;
-                }
-            }
-            else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
-            {
-                if (rMenu)
-                {
-                }
-                else
-                {
-                    s2ch.sel = ret;
-                }
-            }
-            else if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
-            {
-                if (rMenu)
-                {
-                }
-                else
-                {
-                    s2ch.sel = 1;
-                }
-            }
-            else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
-            {
-                if (rMenu)
+                if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
                 {
                     if (psp2chThreadSearch() == 0 && keyWords[0])
                     {
@@ -118,7 +83,27 @@ int psp2chSearch(int retSel)
                         return 0;
                     }
                 }
-                else
+            }
+            else
+            {
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_CIRCLE) || (s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_LTRIGGER))
+                {
+                    free(s2ch.resList);
+                    s2ch.resList = NULL;
+                    preLine = -2;
+                    pgFillvram(WHITE, 0, 0, SCR_WIDTH, BUF_HEIGHT);
+                    s2ch.sel = 8;
+                    return 0;
+                }
+                else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
+                {
+                    s2ch.sel = ret;
+                }
+                else if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
+                {
+                    s2ch.sel = 1;
+                }
+                else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
                 {
                     s2ch.sel = 2;
                 }

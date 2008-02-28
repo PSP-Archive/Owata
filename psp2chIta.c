@@ -119,12 +119,28 @@ int psp2chIta(void)
             {
                 psp2chMenu(0, 0);
             }
-            else if((!s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_CIRCLE) || (s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_LTRIGGER))
+            if (rMenu)
             {
-                if (rMenu)
+                if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
                 {
+                    psp2chAddFavoriteIta(s2ch.categoryList[s2ch.category.select].name, s2ch.itaList[s2ch.ita.select].title);
                 }
-                else
+                else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
+                {
+                    if (psp2chThreadSearch() == 0 && keyWords[0])
+                    {
+                        if (s2ch.findList)
+                        {
+                            free(s2ch.findList);
+                            s2ch.findList = NULL;
+                        }
+                        s2ch.sel = 7;
+                    }
+                }
+            }
+            else
+            {
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_CIRCLE) || (s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_LTRIGGER))
                 {
                     if (focus)
                     {
@@ -144,13 +160,7 @@ int psp2chIta(void)
                         focus = 1;
                     }
                 }
-            }
-            else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
-            {
-                if (rMenu)
-                {
-                }
-                else
+                else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
                 {
                     if (focus)
                     {
@@ -164,14 +174,7 @@ int psp2chIta(void)
                         }
                     }
                 }
-            }
-            else if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
-            {
-                if (rMenu)
-                {
-                    psp2chAddFavoriteIta(s2ch.categoryList[s2ch.category.select].name, s2ch.itaList[s2ch.ita.select].title);
-                }
-                else
+                else if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
                 {
                     psp2chGetMenu();
                     psp2chItaList();
@@ -181,22 +184,7 @@ int psp2chIta(void)
                     s2ch.ita.select = 0;
                     focus = 0;
                 }
-            }
-            else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
-            {
-                if (rMenu)
-                {
-                    if (psp2chThreadSearch() == 0 && keyWords[0])
-                    {
-                        if (s2ch.findList)
-                        {
-                            free(s2ch.findList);
-                            s2ch.findList = NULL;
-                        }
-                        s2ch.sel = 7;
-                    }
-                }
-                else
+                else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
                 {
                     s2ch.sel = 1;
                 }
