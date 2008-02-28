@@ -217,7 +217,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                 preLine = -2;
             }
             // レスアンカーメニュー
-            if (resMenu >= 0)
+            else if (resMenu >= 0)
             {
                 if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.resView) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.resView))
                 {

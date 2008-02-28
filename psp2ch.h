@@ -217,6 +217,21 @@ typedef struct {
 } S_2CH_THREAD_BUTTONS;
 
 typedef struct {
+    int ok, esc, ita, fav, shift;
+    int search2ch;
+} S_2CH_SEARCH_BUTTONS;
+
+typedef struct {
+    int ok, esc;
+    char main[112];
+} S_2CH_MENU_WIN;
+
+typedef struct {
+    int save, esc, del;
+    char main[112];
+} S_2CH_MENU_NG;
+
+typedef struct {
     int form, back, reload, datDel, change, addFav, delFav;
     int resForm, idView, idNG, resView, resMove, url;
     S_2CH_SCROLL_BUTTONS s;
@@ -284,6 +299,8 @@ typedef struct {
     S_2CH_THREAD_BUTTONS thV;
     S_2CH_FAV_BUTTONS favH;
     S_2CH_FAV_BUTTONS favV;
+    S_2CH_SEARCH_BUTTONS findH;
+    S_2CH_SEARCH_BUTTONS findV;
     S_2CH_MENU_STR menuCateH;
     S_2CH_MENU_STR menuCateV;
     S_2CH_MENU_STR menuItaH;
@@ -292,6 +309,14 @@ typedef struct {
     S_2CH_MENU_STR menuFavV;
     S_2CH_MENU_STR menuFavItaH;
     S_2CH_MENU_STR menuFavItaV;
+    S_2CH_MENU_STR menuThreadH;
+    S_2CH_MENU_STR menuThreadV;
+    S_2CH_MENU_STR menuSearchH;
+    S_2CH_MENU_STR menuSearchV;
+    S_2CH_MENU_WIN menuWinH;
+    S_2CH_MENU_WIN menuWinV;
+    S_2CH_MENU_NG menuNGH;
+    S_2CH_MENU_NG menuNGV;
     int running;
     int sel;
     int tateFlag;
@@ -306,7 +331,7 @@ typedef struct {
 int psp2ch(void);
 void psp2chStart(void);
 int psp2chOwata(void);
-int psp2chCursorSet(S_2CH_SCREEN* line,  int lineEnd);
+int psp2chCursorSet(S_2CH_SCREEN* line,  int lineEnd, int shift);
 int psp2chPadSet(int scrollX);
 int psp2chInit(void);
 int psp2chTerm(void);

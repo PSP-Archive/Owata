@@ -17,6 +17,7 @@
 #include "psp2chRes.h"
 #include "psp2chFavorite.h"
 #include "psp2chSearch.h"
+#include "psp2chMenu.h"
 #include "utf8.h"
 #include "pg.h"
 #include "cp932.h"
@@ -151,7 +152,7 @@ start:表示開始行
 select:カーソル選択行
 を変更しRボタン情報を返す
 *****************************/
-int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd)
+int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd, int shift)
 {
     static int keyStart = 0, keyRepeat = 0;
     static clock_t keyTime = 0;
@@ -181,7 +182,7 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd)
         }
     }
 
-    if(s2ch.pad.Buttons & PSP_CTRL_RTRIGGER)
+    if(s2ch.pad.Buttons & shift)
     {
         rMenu = 1;
     }
@@ -691,6 +692,32 @@ void psp2chSetButtons(void)
                 setButton("FAV_2CHSEARCH_H", s2ch.favH.search2ch, 32768);
                 setButton("FAV_2CHSEARCH_V", s2ch.favV.search2ch, 32768);
 
+                setButton("SEARCH_OK_H", s2ch.findH.ok, 8192);
+                setButton("SEARCH_ESC_H", s2ch.findH.esc, 16384);
+                setButton("SEARCH_ITA_H", s2ch.findH.ita, 32768);
+                setButton("SEARCH_FAV_H", s2ch.findH.fav, 4096);
+                setButton("SEARCH_SHIFT_H", s2ch.findH.shift, 512);
+                setButton("SEARCH_OK_V", s2ch.findV.ok, 256);
+                setButton("SEARCH_ESC_V", s2ch.findV.esc, 16384);
+                setButton("SEARCH_ITA_V", s2ch.findV.ita, 32768);
+                setButton("SEARCH_FAV_V", s2ch.findV.fav, 4096);
+                setButton("SEARCH_SHIFT_V", s2ch.findV.shift, 512);
+
+                setButton("SEARCH_2CHSEARCH_H", s2ch.findH.search2ch, 32768);
+                setButton("SEARCH_2CHSEARCH_V", s2ch.findV.search2ch, 32768);
+
+                setButton("MENUWIN_OK_H", s2ch.menuWinH.ok, 8192);
+                setButton("MENUWIN_ESC_H", s2ch.menuWinH.esc, 16384);
+                setButton("MENUWIN_OK_V", s2ch.menuWinV.ok, 256);
+                setButton("MENUWIN_ESC_V", s2ch.menuWinV.esc, 16384);
+
+                setButton("MENUNG_SAVE_H", s2ch.menuNGH.save, 8192);
+                setButton("MENUNG_ESC_H", s2ch.menuNGH.esc, 16384);
+                setButton("MENUNG_DEL_H", s2ch.menuNGH.del, 32768);
+                setButton("MENUNG_SAVE_V", s2ch.menuNGV.save, 256);
+                setButton("MENUNG_ESC_V", s2ch.menuNGV.esc, 16384);
+                setButton("MENUNG_DEL_V", s2ch.menuNGV.del, 32768);
+
                 free(buf);
                 return;
             }
@@ -812,6 +839,32 @@ void psp2chSetButtons(void)
 
     s2ch.favH.search2ch = PSP_CTRL_SQUARE;
     s2ch.favV.search2ch = PSP_CTRL_SQUARE;
+
+    s2ch.findH.ok = PSP_CTRL_CIRCLE;
+    s2ch.findH.esc = PSP_CTRL_CROSS;
+    s2ch.findH.ita = PSP_CTRL_SQUARE;
+    s2ch.findH.fav = PSP_CTRL_TRIANGLE;
+    s2ch.findH.shift = PSP_CTRL_RTRIGGER;
+    s2ch.findV.ok = PSP_CTRL_CIRCLE;
+    s2ch.findV.esc = PSP_CTRL_CROSS;
+    s2ch.findV.ita = PSP_CTRL_SQUARE;
+    s2ch.findV.fav = PSP_CTRL_TRIANGLE;
+    s2ch.findV.shift = PSP_CTRL_RTRIGGER;
+
+    s2ch.findH.search2ch = PSP_CTRL_SQUARE;
+    s2ch.findV.search2ch = PSP_CTRL_SQUARE;
+
+    s2ch.menuWinH.ok = PSP_CTRL_CIRCLE;
+    s2ch.menuWinH.esc = PSP_CTRL_CROSS;
+    s2ch.menuWinV.ok = PSP_CTRL_RTRIGGER;
+    s2ch.menuWinV.esc = PSP_CTRL_CROSS;
+
+    s2ch.menuNGH.save = PSP_CTRL_CIRCLE;
+    s2ch.menuNGH.esc = PSP_CTRL_CROSS;
+    s2ch.menuNGH.del = PSP_CTRL_SQUARE;
+    s2ch.menuNGV.save = PSP_CTRL_RTRIGGER;
+    s2ch.menuNGV.esc = PSP_CTRL_CROSS;
+    s2ch.menuNGV.del = PSP_CTRL_SQUARE;
 }
 
 /***********************************
@@ -850,7 +903,10 @@ int psp2chInit(void)
     psp2chSetButtons();
     psp2chItaSetMenuString();
     psp2chFavSetMenuString();
+    psp2chThreadSetMenuString();
+    psp2chSearchSetMenuString();
     psp2chResSetMenuString();
+    psp2chMenuSetMenuString();
     s2ch.running = 1;
     s2ch.sel = 0;
     s2ch.tateFlag = 0;

@@ -15,9 +15,55 @@ extern char keyWords[128]; //psp2ch.c
 extern unsigned int pixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
 extern unsigned int winPixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
 extern unsigned int* printBuf; // pg.c
+extern const char *sBtnH[];
+extern const char *sBtnV[];
 
 const char* ngNameFile = "ngname.txt";
 const char* ngIDFile = "ngid.txt";
+
+/*********************
+メニュー文字列の作成
+**********************/
+#define getIndex(X, Y) \
+    tmp = (X);\
+    (Y) = 0;\
+    for (i = 0; i < 16; i++)\
+    {\
+        if (tmp & 1)\
+        {\
+            break;\
+        }\
+        (Y)++;\
+        tmp >>= 1;\
+    }
+
+void psp2chMenuSetMenuString(void)
+{
+    int index1, index2, index3;
+    int i, tmp;
+
+    getIndex(s2ch.menuWinH.ok, index1);
+    getIndex(s2ch.menuWinH.esc, index2);
+    sprintf(s2ch.menuWinH.main, "　%s : 決定　　　　　%s : 戻る",
+            sBtnH[index1], sBtnH[index2]);
+
+    getIndex(s2ch.menuWinV.ok, index1);
+    getIndex(s2ch.menuWinV.esc, index2);
+    sprintf(s2ch.menuWinV.main, "　%s : 決定　　　　　%s : 戻る",
+            sBtnV[index1], sBtnV[index2]);
+
+    getIndex(s2ch.menuNGH.save, index1);
+    getIndex(s2ch.menuNGH.esc, index2);
+    getIndex(s2ch.menuNGH.del, index3);
+    sprintf(s2ch.menuNGH.main, "　%s : 保存　　　　%s : 取消し　　　%s : 削除",
+            sBtnH[index1], sBtnH[index2], sBtnH[index3]);
+
+    getIndex(s2ch.menuNGV.save, index1);
+    getIndex(s2ch.menuNGV.esc, index2);
+    getIndex(s2ch.menuNGV.del, index3);
+    sprintf(s2ch.menuNGV.main, "　%s : 保存　　　　%s : 取消し　　　%s : 削除",
+            sBtnV[index1], sBtnV[index2], sBtnV[index3]);
+}
 
 /****************
 メニュー選択ウィンドウ
@@ -51,11 +97,11 @@ int psp2chMenu(int pixelsX, int pixelsY)
     {
         if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
         {
-            psp2chCursorSet(&menu, lineEnd);
+            psp2chCursorSet(&menu, lineEnd, 0);
             if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
             {
                 s2ch.oldPad = s2ch.pad;
-                if((!s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_CIRCLE) || (s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_LTRIGGER))
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinH.ok) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinV.ok))
                 {
                     switch (menu.select)
                     {
@@ -72,25 +118,19 @@ int psp2chMenu(int pixelsX, int pixelsY)
                     pgCopy(pixelsX, pixelsY);
                     printBuf = winPixels;
                 }
-                else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
+                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinH.esc) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinV.esc))
                 {
                     printBuf = pixels;
                     break;
                 }
-                else if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
-                {
-                }
-                else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
-                {
-                }
             }
             if (s2ch.tateFlag)
             {
-                menuStr = "　L : 決定　　　　× : 戻る　　　";
+                menuStr = s2ch.menuWinV.main;
             }
             else
             {
-                menuStr = "　○ : 決定　　　　× : 戻る　　　";
+                menuStr = s2ch.menuWinH.main;
             }
             psp2chDrawMenu((char**)menuList, menu, startX, startY, scrX, scrY);
             pgCopyWindow(0, startX, startY, scrX, scrY);
@@ -141,11 +181,11 @@ void psp2chMenuNG(int pixelsX, int pixelsY)
     {
         if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
         {
-            psp2chCursorSet(&menu, lineEnd);
+            psp2chCursorSet(&menu, lineEnd, 0);
             if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
             {
                 s2ch.oldPad = s2ch.pad;
-                if(s2ch.pad.Buttons & PSP_CTRL_CIRCLE)
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinH.ok) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinV.ok))
                 {
                     switch (menu.select)
                     {
@@ -171,12 +211,19 @@ void psp2chMenuNG(int pixelsX, int pixelsY)
                     pgCopy(pixelsX, pixelsY);
                     printBuf = winPixels;
                 }
-                else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
+                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinH.esc) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinV.esc))
                 {
                     break;
                 }
             }
-            menuStr = "　○ : 決定　　　　× : 戻る　　　";
+            if (s2ch.tateFlag)
+            {
+                menuStr = s2ch.menuWinV.main;
+            }
+            else
+            {
+                menuStr = s2ch.menuWinH.main;
+            }
             psp2chDrawMenu((char**)menuList, menu, startX, startY, scrX, scrY);
             pgCopyWindow(0, startX, startY, scrX, scrY);
             pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
@@ -305,11 +352,11 @@ int psp2chNGDel(const char* file, int pixelsX, int pixelsY)
     {
         if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
         {
-            psp2chCursorSet(&menu, lineEnd);
+            psp2chCursorSet(&menu, lineEnd, 0);
             if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
             {
                 s2ch.oldPad = s2ch.pad;
-                if(s2ch.pad.Buttons & PSP_CTRL_CIRCLE)
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuNGH.save) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuNGV.save))
                 {
                     fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
                     if (fd < 0)
@@ -331,11 +378,11 @@ int psp2chNGDel(const char* file, int pixelsX, int pixelsY)
                     psp2chResCheckNG();
                     break;
                 }
-                else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
+                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuNGH.esc) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuNGV.esc))
                 {
                     break;
                 }
-                else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
+                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuNGH.del) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuNGV.del))
                 {
                     menu.count--;
                     for (i = menu.select; i < menu.count; i++)
@@ -344,7 +391,14 @@ int psp2chNGDel(const char* file, int pixelsX, int pixelsY)
                     }
                 }
             }
-            menuStr = "　○ : 保存　　　　× : 取消し　　　□ : 削除";
+            if (s2ch.tateFlag)
+            {
+                menuStr = s2ch.menuNGV.main;
+            }
+            else
+            {
+                menuStr = s2ch.menuNGH.main;
+            }
             psp2chDrawMenu(list, menu, startX, startY, scrX, scrY);
             pgCopyWindow(0, startX, startY, scrX, scrY);
             pgWindowFrame(startX, startY, startX + scrX, startY + scrY);

@@ -5,6 +5,7 @@
 #ifndef __PSP2CH_MENU_H__
 #define __PSP2CH_MENU_H__
 
+void psp2chMenuSetMenuString(void);
 int psp2chMenu(int pixelsX, int pixelsY);
 void psp2chMenuNG(int pixelsX, int pixelsY);
 char* psp2chGetNGBuf(const char* file, char* buf);

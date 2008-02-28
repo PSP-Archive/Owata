@@ -116,13 +116,27 @@ int psp2chFavorite(void)
     }
     if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
     {
-        if (focus)
+        if (s2ch.tateFlag)
         {
-            rMenu = psp2chCursorSet(&s2ch.favIta, lineEnd);
+            if (focus)
+            {
+                rMenu = psp2chCursorSet(&s2ch.favIta, lineEnd, s2ch.favV.shift);
+            }
+            else
+            {
+                rMenu = psp2chCursorSet(&s2ch.fav, lineEnd, s2ch.favV.shift);
+            }
         }
         else
         {
-            rMenu = psp2chCursorSet(&s2ch.fav, lineEnd);
+            if (focus)
+            {
+                rMenu = psp2chCursorSet(&s2ch.favIta, lineEnd, s2ch.favH.shift);
+            }
+            else
+            {
+                rMenu = psp2chCursorSet(&s2ch.fav, lineEnd, s2ch.favH.shift);
+            }
         }
         if (rMenu)
         {
@@ -186,7 +200,7 @@ int psp2chFavorite(void)
             {
                 psp2chMenu(scrollX, 0);
             }
-            if (rMenu)
+            else if (rMenu)
             {
                 // ëSî¬åüçı
                 if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favH.search2ch) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favV.search2ch))

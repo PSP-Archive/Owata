@@ -21,8 +21,64 @@ extern unsigned int list[512*512]; // pg.c
 extern intraFont* jpn0; // pg.c
 extern int preLine; // psp2chRes.c
 extern char keyWords[128]; //psp2ch.c
+extern const char *sBtnH[];
+extern const char *sBtnV[];
 
 int* threadSort = NULL;
+
+/*********************
+メニュー文字列の作成
+**********************/
+#define getIndex(X, Y) \
+    tmp = (X);\
+    (Y) = 0;\
+    for (i = 0; i < 16; i++)\
+    {\
+        if (tmp & 1)\
+        {\
+            break;\
+        }\
+        (Y)++;\
+        tmp >>= 1;\
+    }
+
+void psp2chThreadSetMenuString(void)
+{
+    int index1, index2, index3, index4, index5;
+    int i, tmp;
+
+    getIndex(s2ch.thH.ok, index1);
+    getIndex(s2ch.thH.esc, index2);
+    getIndex(s2ch.thH.reload, index3);
+    getIndex(s2ch.thH.move, index4);
+    getIndex(s2ch.thH.shift, index5);
+    sprintf(s2ch.menuThreadH.main, "　%s : 決定　　　　　%s : 戻る　　　　　%s : 更新　　　　　%s : お気に入り　　　%s : メニュー切替",
+            sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index4], sBtnH[index5]);
+
+    getIndex(s2ch.listH.top, index1);
+    getIndex(s2ch.listH.end, index2);
+    getIndex(s2ch.thH.sort, index3);
+    getIndex(s2ch.thH.search, index4);
+    getIndex(s2ch.thH.search2ch, index5);
+    sprintf(s2ch.menuThreadH.sub, "　%s : 先頭　　　%s : 最後　　　%s : ソ\ート　　　%s : 検索　　　%s : 全板検索",
+            sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index4], sBtnH[index5]);
+
+    getIndex(s2ch.thV.ok, index1);
+    getIndex(s2ch.thV.esc, index2);
+    getIndex(s2ch.thV.reload, index3);
+    getIndex(s2ch.thV.move, index4);
+    getIndex(s2ch.thV.shift, index5);
+    sprintf(s2ch.menuThreadV.main, "　%s : 決定　　　　　%s : 戻る　　　　　%s : 更新　　　　　%s : お気に入り　　　%s : メニュー切替",
+            sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4], sBtnV[index5]);
+
+    getIndex(s2ch.listV.top, index1);
+    getIndex(s2ch.listV.end, index2);
+    getIndex(s2ch.thV.sort, index3);
+    getIndex(s2ch.thV.search, index4);
+    getIndex(s2ch.thV.search2ch, index5);
+    sprintf(s2ch.menuThreadV.sub, "　%s : 先頭　　　%s : 最後　　　%s : ソ\ート　　　%s : 検索　　　%s : 全板検索",
+            sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4], sBtnV[index5]);
+}
 
 /****************
  スレッド一覧表示
@@ -48,20 +104,34 @@ int psp2chThread(int retSel)
     }
     if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
     {
-        rMenu = psp2chCursorSet(&s2ch.thread, lineEnd);
+        if (s2ch.tateFlag)
+        {
+            rMenu = psp2chCursorSet(&s2ch.thread, lineEnd, s2ch.thV.shift);
+        }
+        else
+        {
+            rMenu = psp2chCursorSet(&s2ch.thread, lineEnd, s2ch.thH.shift);
+        }
         if (rMenu)
         {
-            menuStr = "　↑ : 先頭　　　↓ : 最後　　　○ : ソ\ート　　　△ : 検索　　　□ : 全板検索";
+            if (s2ch.tateFlag)
+            {
+                menuStr = s2ch.menuThreadV.sub;
+            }
+            else
+            {
+                menuStr = s2ch.menuThreadH.sub;
+            }
         }
         else
         {
             if (s2ch.tateFlag)
             {
-                menuStr = "　L : 決定　　　　　× : 戻る　　　　　△ : 更新　　　　　□ : お気に入り　　　R : メニュー切替";
+                menuStr = s2ch.menuThreadV.main;
             }
             else
             {
-                menuStr = "　○ : 決定　　　　　× : 戻る　　　　　△ : 更新　　　　　□ : お気に入り　　　R : メニュー切替";
+                menuStr = s2ch.menuThreadH.main;
             }
         }
         if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
@@ -76,20 +146,20 @@ int psp2chThread(int retSel)
             {
                 psp2chMenu(scrollX, 0);
             }
-            if (rMenu)
+            else if (rMenu)
             {
-                if((!s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_CIRCLE) || (s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_LTRIGGER))
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thH.sort) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thV.sort))
                 {
                     psp2chThreadSort();
                 }
-                else if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thH.search) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thV.search))
                 {
                     if (psp2chThreadSearch() == 0 && keyWords[0])
                     {
                         psp2chSort(10);
                     }
                 }
-                else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thH.search2ch) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thV.search2ch))
                 {
                     if (psp2chThreadSearch() == 0 && keyWords[0])
                     {
@@ -104,27 +174,27 @@ int psp2chThread(int retSel)
             }
             else
             {
-                if((!s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_CIRCLE) || (s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_LTRIGGER))
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thH.ok) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thV.ok))
                 {
                     free(s2ch.resList);
                     s2ch.resList = NULL;
                     preLine = -2;
                     s2ch.sel = 5;
                 }
-                else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thH.esc) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thV.esc))
                 {
                     s2ch.sel = ret;
                     ret = 0;
                     return 0;
                 }
-                else if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thH.reload) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thV.reload))
                 {
                     psp2chGetSubject(s2ch.ita.select);
                     psp2chThreadList(s2ch.ita.select);
                     s2ch.thread.start = 0;
                     s2ch.thread.select = 0;
                 }
-                else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thH.move) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thV.move))
                 {
                     s2ch.sel = 1;
                 }

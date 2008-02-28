@@ -122,7 +122,14 @@ int psp2chIta(void)
             {
                 s2ch.ita.count = end;
             }
-            rMenu = psp2chCursorSet(&s2ch.ita, lineEnd);
+            if (s2ch.tateFlag)
+            {
+                rMenu = psp2chCursorSet(&s2ch.ita, lineEnd, s2ch.itaV.shift);
+            }
+            else
+            {
+                rMenu = psp2chCursorSet(&s2ch.ita, lineEnd, s2ch.itaH.shift);
+            }
             if (s2ch.ita.start < s2ch.categoryList[s2ch.category.select].itaId)
             {
                 s2ch.ita.start = s2ch.categoryList[s2ch.category.select].itaId;
@@ -155,7 +162,14 @@ int psp2chIta(void)
         }
         else
         {
-            rMenu = psp2chCursorSet(&s2ch.category, lineEnd);
+            if (s2ch.tateFlag)
+            {
+                rMenu = psp2chCursorSet(&s2ch.category, lineEnd, s2ch.itaV.shift);
+            }
+            else
+            {
+                rMenu = psp2chCursorSet(&s2ch.category, lineEnd, s2ch.itaH.shift);
+            }
             s2ch.ita.start = s2ch.categoryList[s2ch.category.select].itaId;
             s2ch.ita.select = s2ch.categoryList[s2ch.category.select].itaId;
             psp2chDrawCategory(s2ch.category.start, s2ch.category.select, s2ch.cateOnColor);
@@ -195,7 +209,7 @@ int psp2chIta(void)
             {
                 psp2chMenu(0, 0);
             }
-            if (rMenu)
+            else if (rMenu)
             {
                 if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.itaH.addFav) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.itaV.addFav))
                 {
