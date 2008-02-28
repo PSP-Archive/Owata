@@ -5,13 +5,13 @@
 #ifndef __PSP2CH_H__
 #define __PSP2CH_H__
 
+#include "pspdialogs.h"
 #include <pspnet.h>
 #include <pspnet_apctl.h>
 #include <pspnet_inet.h>
 #include <pspnet_resolver.h>
 #include <sys/socket.h>
 #include <pspctrl.h>
-#include "pspdialogs.h"
 
 //#define DEBUG
 #define RES_BAR_WIDTH (8)
