@@ -549,6 +549,148 @@ void psp2chSetColor(void)
     s2ch.menuWinColor.s_bg = BLUE;
 }
 
+/********************
+レス表示画面 ボタンの割り当て
+********************/
+#define setButton(A, B, C) \
+    p = strstr(buf, (A));\
+    if (p) {\
+        p = strstr(p, "=");\
+        if(p){\
+            p++;\
+            sscanf(p, "%d", &(B));\
+        }\
+        else{(B) = (C);}\
+    }\
+    else{(B) = (C);}
+void psp2chSetResButtons(void)
+{
+    SceUID fd;
+    SceIoStat st;
+    char file[256];
+    char *buf;
+    char *p;
+    int ret;
+
+    sprintf(file, "%s/button.ini", s2ch.cwDir);
+    ret = sceIoGetstat(file, &st);
+    if (ret >= 0)
+    {
+        buf = (char*)malloc(st.st_size + 1);
+        if (buf)
+        {
+            fd = sceIoOpen(file, PSP_O_RDONLY, 0777);
+            if (fd >= 0)
+            {
+                sceIoRead(fd, buf, st.st_size);
+                sceIoClose(fd);
+                buf[st.st_size] = '\0';
+                setButton("RES_FORM_H", s2ch.btnResH.form, 8192);
+                setButton("RES_BACK_H", s2ch.btnResH.back, 16384);
+                setButton("RES_RELOAD_H", s2ch.btnResH.reload, 4096);
+                setButton("RES_DATDEL_H", s2ch.btnResH.datDel, 32768);
+                setButton("RES_SHIFT_H", s2ch.btnResH.change, 512);
+                setButton("RES_FORM_V", s2ch.btnResV.form, 8192);
+                setButton("RES_BACK_V", s2ch.btnResV.back, 16384);
+                setButton("RES_RELOAD_V", s2ch.btnResV.reload, 4096);
+                setButton("RES_DATDEL_V", s2ch.btnResV.datDel, 32768);
+                setButton("RES_SHIFT_V", s2ch.btnResV.change, 512);
+
+                setButton("RES_TOP_H", s2ch.btnResH.top, 16);
+                setButton("RES_END_H", s2ch.btnResH.end, 64);
+                setButton("RES_ADDFAV_H", s2ch.btnResH.addFav, 8192);
+                setButton("RES_DELFAV_H", s2ch.btnResH.delFav, 32768);
+                setButton("RES_TOP_V", s2ch.btnResV.top, 16);
+                setButton("RES_END_V", s2ch.btnResV.end, 64);
+                setButton("RES_ADDFAV_V", s2ch.btnResV.addFav, 8192);
+                setButton("RES_DELFAV_V", s2ch.btnResV.delFav, 32768);
+
+                setButton("RES_NUMRES_H", s2ch.btnResH.resForm, 8192);
+                setButton("RES_NUMRES_V", s2ch.btnResV.resForm, 8192);
+
+                setButton("RES_IDVIEW_H", s2ch.btnResH.idView, 8192);
+                setButton("RES_IDNG_H", s2ch.btnResH.idNG, 32768);
+                setButton("RES_IDVIEW_V", s2ch.btnResV.idView, 8192);
+                setButton("RES_IDNG_V", s2ch.btnResV.idNG, 32768);
+
+                setButton("RES_RESVIEW_H", s2ch.btnResH.resView, 8192);
+                setButton("RES_RESMOVE_H", s2ch.btnResH.resMove, 4096);
+                setButton("RES_RESVIEW_V", s2ch.btnResV.resView, 8192);
+                setButton("RES_RESMOVE_V", s2ch.btnResV.resMove, 4096);
+
+                setButton("RES_URL_H", s2ch.btnResH.url, 8192);
+                setButton("RES_URL_V", s2ch.btnResV.url, 8192);
+
+                setButton("RES_UP_H", s2ch.btnResH.up, 16);
+                setButton("RES_PAGEUP_H", s2ch.btnResH.pUp, 128);
+                setButton("RES_DOWN_H", s2ch.btnResH.down, 64);
+                setButton("RES_PAGEDOWN_H", s2ch.btnResH.pDown, 32);
+                setButton("RES_UP_V", s2ch.btnResV.up, 32);
+                setButton("RES_PAGEUP_V", s2ch.btnResV.pUp, 16);
+                setButton("RES_DOWN_V", s2ch.btnResV.down, 128);
+                setButton("RES_PAGEDOWN_V", s2ch.btnResV.pDown, 64);
+                free(buf);
+                return;
+            }
+            else
+            {
+                free(buf);
+            }
+        }
+    }
+    s2ch.btnResH.form     = PSP_CTRL_CIRCLE;
+    s2ch.btnResH.back     = PSP_CTRL_CROSS;
+    s2ch.btnResH.reload   = PSP_CTRL_TRIANGLE;
+    s2ch.btnResH.datDel   = PSP_CTRL_SQUARE;
+    s2ch.btnResH.change   = PSP_CTRL_RTRIGGER;
+
+    s2ch.btnResH.top      = PSP_CTRL_UP;
+    s2ch.btnResH.end      = PSP_CTRL_DOWN;
+    s2ch.btnResH.addFav   = PSP_CTRL_CIRCLE;
+    s2ch.btnResH.delFav   = PSP_CTRL_SQUARE;
+
+    s2ch.btnResH.resForm  = PSP_CTRL_CIRCLE;
+
+    s2ch.btnResH.idView   = PSP_CTRL_CIRCLE;
+    s2ch.btnResH.idNG     = PSP_CTRL_SQUARE;
+
+    s2ch.btnResH.resView  = PSP_CTRL_CIRCLE;
+    s2ch.btnResH.resMove  = PSP_CTRL_TRIANGLE;
+
+    s2ch.btnResH.url      = PSP_CTRL_CIRCLE;
+
+    s2ch.btnResH.up       = PSP_CTRL_UP;
+    s2ch.btnResH.pUp      = PSP_CTRL_LEFT;
+    s2ch.btnResH.down     = PSP_CTRL_DOWN;
+    s2ch.btnResH.pDown    = PSP_CTRL_RIGHT;
+
+    s2ch.btnResV.form     = PSP_CTRL_CIRCLE;
+    s2ch.btnResV.back     = PSP_CTRL_CROSS;
+    s2ch.btnResV.reload   = PSP_CTRL_TRIANGLE;
+    s2ch.btnResV.datDel   = PSP_CTRL_SQUARE;
+    s2ch.btnResV.change   = PSP_CTRL_RTRIGGER;
+
+    s2ch.btnResV.top      = PSP_CTRL_RIGHT;
+    s2ch.btnResV.end      = PSP_CTRL_LEFT;
+    s2ch.btnResV.addFav   = PSP_CTRL_CIRCLE;
+    s2ch.btnResV.delFav   = PSP_CTRL_SQUARE;
+
+    s2ch.btnResV.resForm  = PSP_CTRL_CIRCLE;
+
+    s2ch.btnResV.idView   = PSP_CTRL_CIRCLE;
+    s2ch.btnResV.idNG     = PSP_CTRL_SQUARE;
+
+    s2ch.btnResV.resView  = PSP_CTRL_CIRCLE;
+    s2ch.btnResV.resMove  = PSP_CTRL_TRIANGLE;
+
+    s2ch.btnResV.url      = PSP_CTRL_CIRCLE;
+
+    s2ch.btnResV.up       = PSP_CTRL_RIGHT;
+    s2ch.btnResV.pUp      = PSP_CTRL_UP;
+    s2ch.btnResV.down     = PSP_CTRL_LEFT;
+    s2ch.btnResV.pDown    = PSP_CTRL_DOWN;
+}
+
 /***********************************
 ネットモジュールのロード初期化
 ************************************/
@@ -581,6 +723,8 @@ int psp2chInit(void)
         return ret;
     }
     psp2chSetColor();
+    psp2chSetResButtons();
+    psp2chResSetMenuString();
     s2ch.running = 1;
     s2ch.sel = 0;
     s2ch.tateFlag = 0;

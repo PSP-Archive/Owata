@@ -198,6 +198,22 @@ typedef struct {
 } S_2CH_NUM_ANCHOR;
 
 typedef struct {
+    int form, back, reload, datDel, change, addFav, delFav;
+    int resForm, idView, idNG, resView, resMove, url;
+    int up, pUp, down, pDown, top, end;
+} S_2CH_RES_BUTTONS;
+
+typedef struct {
+    char main[96];
+    char sub1[96];
+    char sub2[96];
+    char aNum[96];
+    char aRes[96];
+    char aId[96];
+    char aUrl[96];
+} S_2CH_RES_MENU_STR;
+
+typedef struct {
     S_2CH_CATEGORY* categoryList;
     S_2CH_ITA* itaList;
     S_2CH_FAVORITE* favList;
@@ -232,6 +248,10 @@ typedef struct {
     S_2CH_ITA_COLOR cateOffColor;
     S_2CH_FORM_COLOR formColor;
     S_2CH_TXT_COLOR menuWinColor;
+    S_2CH_RES_BUTTONS btnResH;
+    S_2CH_RES_BUTTONS btnResV;
+    S_2CH_RES_MENU_STR menuResH;
+    S_2CH_RES_MENU_STR menuResV;
     int running;
     int sel;
     int tateFlag;

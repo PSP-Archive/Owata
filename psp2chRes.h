@@ -5,6 +5,7 @@
 #ifndef __PSP2CH_RES_H__
 #define __PSP2CH_RES_H__
 
+void psp2chResSetMenuString(void);
 int psp2chFavoriteRes(int ret);
 int psp2chThreadRes(int ret);
 int psp2chJumpRes(int ret);
