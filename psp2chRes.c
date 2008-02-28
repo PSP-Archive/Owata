@@ -27,384 +27,97 @@ char* resBuffer = NULL;
 
 static char jmpHost[32], jmpDir[32], jmpTitle[32];
 static int jmpDat;
-const char *sBtnH[] = {"Sel", "", "", "St", "↑", "→", "↓", "←", "L", "R", "", "", "△", "○", "×", "□"};
-const char *sBtnV[] = {"Sel", "", "", "St", "←", "↑", "→", "↓", "L", "R", "", "", "△", "○", "×", "□"};
+const char *sBtnH[] = {"Sel", "", "", "St", "↑", "→", "↓", "←", "L", "R", "", "", "△", "○", "×", "□", ""};
+const char *sBtnV[] = {"Sel", "", "", "St", "←", "↑", "→", "↓", "L", "R", "", "", "△", "○", "×", "□", ""};
 
 /*********************
 メニュー文字列の作成
 **********************/
+#define getIndex(X, Y) \
+    tmp = (X);\
+    (Y) = 0;\
+    for (i = 0; i < 16; i++)\
+    {\
+        if (tmp & 1)\
+        {\
+            break;\
+        }\
+        (Y)++;\
+        tmp >>= 1;\
+    }
+
 void psp2chResSetMenuString(void)
 {
     int index1, index2, index3, index4, index5;
     int i, tmp;
 
-    tmp = s2ch.btnResH.form;
-    index1 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index1++;
-        tmp >>= 1;
-    }
-    tmp = s2ch.btnResH.back;
-    index2 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index2++;
-        tmp >>= 1;
-    }
-    tmp = s2ch.btnResH.reload;
-    index3 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index3++;
-        tmp >>= 1;
-    }
-    tmp = s2ch.btnResH.datDel;
-    index4 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index4++;
-        tmp >>= 1;
-    }
-    tmp = s2ch.btnResH.change;
-    index5 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index5++;
-        tmp >>= 1;
-    }
+    getIndex(s2ch.btnResH.form, index1);
+    getIndex(s2ch.btnResH.back, index2);
+    getIndex(s2ch.btnResH.reload, index3);
+    getIndex(s2ch.btnResH.datDel, index4);
+    getIndex(s2ch.btnResH.change, index5);
     sprintf(s2ch.menuResH.main, "　%s : 書き込み　　　%s : 戻る　　　　　%s : 更新　　　　　%s : 削除　　　%s : メニュー切替",
             sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index4], sBtnH[index5]);
 
-    tmp = s2ch.btnResH.top;
-    index1 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index1++;
-        tmp >>= 1;
-    }
-    tmp = s2ch.btnResH.end;
-    index2 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index2++;
-        tmp >>= 1;
-    }
-    tmp = s2ch.btnResH.addFav;
-    index3 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index3++;
-        tmp >>= 1;
-    }
-    tmp = s2ch.btnResH.delFav;
-    index4 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index4++;
-        tmp >>= 1;
-    }
+    getIndex(s2ch.btnResH.s.top, index1);
+    getIndex(s2ch.btnResH.s.end, index2);
+    getIndex(s2ch.btnResH.addFav, index3);
+    getIndex(s2ch.btnResH.delFav, index4);
     sprintf(s2ch.menuResH.sub1, "　%s : 先頭　　　%s : 最後　　　%s : お気に入りに登録",
             sBtnH[index1], sBtnH[index2], sBtnH[index3]);
     sprintf(s2ch.menuResH.sub2, "　%s : 先頭　　　%s : 最後　　　%s : お気に入りから削除",
             sBtnH[index1], sBtnH[index2], sBtnH[index4]);
 
-    tmp = s2ch.btnResH.resForm;
-    index1 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index1++;
-        tmp >>= 1;
-    }
+    getIndex(s2ch.btnResH.resForm, index1);
     sprintf(s2ch.menuResH.aNum, "　%s : レスをする",
             sBtnH[index1]);
 
-    tmp = s2ch.btnResH.idView;
-    index1 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index1++;
-        tmp >>= 1;
-    }
-    tmp = s2ch.btnResH.idNG;
-    index2 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index2++;
-        tmp >>= 1;
-    }
+    getIndex(s2ch.btnResH.idView, index1);
+    getIndex(s2ch.btnResH.idNG, index2);
     sprintf(s2ch.menuResH.aId, "　%s : ID抽出　　　%s : NGID登録",
             sBtnH[index1], sBtnH[index2]);
 
-    tmp = s2ch.btnResH.resView;
-    index1 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index1++;
-        tmp >>= 1;
-    }
-    tmp = s2ch.btnResH.resMove;
-    index2 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index2++;
-        tmp >>= 1;
-    }
+    getIndex(s2ch.btnResH.resView, index1);
+    getIndex(s2ch.btnResH.resMove, index2);
     sprintf(s2ch.menuResH.aRes, "　%s : レス表\示　　　%s : レスに移動",
             sBtnH[index1], sBtnH[index2]);
 
-    tmp = s2ch.btnResH.url;
-    index1 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index1++;
-        tmp >>= 1;
-    }
+    getIndex(s2ch.btnResH.url, index1);
     sprintf(s2ch.menuResH.aUrl, "　%s : リンク表\示",
             sBtnH[index1]);
 
-    tmp = s2ch.btnResV.form;
-    index1 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index1++;
-        tmp >>= 1;
-    }
-    tmp = s2ch.btnResV.back;
-    index2 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index2++;
-        tmp >>= 1;
-    }
-    tmp = s2ch.btnResV.reload;
-    index3 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index3++;
-        tmp >>= 1;
-    }
-    tmp = s2ch.btnResV.datDel;
-    index4 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index4++;
-        tmp >>= 1;
-    }
-    tmp = s2ch.btnResV.change;
-    index5 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index5++;
-        tmp >>= 1;
-    }
+    getIndex(s2ch.btnResV.form, index1);
+    getIndex(s2ch.btnResV.back, index2);
+    getIndex(s2ch.btnResV.reload, index3);
+    getIndex(s2ch.btnResV.datDel, index4);
+    getIndex(s2ch.btnResV.change, index5);
     sprintf(s2ch.menuResV.main, "　%s : 書き込み　　　%s : 戻る　　　　　%s : 更新　　　　　%s : 削除　　　%s : メニュー切替",
             sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4], sBtnV[index5]);
 
-    tmp = s2ch.btnResV.top;
-    index1 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index1++;
-        tmp >>= 1;
-    }
-    tmp = s2ch.btnResV.end;
-    index2 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index2++;
-        tmp >>= 1;
-    }
-    tmp = s2ch.btnResV.addFav;
-    index3 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index3++;
-        tmp >>= 1;
-    }
-    tmp = s2ch.btnResV.delFav;
-    index4 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index4++;
-        tmp >>= 1;
-    }
+    getIndex(s2ch.btnResV.s.top, index1);
+    getIndex(s2ch.btnResV.s.end, index2);
+    getIndex(s2ch.btnResV.addFav, index3);
+    getIndex(s2ch.btnResV.delFav, index4);
     sprintf(s2ch.menuResV.sub1, "　%s : 先頭　　　%s : 最後　　　%s : お気に入りに登録",
             sBtnV[index1], sBtnV[index2], sBtnV[index3]);
     sprintf(s2ch.menuResV.sub2, "　%s : 先頭　　　%s : 最後　　　%s : お気に入りから削除",
             sBtnV[index1], sBtnV[index2], sBtnV[index4]);
 
-    tmp = s2ch.btnResV.resForm;
-    index1 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index1++;
-        tmp >>= 1;
-    }
+    getIndex(s2ch.btnResV.resForm, index1);
     sprintf(s2ch.menuResV.aNum, "　%s : レスをする",
             sBtnV[index1]);
 
-    tmp = s2ch.btnResV.idView;
-    index1 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index1++;
-        tmp >>= 1;
-    }
-    tmp = s2ch.btnResV.idNG;
-    index2 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index2++;
-        tmp >>= 1;
-    }
+    getIndex(s2ch.btnResV.idView, index1);
+    getIndex(s2ch.btnResV.idNG, index2);
     sprintf(s2ch.menuResV.aId, "　%s : ID抽出　　　%s : NGID登録",
             sBtnV[index1], sBtnV[index2]);
 
-    tmp = s2ch.btnResV.resView;
-    index1 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index1++;
-        tmp >>= 1;
-    }
-    tmp = s2ch.btnResV.resMove;
-    index2 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index2++;
-        tmp >>= 1;
-    }
+    getIndex(s2ch.btnResV.resView, index1);
+    getIndex(s2ch.btnResV.resMove, index2);
     sprintf(s2ch.menuResV.aRes, "　%s : レス表\示　　　%s : レスに移動",
             sBtnV[index1], sBtnV[index2]);
 
-    tmp = s2ch.btnResV.url;
-    index1 = 0;
-    for (i = 0; i < 16; i++)
-    {
-        if (tmp & 1)
-        {
-            break;
-        }
-        index1++;
-        tmp >>= 1;
-    }
+    getIndex(s2ch.btnResV.url, index1);
     sprintf(s2ch.menuResV.aUrl, "　%s : リンク表\示",
             sBtnV[index1]);
 }
@@ -1000,7 +713,7 @@ int psp2chResCursorMove(int* totalLine, int* lineEnd, int* cursorY, int limitY)
         }
         keyTime = clock();
         keyRepeat = 0;
-        if((s2ch.pad.Buttons & s2ch.btnResH.up && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.up && s2ch.tateFlag) || padUp)
+        if((s2ch.pad.Buttons & s2ch.btnResH.s.up && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.s.up && s2ch.tateFlag) || padUp)
         {
             s2ch.res.start--;
             if (s2ch.res.start < 0)
@@ -1008,7 +721,7 @@ int psp2chResCursorMove(int* totalLine, int* lineEnd, int* cursorY, int limitY)
                 s2ch.res.start = 0;
             }
         }
-        if((s2ch.pad.Buttons & s2ch.btnResH.down && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.down && s2ch.tateFlag) || padDown)
+        if((s2ch.pad.Buttons & s2ch.btnResH.s.down && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.s.down && s2ch.tateFlag) || padDown)
         {
             s2ch.res.start++;
             if (s2ch.res.start > *totalLine - *lineEnd)
@@ -1020,7 +733,7 @@ int psp2chResCursorMove(int* totalLine, int* lineEnd, int* cursorY, int limitY)
                 s2ch.res.start = 0;
             }
         }
-        if((s2ch.pad.Buttons & s2ch.btnResH.pUp && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.pUp && s2ch.tateFlag))
+        if((s2ch.pad.Buttons & s2ch.btnResH.s.pUp && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.s.pUp && s2ch.tateFlag))
         {
             s2ch.res.start -= (*lineEnd - 2);
             if (s2ch.res.start < 0)
@@ -1028,7 +741,7 @@ int psp2chResCursorMove(int* totalLine, int* lineEnd, int* cursorY, int limitY)
                 s2ch.res.start = 0;
             }
         }
-        if((s2ch.pad.Buttons & s2ch.btnResH.pDown && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.pDown && s2ch.tateFlag))
+        if((s2ch.pad.Buttons & s2ch.btnResH.s.pDown && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.s.pDown && s2ch.tateFlag))
         {
             s2ch.res.start += (*lineEnd - 2);
             if (s2ch.res.start > *totalLine - *lineEnd)
@@ -1040,14 +753,14 @@ int psp2chResCursorMove(int* totalLine, int* lineEnd, int* cursorY, int limitY)
                 s2ch.res.start = 0;
             }
         }
-        if((s2ch.pad.Buttons & s2ch.btnResH.top && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.top && s2ch.tateFlag))
+        if((s2ch.pad.Buttons & s2ch.btnResH.s.top && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.s.top && s2ch.tateFlag))
         {
             if (rMenu && !padUp)
             {
                 s2ch.res.start = 0;
             }
         }
-        if((s2ch.pad.Buttons & s2ch.btnResH.end && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.end && s2ch.tateFlag))
+        if((s2ch.pad.Buttons & s2ch.btnResH.s.end && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.s.end && s2ch.tateFlag))
         {
             if (rMenu && !padDown)
             {

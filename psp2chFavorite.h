@@ -5,6 +5,7 @@
 #ifndef __PSP2CH_FAVORITE_H__
 #define __PSP2CH_FAVORITE_H__
 
+void psp2chFavSetMenuString(void);
 int psp2chFavorite(void);
 int psp2chLoadFavorite(void);
 int psp2chLoadFavoriteIta(void);

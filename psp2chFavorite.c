@@ -18,6 +18,66 @@
 extern S_2CH s2ch; // psp2ch.c
 extern int preLine; // psp2chRes.c
 extern char keyWords[128]; // psp2chThread.c
+extern const char *sBtnH[];
+extern const char *sBtnV[];
+
+/*********************
+メニュー文字列の作成
+**********************/
+#define getIndex(X, Y) \
+    tmp = (X);\
+    (Y) = 0;\
+    for (i = 0; i < 16; i++)\
+    {\
+        if (tmp & 1)\
+        {\
+            break;\
+        }\
+        (Y)++;\
+        tmp >>= 1;\
+    }
+
+void psp2chFavSetMenuString(void)
+{
+    int index1, index2, index3, index4, index5;
+    int i, tmp;
+
+    getIndex(s2ch.favH.ok, index1);
+    getIndex(s2ch.favH.move, index2);
+    getIndex(s2ch.favH.change, index3);
+    getIndex(s2ch.favH.del, index4);
+    getIndex(s2ch.favH.shift, index5);
+    sprintf(s2ch.menuFavH.main, "　%s : 決定　　　　　%s : 板一覧　　　　%s : お気に板　　　　%s : 削除　　　　%s : メニュー切替",
+            sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index4], sBtnH[index5]);
+    sprintf(s2ch.menuFavItaH.main, "　%s : 決定　　　　　%s : 板一覧　　　　%s : お気にスレ　　　%s : 削除　　　　%s : メニュー切替",
+            sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index4], sBtnH[index5]);
+
+    getIndex(s2ch.listH.top, index1);
+    getIndex(s2ch.listH.end, index2);
+    getIndex(s2ch.favH.search2ch, index3);
+    sprintf(s2ch.menuFavH.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索",
+            sBtnH[index1], sBtnH[index2], sBtnH[index3]);
+    sprintf(s2ch.menuFavItaH.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索",
+            sBtnH[index1], sBtnH[index2], sBtnH[index3]);
+
+    getIndex(s2ch.favH.ok, index1);
+    getIndex(s2ch.favH.move, index2);
+    getIndex(s2ch.favH.change, index3);
+    getIndex(s2ch.favH.del, index4);
+    getIndex(s2ch.favH.shift, index5);
+    sprintf(s2ch.menuFavV.main, "　%s : 決定　　　　　%s : 板一覧　　　　%s : お気に板　　　　%s : 削除　　　　%s : メニュー切替",
+            sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4], sBtnV[index5]);
+    sprintf(s2ch.menuFavItaV.main,"　%s : 決定　　　　　%s : 板一覧　　　　%s : お気にスレ　　　%s : 削除　　　　%s : メニュー切替",
+            sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4], sBtnV[index5]);
+
+    getIndex(s2ch.listV.top, index1);
+    getIndex(s2ch.listV.end, index2);
+    getIndex(s2ch.favH.search2ch, index3);
+    sprintf(s2ch.menuFavV.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索",
+            sBtnV[index1], sBtnV[index2], sBtnV[index3]);
+    sprintf(s2ch.menuFavItaV.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索",
+            sBtnV[index1], sBtnV[index2], sBtnV[index3]);
+}
 
 /**********************
  Favorite
@@ -66,7 +126,28 @@ int psp2chFavorite(void)
         }
         if (rMenu)
         {
-            menuStr = "　↑ : 先頭　　　↓ : 最後　　　　□ : 全板検索";
+            if (s2ch.tateFlag)
+            {
+                if (focus)
+                {
+                    menuStr = s2ch.menuFavItaV.sub;
+                }
+                else
+                {
+                    menuStr = s2ch.menuFavV.sub;
+                }
+            }
+            else
+            {
+                if (focus)
+                {
+                    menuStr = s2ch.menuFavItaH.sub;
+                }
+                else
+                {
+                    menuStr = s2ch.menuFavH.sub;
+                }
+            }
         }
         else
         {
@@ -74,22 +155,22 @@ int psp2chFavorite(void)
             {
                 if (focus)
                 {
-                    menuStr = "　L : 決定　　　　　× : 板一覧　　　　　△ : お気にスレ　　□ : 削除　　　　　R : メニュー切替";
+                    menuStr = s2ch.menuFavItaV.main;
                 }
                 else
                 {
-                    menuStr = "　L : 決定　　　　　× : 板一覧　　　　　△ : お気に板　　　□ : 削除　　　　　R : メニュー切替";
+                    menuStr = s2ch.menuFavV.main;
                 }
             }
             else
             {
                 if (focus)
                 {
-                    menuStr = "　○ : 決定　　　　　× : 板一覧　　　　△ : お気にスレ　　　□ : 削除　　　　R : メニュー切替";
+                    menuStr = s2ch.menuFavItaH.main;
                 }
                 else
                 {
-                    menuStr = "　○ : 決定　　　　　× : 板一覧　　　　△ : お気に板　　　　□ : 削除　　　　R : メニュー切替";
+                    menuStr = s2ch.menuFavH.main;
                 }
             }
         }
@@ -107,7 +188,8 @@ int psp2chFavorite(void)
             }
             if (rMenu)
             {
-                if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
+                // 全板検索
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favH.search2ch) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favV.search2ch))
                 {
                     if (psp2chThreadSearch() == 0 && keyWords[0])
                     {
@@ -122,7 +204,8 @@ int psp2chFavorite(void)
             }
             else
             {
-                if((!s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_CIRCLE) || (s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_LTRIGGER))
+                // 決定
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favH.ok) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favV.ok))
                 {
                     if (focus)
                     {
@@ -159,11 +242,13 @@ int psp2chFavorite(void)
                         return 0;
                     }
                 }
-                else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
+                // 板一覧に移動
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favH.move) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favV.move))
                 {
                     s2ch.sel = 2;
                 }
-                else if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
+                // お気に入り切り替え
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favH.change) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favV.change))
                 {
                     focus = focus ? 0 : 1;
                     if (focus && s2ch.favItaList == NULL)
@@ -175,7 +260,8 @@ int psp2chFavorite(void)
                         focus = 1;
                     }
                 }
-                else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
+                // 削除
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favH.del) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favV.del))
                 {
                     if (focus)
                     {

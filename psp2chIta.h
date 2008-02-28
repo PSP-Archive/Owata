@@ -7,6 +7,7 @@
 
 #include "psp2ch.h"
 
+void psp2chItaSetMenuString(void);
 int psp2chIta(void);
 int psp2chItaList(void);
 int psp2chGetMenu(void);

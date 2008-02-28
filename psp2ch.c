@@ -201,55 +201,35 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd)
         }
         keyTime = clock();
         keyRepeat = 0;
-        if((s2ch.pad.Buttons & PSP_CTRL_UP && !s2ch.tateFlag) || (s2ch.pad.Buttons & PSP_CTRL_RIGHT && s2ch.tateFlag) || padUp)
+        if((s2ch.pad.Buttons & s2ch.listH.up && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.listV.up && s2ch.tateFlag) || padUp)
         {
-            if (rMenu && !padUp)
+            line->select--;
+            if (line->select < 0)
             {
-                line->start = 0;
                 line->select = 0;
             }
-            else
+            if (line->select < line->start)
             {
-                line->select--;
-                if (line->select < 0)
-                {
-                    line->select = 0;
-                }
-                if (line->select < line->start)
-                {
-                    line->start = line->select;
-                }
+                line->start = line->select;
             }
         }
-        if((s2ch.pad.Buttons & PSP_CTRL_DOWN && !s2ch.tateFlag) || (s2ch.pad.Buttons & PSP_CTRL_LEFT && s2ch.tateFlag) || padDown)
+        if((s2ch.pad.Buttons & s2ch.listH.down && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.listV.down && s2ch.tateFlag) || padDown)
         {
-            if (rMenu && !padDown)
+            line->select++;
+            if (line->select >= line->count)
             {
-                line->start = line->count - lineEnd;
-                if (line->start < 0)
-                {
-                    line->start = 0;
-                }
-                line->select = line->count - 1;
+                line->select = line->count -1;
             }
-            else
+            if (line->select >= line->start + lineEnd)
             {
-                line->select++;
-                if (line->select >= line->count)
-                {
-                    line->select = line->count -1;
-                }
-                if (line->select >= line->start + lineEnd)
-                {
-                    line->start = line->select - lineEnd + 1;
-                }
-                if (line->start < 0)
-                {
-                    line->start = 0;
-                }
+                line->start = line->select - lineEnd + 1;
+            }
+            if (line->start < 0)
+            {
+                line->start = 0;
             }
         }
-        if((s2ch.pad.Buttons & PSP_CTRL_LEFT && !s2ch.tateFlag) || (s2ch.pad.Buttons & PSP_CTRL_UP && s2ch.tateFlag))
+        if((s2ch.pad.Buttons & s2ch.listH.pUp && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.listV.pUp && s2ch.tateFlag))
         {
             if (line->select == line->start)
             {
@@ -261,7 +241,7 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd)
             }
             line->select = line->start;
         }
-        if((s2ch.pad.Buttons & PSP_CTRL_RIGHT && !s2ch.tateFlag) || (s2ch.pad.Buttons & PSP_CTRL_DOWN && s2ch.tateFlag))
+        if((s2ch.pad.Buttons & s2ch.listH.pDown && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.listV.pDown && s2ch.tateFlag))
         {
             if (line->select == line->start + lineEnd - 1)
             {
@@ -279,6 +259,26 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd)
             if (line->select >= line->count)
             {
                 line->select = line->count -1;
+            }
+        }
+        if((s2ch.pad.Buttons & s2ch.listH.top && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.listV.top && s2ch.tateFlag) || padUp)
+        {
+            if (rMenu && !padUp)
+            {
+                line->start = 0;
+                line->select = 0;
+            }
+        }
+        if((s2ch.pad.Buttons & s2ch.listH.end && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.listV.end && s2ch.tateFlag) || padDown)
+        {
+            if (rMenu && !padDown)
+            {
+                line->start = line->count - lineEnd;
+                if (line->start < 0)
+                {
+                    line->start = 0;
+                }
+                line->select = line->count - 1;
             }
         }
     }
@@ -563,7 +563,7 @@ void psp2chSetColor(void)
         else{(B) = (C);}\
     }\
     else{(B) = (C);}
-void psp2chSetResButtons(void)
+void psp2chSetButtons(void)
 {
     SceUID fd;
     SceIoStat st;
@@ -596,12 +596,12 @@ void psp2chSetResButtons(void)
                 setButton("RES_DATDEL_V", s2ch.btnResV.datDel, 32768);
                 setButton("RES_SHIFT_V", s2ch.btnResV.change, 512);
 
-                setButton("RES_TOP_H", s2ch.btnResH.top, 16);
-                setButton("RES_END_H", s2ch.btnResH.end, 64);
+                setButton("RES_TOP_H", s2ch.btnResH.s.top, 16);
+                setButton("RES_END_H", s2ch.btnResH.s.end, 64);
                 setButton("RES_ADDFAV_H", s2ch.btnResH.addFav, 8192);
                 setButton("RES_DELFAV_H", s2ch.btnResH.delFav, 32768);
-                setButton("RES_TOP_V", s2ch.btnResV.top, 16);
-                setButton("RES_END_V", s2ch.btnResV.end, 64);
+                setButton("RES_TOP_V", s2ch.btnResV.s.top, 32);
+                setButton("RES_END_V", s2ch.btnResV.s.end, 128);
                 setButton("RES_ADDFAV_V", s2ch.btnResV.addFav, 8192);
                 setButton("RES_DELFAV_V", s2ch.btnResV.delFav, 32768);
 
@@ -621,14 +621,76 @@ void psp2chSetResButtons(void)
                 setButton("RES_URL_H", s2ch.btnResH.url, 8192);
                 setButton("RES_URL_V", s2ch.btnResV.url, 8192);
 
-                setButton("RES_UP_H", s2ch.btnResH.up, 16);
-                setButton("RES_PAGEUP_H", s2ch.btnResH.pUp, 128);
-                setButton("RES_DOWN_H", s2ch.btnResH.down, 64);
-                setButton("RES_PAGEDOWN_H", s2ch.btnResH.pDown, 32);
-                setButton("RES_UP_V", s2ch.btnResV.up, 32);
-                setButton("RES_PAGEUP_V", s2ch.btnResV.pUp, 16);
-                setButton("RES_DOWN_V", s2ch.btnResV.down, 128);
-                setButton("RES_PAGEDOWN_V", s2ch.btnResV.pDown, 64);
+                setButton("RES_UP_H", s2ch.btnResH.s.up, 16);
+                setButton("RES_PAGEUP_H", s2ch.btnResH.s.pUp, 128);
+                setButton("RES_DOWN_H", s2ch.btnResH.s.down, 64);
+                setButton("RES_PAGEDOWN_H", s2ch.btnResH.s.pDown, 32);
+                setButton("RES_UP_V", s2ch.btnResV.s.up, 32);
+                setButton("RES_PAGEUP_V", s2ch.btnResV.s.pUp, 16);
+                setButton("RES_DOWN_V", s2ch.btnResV.s.down, 128);
+                setButton("RES_PAGEDOWN_V", s2ch.btnResV.s.pDown, 64);
+
+                setButton("SCROLL_UP_H", s2ch.listH.up, 16);
+                setButton("PAGE_UP_H", s2ch.listH.pUp, 128);
+                setButton("SCROLL_DOWN_H", s2ch.listH.down, 64);
+                setButton("PAGE_DOWN_H", s2ch.listH.pDown, 32);
+                setButton("LIST_TOP_H", s2ch.listH.top, 16);
+                setButton("LIST_END_H", s2ch.listH.end, 64);
+                setButton("SCROLL_UP_V", s2ch.listV.up, 32);
+                setButton("PAGE_UP_V", s2ch.listV.pUp, 16);
+                setButton("SCROLL_DOWN_V", s2ch.listV.down, 128);
+                setButton("PAGE_DOWN_V", s2ch.listV.pDown, 64);
+                setButton("LIST_TOP_V", s2ch.listV.top, 32);
+                setButton("LIST_END_V", s2ch.listV.end, 128);
+
+                setButton("ITA_OK_H", s2ch.itaH.ok, 8192);
+                setButton("ITA_ESC_H", s2ch.itaH.esc, 16384);
+                setButton("ITA_MOVEFAV_H", s2ch.itaH.move, 32768);
+                setButton("ITA_RELOAD_H", s2ch.itaH.reload, 4096);
+                setButton("ITA_SHIFT_H", s2ch.itaH.shift, 512);
+                setButton("ITA_OK_V", s2ch.itaV.ok, 256);
+                setButton("ITA_ESC_V", s2ch.itaV.esc, 16384);
+                setButton("ITA_MOVEFAV_V", s2ch.itaV.move, 32768);
+                setButton("ITA_RELOAD_V", s2ch.itaV.reload, 4096);
+                setButton("ITA_SHIFT_V", s2ch.itaV.shift, 512);
+
+                setButton("ITA_ADDFAV_H", s2ch.itaH.addFav, 4096);
+                setButton("ITA_2CHSEARCH_H", s2ch.itaH.search2ch, 32768);
+                setButton("ITA_ADDFAV_V", s2ch.itaV.addFav, 4096);
+                setButton("ITA_2CHSEARCH_V", s2ch.itaV.search2ch, 32768);
+
+                setButton("THREAD_OK_H", s2ch.thH.ok, 8192);
+                setButton("THREAD_ESC_H", s2ch.thH.esc, 16384);
+                setButton("THREAD_MOVEFAV_H", s2ch.thH.move, 32768);
+                setButton("THREAD_RELOAD_H", s2ch.thH.reload, 4096);
+                setButton("THREAD_SHIFT_H", s2ch.thH.shift, 512);
+                setButton("THREAD_OK_V", s2ch.thV.ok, 256);
+                setButton("THREAD_ESC_V", s2ch.thV.esc, 16384);
+                setButton("THREAD_MOVEFAV_V", s2ch.thV.move, 32768);
+                setButton("THREAD_RELOAD_V", s2ch.thV.reload, 4096);
+                setButton("THREAD_SHIFT_V", s2ch.thV.shift, 512);
+
+                setButton("THREAD_DORT_H", s2ch.thH.sort, 8192);
+                setButton("THREAD_SEARCH_H", s2ch.thH.search, 4096);
+                setButton("THREAD_2CHSEARCH_H", s2ch.thH.search2ch, 32768);
+                setButton("THREAD_DORT_V", s2ch.thV.sort, 8192);
+                setButton("THREAD_SEARCH_V", s2ch.thV.search, 4096);
+                setButton("THREAD_2CHSEARCH_V", s2ch.thV.search2ch, 32768);
+
+                setButton("FAV_OK_H", s2ch.favH.ok, 8192);
+                setButton("FAV_MOVEITS_H", s2ch.favH.move, 16384);
+                setButton("FAV_CHANGE_H", s2ch.favH.change, 4096);
+                setButton("FAV_DEL_H", s2ch.favH.del, 32768);
+                setButton("FAV_SHIFT_H", s2ch.favH.shift, 512);
+                setButton("FAV_OK_V", s2ch.favV.ok, 256);
+                setButton("FAV_MOVEITS_V", s2ch.favV.move, 16384);
+                setButton("FAV_CHANGE_V", s2ch.favV.change, 4096);
+                setButton("FAV_DEL_V", s2ch.favV.del, 32768);
+                setButton("FAV_SHIFT_V", s2ch.favV.shift, 512);
+
+                setButton("FAV_2CHSEARCH_H", s2ch.favH.search2ch, 32768);
+                setButton("FAV_2CHSEARCH_V", s2ch.favV.search2ch, 32768);
+
                 free(buf);
                 return;
             }
@@ -644,8 +706,8 @@ void psp2chSetResButtons(void)
     s2ch.btnResH.datDel   = PSP_CTRL_SQUARE;
     s2ch.btnResH.change   = PSP_CTRL_RTRIGGER;
 
-    s2ch.btnResH.top      = PSP_CTRL_UP;
-    s2ch.btnResH.end      = PSP_CTRL_DOWN;
+    s2ch.btnResH.s.top      = PSP_CTRL_UP;
+    s2ch.btnResH.s.end      = PSP_CTRL_DOWN;
     s2ch.btnResH.addFav   = PSP_CTRL_CIRCLE;
     s2ch.btnResH.delFav   = PSP_CTRL_SQUARE;
 
@@ -659,10 +721,10 @@ void psp2chSetResButtons(void)
 
     s2ch.btnResH.url      = PSP_CTRL_CIRCLE;
 
-    s2ch.btnResH.up       = PSP_CTRL_UP;
-    s2ch.btnResH.pUp      = PSP_CTRL_LEFT;
-    s2ch.btnResH.down     = PSP_CTRL_DOWN;
-    s2ch.btnResH.pDown    = PSP_CTRL_RIGHT;
+    s2ch.btnResH.s.up       = PSP_CTRL_UP;
+    s2ch.btnResH.s.pUp      = PSP_CTRL_LEFT;
+    s2ch.btnResH.s.down     = PSP_CTRL_DOWN;
+    s2ch.btnResH.s.pDown    = PSP_CTRL_RIGHT;
 
     s2ch.btnResV.form     = PSP_CTRL_CIRCLE;
     s2ch.btnResV.back     = PSP_CTRL_CROSS;
@@ -670,8 +732,8 @@ void psp2chSetResButtons(void)
     s2ch.btnResV.datDel   = PSP_CTRL_SQUARE;
     s2ch.btnResV.change   = PSP_CTRL_RTRIGGER;
 
-    s2ch.btnResV.top      = PSP_CTRL_RIGHT;
-    s2ch.btnResV.end      = PSP_CTRL_LEFT;
+    s2ch.btnResV.s.top      = PSP_CTRL_RIGHT;
+    s2ch.btnResV.s.end      = PSP_CTRL_LEFT;
     s2ch.btnResV.addFav   = PSP_CTRL_CIRCLE;
     s2ch.btnResV.delFav   = PSP_CTRL_SQUARE;
 
@@ -685,14 +747,76 @@ void psp2chSetResButtons(void)
 
     s2ch.btnResV.url      = PSP_CTRL_CIRCLE;
 
-    s2ch.btnResV.up       = PSP_CTRL_RIGHT;
-    s2ch.btnResV.pUp      = PSP_CTRL_UP;
-    s2ch.btnResV.down     = PSP_CTRL_LEFT;
-    s2ch.btnResV.pDown    = PSP_CTRL_DOWN;
+    s2ch.btnResV.s.up       = PSP_CTRL_RIGHT;
+    s2ch.btnResV.s.pUp      = PSP_CTRL_UP;
+    s2ch.btnResV.s.down     = PSP_CTRL_LEFT;
+    s2ch.btnResV.s.pDown    = PSP_CTRL_DOWN;
+
+    s2ch.listH.up     = PSP_CTRL_UP;
+    s2ch.listH.pUp    = PSP_CTRL_LEFT;
+    s2ch.listH.down   = PSP_CTRL_DOWN;
+    s2ch.listH.pDown  = PSP_CTRL_RIGHT;
+    s2ch.listH.top    = PSP_CTRL_UP;
+    s2ch.listH.end    = PSP_CTRL_DOWN;
+    s2ch.listV.up     = PSP_CTRL_RIGHT;
+    s2ch.listV.pUp    = PSP_CTRL_UP;
+    s2ch.listV.down   = PSP_CTRL_LEFT;
+    s2ch.listV.pDown  = PSP_CTRL_DOWN;
+    s2ch.listV.top    = PSP_CTRL_RIGHT;
+    s2ch.listV.end    = PSP_CTRL_LEFT;
+
+    s2ch.itaH.ok = PSP_CTRL_CIRCLE;
+    s2ch.itaH.esc = PSP_CTRL_CROSS;
+    s2ch.itaH.move = PSP_CTRL_SQUARE;
+    s2ch.itaH.reload = PSP_CTRL_TRIANGLE;
+    s2ch.itaH.shift = PSP_CTRL_RTRIGGER;
+    s2ch.itaV.ok = PSP_CTRL_LTRIGGER;
+    s2ch.itaV.esc = PSP_CTRL_CROSS;
+    s2ch.itaV.move = PSP_CTRL_SQUARE;
+    s2ch.itaV.reload = PSP_CTRL_TRIANGLE;
+    s2ch.itaV.shift = PSP_CTRL_RTRIGGER;
+
+    s2ch.itaH.addFav = PSP_CTRL_TRIANGLE;
+    s2ch.itaH.search2ch = PSP_CTRL_SQUARE;
+    s2ch.itaV.addFav = PSP_CTRL_TRIANGLE;
+    s2ch.itaV.search2ch = PSP_CTRL_SQUARE;
+
+    s2ch.thH.ok = PSP_CTRL_CIRCLE;
+    s2ch.thH.esc = PSP_CTRL_CROSS;
+    s2ch.thH.move = PSP_CTRL_SQUARE;
+    s2ch.thH.reload = PSP_CTRL_TRIANGLE;
+    s2ch.thH.shift = PSP_CTRL_RTRIGGER;
+    s2ch.thV.ok = PSP_CTRL_LTRIGGER;
+    s2ch.thV.esc = PSP_CTRL_CROSS;
+    s2ch.thV.move = PSP_CTRL_SQUARE;
+    s2ch.thV.reload = PSP_CTRL_TRIANGLE;
+    s2ch.thV.shift = PSP_CTRL_RTRIGGER;
+
+    s2ch.thH.sort = PSP_CTRL_CIRCLE;
+    s2ch.thH.search = PSP_CTRL_TRIANGLE;
+    s2ch.thH.search2ch = PSP_CTRL_SQUARE;
+    s2ch.thV.sort = PSP_CTRL_CIRCLE;
+    s2ch.thV.search = PSP_CTRL_TRIANGLE;
+    s2ch.thV.search2ch = PSP_CTRL_SQUARE;
+
+    s2ch.favH.ok = PSP_CTRL_CIRCLE;
+    s2ch.favH.move = PSP_CTRL_CROSS;
+    s2ch.favH.change = PSP_CTRL_TRIANGLE;
+    s2ch.favH.del = PSP_CTRL_SQUARE;
+    s2ch.favH.shift = PSP_CTRL_RTRIGGER;
+    s2ch.favV.ok = PSP_CTRL_LTRIGGER;
+    s2ch.favV.move = PSP_CTRL_CROSS;
+    s2ch.favV.change = PSP_CTRL_TRIANGLE;
+    s2ch.favV.del = PSP_CTRL_SQUARE;
+    s2ch.favV.shift = PSP_CTRL_RTRIGGER;
+
+    s2ch.favH.search2ch = PSP_CTRL_SQUARE;
+    s2ch.favV.search2ch = PSP_CTRL_SQUARE;
 }
 
 /***********************************
-ネットモジュールのロード初期化
+ネットモジュールのロード
+初期化
 ************************************/
 int psp2chInit(void)
 {
@@ -723,7 +847,9 @@ int psp2chInit(void)
         return ret;
     }
     psp2chSetColor();
-    psp2chSetResButtons();
+    psp2chSetButtons();
+    psp2chItaSetMenuString();
+    psp2chFavSetMenuString();
     psp2chResSetMenuString();
     s2ch.running = 1;
     s2ch.sel = 0;

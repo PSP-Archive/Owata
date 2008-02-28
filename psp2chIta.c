@@ -16,8 +16,70 @@
 
 extern S_2CH s2ch; // psp2ch.c
 extern char keyWords[128]; // psp2chThread.c
+extern const char *sBtnH[];
+extern const char *sBtnV[];
 
 static const char* boardFile = "2channel.brd";
+
+/*********************
+メニュー文字列の作成
+**********************/
+#define getIndex(X, Y) \
+    tmp = (X);\
+    (Y) = 0;\
+    for (i = 0; i < 16; i++)\
+    {\
+        if (tmp & 1)\
+        {\
+            break;\
+        }\
+        (Y)++;\
+        tmp >>= 1;\
+    }
+
+void psp2chItaSetMenuString(void)
+{
+    int index1, index2, index3, index4, index5;
+    int i, tmp;
+
+    getIndex(s2ch.itaH.ok, index1);
+    getIndex(s2ch.itaH.esc, index2);
+    getIndex(s2ch.itaH.move, index3);
+    getIndex(s2ch.itaH.reload, index4);
+    getIndex(s2ch.itaH.shift, index5);
+    sprintf(s2ch.menuCateH.main, "　%s : 決定　　　　　%s : 終了　　　　%s : お気に入り　　　　%s : 更新　　　　　%s : メニュー切替",
+            sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index4], sBtnH[index5]);
+    sprintf(s2ch.menuItaH.main, "　%s : 決定　　　　　%s : 戻る　　　　%s : お気に入り　　　　%s : 更新　　　　　%s : メニュー切替",
+            sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index4], sBtnH[index5]);
+
+    getIndex(s2ch.listH.top, index1);
+    getIndex(s2ch.listH.end, index2);
+    getIndex(s2ch.itaH.search2ch, index3);
+    getIndex(s2ch.itaH.addFav, index4);
+    sprintf(s2ch.menuCateH.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索",
+            sBtnH[index1], sBtnH[index2], sBtnH[index3]);
+    sprintf(s2ch.menuItaH.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索　　　　　%s : お気に入りに追加",
+            sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index4]);
+
+    getIndex(s2ch.itaV.ok, index1);
+    getIndex(s2ch.itaV.esc, index2);
+    getIndex(s2ch.itaV.move, index3);
+    getIndex(s2ch.itaV.reload, index4);
+    getIndex(s2ch.itaV.shift, index5);
+    sprintf(s2ch.menuCateV.main, "　%s : 決定　　　　　%s : 終了　　　　%s : お気に入り　　　　%s : 更新　　　　　%s : メニュー切替",
+            sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4], sBtnV[index5]);
+    sprintf(s2ch.menuItaV.main, "　%s : 決定　　　　　%s : 戻る　　　　%s : お気に入り　　　　%s : 更新　　　　　%s : メニュー切替",
+            sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4], sBtnV[index5]);
+
+    getIndex(s2ch.listV.top, index1);
+    getIndex(s2ch.listV.end, index2);
+    getIndex(s2ch.itaV.search2ch, index3);
+    getIndex(s2ch.itaV.addFav, index4);
+    sprintf(s2ch.menuCateV.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索",
+            sBtnV[index1], sBtnV[index2], sBtnV[index3]);
+    sprintf(s2ch.menuItaV.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索　　　　　%s : お気に入りに追加",
+            sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4]);
+}
 
 /**********************
  カテゴリーと板一覧表示
@@ -70,17 +132,24 @@ int psp2chIta(void)
             psp2chDrawIta(s2ch.ita.start, s2ch.ita.select, s2ch.cateOffColor);
             if (rMenu)
             {
-                menuStr = "　↑ : 先頭　　　　↓ : 最後　　　　□ : 全板検索　　　　　△ : お気に入りに追加";
+                if (s2ch.tateFlag)
+                {
+                    menuStr = s2ch.menuItaV.sub;
+                }
+                else
+                {
+                    menuStr = s2ch.menuItaH.sub;
+                }
             }
             else
             {
                 if (s2ch.tateFlag)
                 {
-                    menuStr = "　L : 決定　　　　　× : 戻る　　　　□ : お気に入り　　　　△ : 更新　　　　　R : メニュー切替";
+                    menuStr = s2ch.menuItaV.main;
                 }
                 else
                 {
-                    menuStr = "　○ : 決定　　　　× : 戻る　　　　□ : お気に入り　　　△ : 更新　　　　　R : メニュー切替";
+                    menuStr = s2ch.menuItaH.main;
                 }
             }
         }
@@ -93,17 +162,24 @@ int psp2chIta(void)
             psp2chDrawIta(s2ch.ita.start, s2ch.ita.select, s2ch.cateOnColor);
             if (rMenu)
             {
-                menuStr = "　↑ : 先頭　　　　↓ : 最後　　　　□ : 全板検索";
+                if (s2ch.tateFlag)
+                {
+                    menuStr = s2ch.menuCateV.sub;
+                }
+                else
+                {
+                    menuStr = s2ch.menuCateH.sub;
+                }
             }
             else
             {
                 if (s2ch.tateFlag)
                 {
-                    menuStr = "　L : 決定　　　　　× : 終了　　　　□ : お気に入り　　　　△ : 更新　　　　　R : メニュー切替";
+                    menuStr = s2ch.menuCateV.main;
                 }
                 else
                 {
-                    menuStr = "　○ : 決定　　　　× : 終了　　　　□ : お気に入り　　　△ : 更新　　　　　R : メニュー切替";
+                    menuStr = s2ch.menuCateH.main;
                 }
             }
         }
@@ -121,11 +197,14 @@ int psp2chIta(void)
             }
             if (rMenu)
             {
-                if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.itaH.addFav) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.itaV.addFav))
                 {
-                    psp2chAddFavoriteIta(s2ch.categoryList[s2ch.category.select].name, s2ch.itaList[s2ch.ita.select].title);
+                    if (focus)
+                    {
+                        psp2chAddFavoriteIta(s2ch.categoryList[s2ch.category.select].name, s2ch.itaList[s2ch.ita.select].title);
+                    }
                 }
-                else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
+                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.itaH.search2ch) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.itaV.search2ch))
                 {
                     if (psp2chThreadSearch() == 0 && keyWords[0])
                     {
@@ -140,7 +219,8 @@ int psp2chIta(void)
             }
             else
             {
-                if((!s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_CIRCLE) || (s2ch.tateFlag && s2ch.pad.Buttons & PSP_CTRL_LTRIGGER))
+                // 決定
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.itaH.ok) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.itaV.ok))
                 {
                     if (focus)
                     {
@@ -160,7 +240,8 @@ int psp2chIta(void)
                         focus = 1;
                     }
                 }
-                else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
+                // 戻る、終了
+                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.itaH.esc) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.itaV.esc))
                 {
                     if (focus)
                     {
@@ -174,7 +255,8 @@ int psp2chIta(void)
                         }
                     }
                 }
-                else if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
+                // 更新
+                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.itaH.reload) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.itaV.reload))
                 {
                     psp2chGetMenu();
                     psp2chItaList();
@@ -184,7 +266,8 @@ int psp2chIta(void)
                     s2ch.ita.select = 0;
                     focus = 0;
                 }
-                else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
+                // お気に入りに移動
+                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.itaH.move) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.itaV.move))
                 {
                     s2ch.sel = 1;
                 }

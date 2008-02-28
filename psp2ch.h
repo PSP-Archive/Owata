@@ -198,13 +198,37 @@ typedef struct {
 } S_2CH_NUM_ANCHOR;
 
 typedef struct {
+    int up, pUp, down, pDown, top, end;
+} S_2CH_SCROLL_BUTTONS;
+
+typedef struct {
+    int ok, esc, move, reload, shift;
+    int addFav, search2ch;
+} S_2CH_ITA_BUTTONS;
+
+typedef struct {
+    int ok, move, change, del, shift;
+    int search2ch;
+} S_2CH_FAV_BUTTONS;
+
+typedef struct {
+    int ok, esc, move, reload, shift;
+    int sort, search, search2ch;
+} S_2CH_THREAD_BUTTONS;
+
+typedef struct {
     int form, back, reload, datDel, change, addFav, delFav;
     int resForm, idView, idNG, resView, resMove, url;
-    int up, pUp, down, pDown, top, end;
+    S_2CH_SCROLL_BUTTONS s;
 } S_2CH_RES_BUTTONS;
 
 typedef struct {
-    char main[96];
+    char main[112];
+    char sub[96];
+} S_2CH_MENU_STR;
+
+typedef struct {
+    char main[112];
     char sub1[96];
     char sub2[96];
     char aNum[96];
@@ -252,6 +276,22 @@ typedef struct {
     S_2CH_RES_BUTTONS btnResV;
     S_2CH_RES_MENU_STR menuResH;
     S_2CH_RES_MENU_STR menuResV;
+    S_2CH_SCROLL_BUTTONS listH;
+    S_2CH_SCROLL_BUTTONS listV;
+    S_2CH_ITA_BUTTONS itaH;
+    S_2CH_ITA_BUTTONS itaV;
+    S_2CH_THREAD_BUTTONS thH;
+    S_2CH_THREAD_BUTTONS thV;
+    S_2CH_FAV_BUTTONS favH;
+    S_2CH_FAV_BUTTONS favV;
+    S_2CH_MENU_STR menuCateH;
+    S_2CH_MENU_STR menuCateV;
+    S_2CH_MENU_STR menuItaH;
+    S_2CH_MENU_STR menuItaV;
+    S_2CH_MENU_STR menuFavH;
+    S_2CH_MENU_STR menuFavV;
+    S_2CH_MENU_STR menuFavItaH;
+    S_2CH_MENU_STR menuFavItaV;
     int running;
     int sel;
     int tateFlag;
