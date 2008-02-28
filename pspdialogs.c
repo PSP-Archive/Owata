@@ -160,6 +160,7 @@ void pspShowOSK(OSK_HELPER *oskhelper, u8 language)
                 break;
         }
 
+        sceKernelDelayThread(10*1000);
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
     }
