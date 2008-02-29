@@ -15,11 +15,13 @@ extern char keyWords[128]; //psp2ch.c
 extern unsigned int pixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
 extern unsigned int winPixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
 extern unsigned int* printBuf; // pg.c
-extern const char *sBtnH[];
-extern const char *sBtnV[];
+extern const char *sBtnH[]; // psp2chRes.c
+extern const char *sBtnV[]; // psp2chRes.c
 
 const char* ngNameFile = "ngname.txt";
 const char* ngIDFile = "ngid.txt";
+const char* ngWordFile = "ngword.txt";
+const char* ngMailFile = "ngmail.txt";
 
 /*********************
 メニュー文字列の作成
@@ -69,8 +71,8 @@ void psp2chMenuSetMenuString(void)
 メニュー選択ウィンドウ
 ****************/
 #define MENU_WIDTH (80)
-#define MENU_HEIGHT (52)
 #define MENU_ITEM (4)
+#define MENU_HEIGHT (MENU_ITEM * LINE_PITCH)
 int psp2chMenu(int pixelsX, int pixelsY)
 {
     const char* menuList[] = {"NG 設定", "LAN 切断"};
@@ -147,13 +149,15 @@ int psp2chMenu(int pixelsX, int pixelsY)
 NG設定ウィンドウ
 ****************/
 #define MENU_NG_WIDTH (80)
-#define MENU_NG_HEIGHT (52)
-#define MENU_NG_ITEM (4)
+#define MENU_NG_ITEM (7)
+#define MENU_NG_HEIGHT (MENU_NG_ITEM * LINE_PITCH)
 void psp2chMenuNG(int pixelsX, int pixelsY)
 {
-    const unsigned short text1[] = {0x004E,0x0047,0x767B,0x9332,0x3059,0x308B,0x540D,0x524D,0x3092,0x5165,0x529B,0x3057,0x3066,0x304F,0x3060,0x3055,0x3044,0};
-    char* text2 = "NGネーム";
-    const char* menuList[] = {"NG名前登録", "NG名前削除", "NGID削除"};
+    const unsigned short title1[] = {0x004E,0x0047,0x767B,0x9332,0x3059,0x308B,0x540D,0x524D,0x3092,0x5165,0x529B,0x3057,0x3066,0x304F,0x3060,0x3055,0x3044,0};
+    const unsigned short title2[] = {0x004E,0x0047,0x767B,0x9332,0x3059,0x308B,0x5358,0x8A9E,0x3092,0x5165,0x529B,0x3057,0x3066,0x304F,0x3060,0x3055,0x3044,0};
+    const unsigned short title3[] = {0x004E,0x0047,0x767B,0x9332,0x3059,0x308B,0x30A2,0x30C9,0x30EC,0x30B9,0x3092,0x5165,0x529B,0x3057,0x3066,0x304F,0x3060,0x3055,0x3044,0};
+    char* text = "NGネーム";
+    const char* menuList[] = {"NG名前登録", "NG名前削除", "NGID削除", "NGワード登録", "NGワード削除", "NGメール登録", "NGメール削除"};
     static char* menuStr = "";
     int lineEnd;
     static S_2CH_SCREEN menu;
@@ -171,7 +175,7 @@ void psp2chMenuNG(int pixelsX, int pixelsY)
     scrX = MENU_NG_WIDTH;
     scrY = MENU_NG_HEIGHT;
     lineEnd = MENU_NG_ITEM;
-    menu.count = 3;
+    menu.count = MENU_NG_ITEM;
     printBuf = pixels;
     pgCopy(pixelsX, pixelsY);
     framebuffer = sceGuSwapBuffers();
@@ -193,7 +197,7 @@ void psp2chMenuNG(int pixelsX, int pixelsY)
                         pgFillvram(s2ch.menuWinColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
                         pgCopy(0,0);
                         framebuffer = sceGuSwapBuffers();
-                        if (psp2chInputDialog(text1, text2) == 0 && keyWords[0])
+                        if (psp2chInputDialog(title1, text) == 0 && keyWords[0])
                         {
                             psp2chNGAdd(ngNameFile, keyWords);
                         }
@@ -203,6 +207,30 @@ void psp2chMenuNG(int pixelsX, int pixelsY)
                         break;
                     case 2: // NG ID del
                         psp2chNGDel(ngIDFile, pixelsX, pixelsY);
+                        break;
+                    case 3: // NG word add
+                        pgFillvram(s2ch.menuWinColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
+                        pgCopy(0,0);
+                        framebuffer = sceGuSwapBuffers();
+                        if (psp2chInputDialog(title2, text) == 0 && keyWords[0])
+                        {
+                            psp2chNGAdd(ngWordFile, keyWords);
+                        }
+                        break;
+                    case 4: // NG word del
+                        psp2chNGDel(ngWordFile, pixelsX, pixelsY);
+                        break;
+                    case 5: // NG mail add
+                        pgFillvram(s2ch.menuWinColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
+                        pgCopy(0,0);
+                        framebuffer = sceGuSwapBuffers();
+                        if (psp2chInputDialog(title3, text) == 0 && keyWords[0])
+                        {
+                            psp2chNGAdd(ngMailFile, keyWords);
+                        }
+                        break;
+                    case 6: // NG mail del
+                        psp2chNGDel(ngMailFile, pixelsX, pixelsY);
                         break;
                     }
                     printBuf = pixels;

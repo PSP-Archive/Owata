@@ -18,6 +18,7 @@
 #include "psp2chFavorite.h"
 #include "psp2chSearch.h"
 #include "psp2chMenu.h"
+#include "psp2chIni.h"
 #include "utf8.h"
 #include "pg.h"
 #include "cp932.h"
@@ -305,22 +306,19 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd, int shift)
 
 /*****************************
 アナログパッドで横スクロール
-xReverseを-1にするとスクロール方向が反転する
-設定ファイル実装時に設定項目とする予定
+s2ch.cfg.xReverseを-1にするとスクロール方向が反転する
 *****************************/
 int psp2chPadSet(int scrollX)
 {
-    static int xReverse = 1;
-
     if (s2ch.tateFlag)
     {
         if (s2ch.pad.Ly == 0)
         {
-            scrollX += 8 * xReverse;
+            scrollX += 8 * s2ch.cfg.padReverse;
         }
         else if (s2ch.pad.Ly == 255)
         {
-            scrollX -= 8 * xReverse;
+            scrollX -= 8 * s2ch.cfg.padReverse;
         }
         if (scrollX > BUF_HEIGHT - SCR_HEIGHT)
         {
@@ -331,11 +329,11 @@ int psp2chPadSet(int scrollX)
     {
         if (s2ch.pad.Lx == 0)
         {
-            scrollX += 4 * xReverse;
+            scrollX += 4 * s2ch.cfg.padReverse;
         }
         else if (s2ch.pad.Lx == 255)
         {
-            scrollX -= 4 * xReverse;
+            scrollX -= 4 * s2ch.cfg.padReverse;
         }
         if (scrollX > BUF_WIDTH - SCR_WIDTH)
         {
@@ -347,524 +345,6 @@ int psp2chPadSet(int scrollX)
         scrollX = 0;
     }
     return scrollX;
-}
-
-/***********************************
-外部カラーセット
-color.iniを読み込んで各カラーをセット
-************************************/
-#define setColor(A, B, C) \
-    p = strstr(buf, (A));\
-    if (p) {\
-        p = strstr(p, "0x");\
-        if(p){\
-            p+=2;\
-            sscanf(p, "%X", &(B));\
-        }\
-        else{(B) = (C);}\
-    }\
-    else{(B) = (C);}
-void psp2chSetColor(void)
-{
-    SceUID fd;
-    SceIoStat st;
-    char file[256];
-    char *buf;
-    char *p;
-    int ret;
-
-    sprintf(file, "%s/color.ini", s2ch.cwDir);
-    ret = sceIoGetstat(file, &st);
-    if (ret >= 0)
-    {
-        buf = (char*)malloc(st.st_size + 1);
-        if (buf)
-        {
-            fd = sceIoOpen(file, PSP_O_RDONLY, 0777);
-            if (fd >= 0)
-            {
-                sceIoRead(fd, buf, st.st_size);
-                sceIoClose(fd);
-                buf[st.st_size] = '\0';
-                setColor("RES_NUMBER", s2ch.resHeaderColor.num, RED);
-                setColor("RES_NAME_HEAD", s2ch.resHeaderColor.name1, BLACK);
-                setColor("RES_NAME_BODY", s2ch.resHeaderColor.name2, RGB(0x00, 0xCC, 0x00));
-                setColor("RES_MAIL", s2ch.resHeaderColor.mail, RGB(0x99, 0x99, 0x99));
-                setColor("RES_DATE", s2ch.resHeaderColor.date, BLACK);
-                setColor("RES_ID_HEAD_1", s2ch.resHeaderColor.id1, BLUE);
-                setColor("RES_ID_HEAD_2", s2ch.resHeaderColor.id2, RED);
-                setColor("RES_ID_BODY", s2ch.resHeaderColor.id3, BLUE);
-                setColor("RES_TEXT", s2ch.resColor.text, BLACK);
-                setColor("RES_BG", s2ch.resColor.bg, RGB(0xE0, 0xE0, 0xE0));
-                setColor("RES_LINK", s2ch.resColor.link, BLUE);
-                setColor("RES_BAR_SLIDER", s2ch.resBarColor.slider, YELLOW);
-                setColor("RES_BAR_BG", s2ch.resBarColor.bg, RGB(0x66, 0x66, 0xFF));
-
-                setColor("RES_A_NUMBER", s2ch.resAHeaderColor.num, RED);
-                setColor("RES_A_NAME_HEAD", s2ch.resAHeaderColor.name1, BLACK);
-                setColor("RES_A_NAME_BODY", s2ch.resAHeaderColor.name2, RGB(0x00, 0xCC, 0x00));
-                setColor("RES_A_MAIL", s2ch.resAHeaderColor.mail, RGB(0x99, 0x99, 0x99));
-                setColor("RES_A_DATE", s2ch.resAHeaderColor.date, BLACK);
-                setColor("RES_A_ID_HEAD_1", s2ch.resAHeaderColor.id1, BLUE);
-                setColor("RES_A_ID_HEAD_2", s2ch.resAHeaderColor.id2, RED);
-                setColor("RES_A_ID_BODY", s2ch.resAHeaderColor.id3, BLUE);
-                setColor("RES_A_TEXT", s2ch.resAColor.text, BLACK);
-                setColor("RES_A_BG", s2ch.resAColor.bg, RGB(0xFF, 0xFF, 0xCC));
-                setColor("RES_A_LINK", s2ch.resAColor.link, BLUE);
-                setColor("RES_A_BAR_SLIDER", s2ch.resABarColor.slider, RGB(0x00, 0xFF, 0xCC));
-                setColor("RES_A_BAR_BG", s2ch.resABarColor.bg, RGB(0xCC, 0xFF, 0xFF));
-
-                setColor("MENU_TEXT", s2ch.menuColor.text, WHITE);
-                setColor("MENU_BG", s2ch.menuColor.bg, BLACK);
-                setColor("MENU_BATTERY_1", s2ch.menuColor.bat1, GREEN);
-                setColor("MENU_BATTERY_2", s2ch.menuColor.bat2, YELLOW);
-                setColor("MENU_BATTERY_3", s2ch.menuColor.bat3, RED);
-
-                setColor("THREAD_NUMBER", s2ch.threadColor.num, RED);
-                setColor("THREAD_CATEGORY", s2ch.threadColor.category, RED);
-                setColor("THREAD_TEXT_1", s2ch.threadColor.text1, BLUE);
-                setColor("THREAD_TEXT_2", s2ch.threadColor.text2, RED);
-                setColor("THREAD_BG", s2ch.threadColor.bg, RGB(0xCC, 0xFF, 0xCC));
-                setColor("THREAD_COUNT_1", s2ch.threadColor.count1, BLACK);
-                setColor("THREAD_COUNT_2", s2ch.threadColor.count2, BLACK);
-                setColor("THREAD_SELECT_NUMBER", s2ch.threadColor.s_num, RED);
-                setColor("THREAD_SELECT_CATEGORY", s2ch.threadColor.s_category, RGB(0x99, 0x00, 0x00));
-                setColor("THREAD_SELECT_TEXT_1", s2ch.threadColor.s_text1, RGB(0x00, 0x00, 0x99));
-                setColor("THREAD_SELECT_TEXT_2", s2ch.threadColor.s_text2, RGB(0x99, 0x00, 0x00));
-                setColor("THREAD_SELECT_BG", s2ch.threadColor.s_bg, GRAY);
-                setColor("THREAD_SELECT_COUNT_1", s2ch.threadColor.s_count1, BLACK);
-                setColor("THREAD_SELECT_COUNT_2", s2ch.threadColor.s_count2, BLACK);
-
-                setColor("CATE_ON_TEXT", s2ch.cateOnColor.cate.text, RGB(0xCC, 0x33, 0x00));
-                setColor("CATE_ON_BG", s2ch.cateOnColor.cate.bg, WHITE);
-                setColor("CATE_ON_S_TEXT", s2ch.cateOnColor.cate.s_text, WHITE);
-                setColor("CATE_ON_S_BG", s2ch.cateOnColor.cate.s_bg, RGB(0xCC, 0x33, 0x00));
-                setColor("ITA_OFF_TEXT", s2ch.cateOnColor.ita.text, RGB(0x66, 0x66, 0xFF));
-                setColor("ITA_OFF_BG", s2ch.cateOnColor.ita.bg, GRAY);
-                setColor("ITA_OFF_S_TEXT", s2ch.cateOnColor.ita.s_text, GRAY);
-                setColor("ITA_OFF_S_BG", s2ch.cateOnColor.ita.s_bg, RGB(0x66, 0x66, 0xFF));
-                setColor("CATE_ON_BASE", s2ch.cateOnColor.base, WHITE);
-
-                setColor("CATE_OFF_TEXT", s2ch.cateOffColor.cate.text, RGB(0x88, 0x99, 0x66));
-                setColor("CATE_OFF_BG", s2ch.cateOffColor.cate.bg, GRAY);
-                setColor("CATE_OFF_S_TEXT", s2ch.cateOffColor.cate.s_text, GRAY);
-                setColor("CATE_OFF_S_BG", s2ch.cateOffColor.cate.s_bg, RGB(0x88, 0x99, 0x66));
-                setColor("ITA_ON_TEXT", s2ch.cateOffColor.ita.text, BLUE);
-                setColor("ITA_ON_BG", s2ch.cateOffColor.ita.bg, WHITE);
-                setColor("ITA_ON_S_TEXT", s2ch.cateOffColor.ita.s_text, WHITE);
-                setColor("ITA_ON_S_BG", s2ch.cateOffColor.ita.s_bg, BLUE);
-                setColor("CATE_OFF_BASE", s2ch.cateOffColor.base, WHITE);
-
-                setColor("FORM_TITLE_TEXT", s2ch.formColor.title, WHITE);
-                setColor("FORM_TITLE_BG", s2ch.formColor.title_bg, RED);
-
-                setColor("MENU_WIN_TEXT", s2ch.menuWinColor.text, GRAY);
-                setColor("MENU_WIN_BG", s2ch.menuWinColor.bg, BLACK);
-                setColor("MENU_WIN_S_TEXT", s2ch.menuWinColor.s_text, WHITE);
-                setColor("MENU_WIN_S_BG", s2ch.menuWinColor.s_bg, BLUE);
-                free(buf);
-                return;
-            }
-            else
-            {
-                free(buf);
-            }
-        }
-    }
-    // iniファイルがない時のデフォルト
-    // レス本文
-    s2ch.resHeaderColor.num = RED;
-    s2ch.resHeaderColor.name1 = BLACK;
-    s2ch.resHeaderColor.name2 = RGB(0x00, 0xCC, 0x00);
-    s2ch.resHeaderColor.mail = RGB(0x99, 0x99, 0x99);
-    s2ch.resHeaderColor.date = BLACK;
-    s2ch.resHeaderColor.id1 = BLUE;
-    s2ch.resHeaderColor.id2 = RED;
-    s2ch.resHeaderColor.id3 = BLUE;
-    s2ch.resColor.text = BLACK;
-    s2ch.resColor.bg = RGB(0xE0, 0xE0, 0xE0);
-    s2ch.resColor.link = BLUE;
-    s2ch.resBarColor.slider = YELLOW;
-    s2ch.resBarColor.bg = RGB(0x66, 0x66, 0xFF);
-    // レスアンカー　
-    s2ch.resAHeaderColor.num = RED;
-    s2ch.resAHeaderColor.name1 = BLACK;
-    s2ch.resAHeaderColor.name2 = RGB(0x00, 0xCC, 0x00);
-    s2ch.resAHeaderColor.mail = RGB(0x99, 0x99, 0x99);
-    s2ch.resAHeaderColor.date = BLACK;
-    s2ch.resAHeaderColor.id1 = BLUE;
-    s2ch.resAHeaderColor.id2 = RED;
-    s2ch.resAHeaderColor.id3 = BLUE;
-    s2ch.resAColor.text = BLACK;
-    s2ch.resAColor.bg = RGB(0xFF, 0xFF, 0xCC);
-    s2ch.resAColor.link = BLUE;
-    s2ch.resABarColor.slider = RGB(0x00, 0xFF, 0xCC);
-    s2ch.resABarColor.bg = RGB(0xCC, 0xFF, 0xFF);
-    // メニューバー　
-    s2ch.menuColor.text = WHITE;
-    s2ch.menuColor.bg = BLACK;
-    s2ch.menuColor.bat1 = GREEN;
-    s2ch.menuColor.bat2 = YELLOW;
-    s2ch.menuColor.bat3 = RED;
-    // スレッド一覧
-    s2ch.threadColor.num = RED;
-    s2ch.threadColor.category = RED;
-    s2ch.threadColor.text1 = BLUE;
-    s2ch.threadColor.text2 = RED;
-    s2ch.threadColor.bg = RGB(0xCC, 0xFF,0xCC);
-    s2ch.threadColor.count1 = BLACK;
-    s2ch.threadColor.count2 = BLACK;
-    s2ch.threadColor.s_num = RED;
-    s2ch.threadColor.s_category = RGB(0x99, 0x00, 0x00);
-    s2ch.threadColor.s_text1 = RGB(0x00, 0x00, 0x99);
-    s2ch.threadColor.s_text2 = RGB(0x99, 0x00, 0x00);
-    s2ch.threadColor.s_bg = GRAY;
-    s2ch.threadColor.s_count1 = BLACK;
-    s2ch.threadColor.s_count2 = BLACK;
-    // カテゴリー・板一覧
-    s2ch.cateOnColor.cate.text = RGB(0xCC, 0x33, 0x00);
-    s2ch.cateOnColor.cate.bg = WHITE;
-    s2ch.cateOnColor.cate.s_text = WHITE;
-    s2ch.cateOnColor.cate.s_bg = RGB(0xCC, 0x33, 0x00);
-    s2ch.cateOnColor.ita.text = RGB(0x66, 0x66, 0xFF);
-    s2ch.cateOnColor.ita.bg = GRAY;
-    s2ch.cateOnColor.ita.s_text = GRAY;
-    s2ch.cateOnColor.ita.s_bg = RGB(0x66, 0x66, 0xFF);
-    s2ch.cateOnColor.base = WHITE;
-    s2ch.cateOffColor.cate.text = RGB(0x88, 0x99, 0x66);
-    s2ch.cateOffColor.cate.bg = GRAY;
-    s2ch.cateOffColor.cate.s_text = GRAY;
-    s2ch.cateOffColor.cate.s_bg = RGB(0x88, 0x99, 0x66);
-    s2ch.cateOffColor.ita.text = BLUE;
-    s2ch.cateOffColor.ita.bg = WHITE;
-    s2ch.cateOffColor.ita.s_text = WHITE;
-    s2ch.cateOffColor.ita.s_bg = BLUE;
-    s2ch.cateOffColor.base = WHITE;
-    // 送信フォーム
-    s2ch.formColor.title = WHITE;
-    s2ch.formColor.title_bg = RED;
-    // メニューウィンドウ
-    s2ch.menuWinColor.text = GRAY;
-    s2ch.menuWinColor.bg = BLACK;
-    s2ch.menuWinColor.s_text = WHITE;
-    s2ch.menuWinColor.s_bg = BLUE;
-}
-
-/********************
-レス表示画面 ボタンの割り当て
-********************/
-#define setButton(A, B, C) \
-    p = strstr(buf, (A));\
-    if (p) {\
-        p = strstr(p, "=");\
-        if(p){\
-            p++;\
-            sscanf(p, "%d", &(B));\
-        }\
-        else{(B) = (C);}\
-    }\
-    else{(B) = (C);}
-void psp2chSetButtons(void)
-{
-    SceUID fd;
-    SceIoStat st;
-    char file[256];
-    char *buf;
-    char *p;
-    int ret;
-
-    sprintf(file, "%s/button.ini", s2ch.cwDir);
-    ret = sceIoGetstat(file, &st);
-    if (ret >= 0)
-    {
-        buf = (char*)malloc(st.st_size + 1);
-        if (buf)
-        {
-            fd = sceIoOpen(file, PSP_O_RDONLY, 0777);
-            if (fd >= 0)
-            {
-                sceIoRead(fd, buf, st.st_size);
-                sceIoClose(fd);
-                buf[st.st_size] = '\0';
-                setButton("RES_FORM_H", s2ch.btnResH.form, 8192);
-                setButton("RES_BACK_H", s2ch.btnResH.back, 16384);
-                setButton("RES_RELOAD_H", s2ch.btnResH.reload, 4096);
-                setButton("RES_DATDEL_H", s2ch.btnResH.datDel, 32768);
-                setButton("RES_SHIFT_H", s2ch.btnResH.change, 512);
-                setButton("RES_FORM_V", s2ch.btnResV.form, 8192);
-                setButton("RES_BACK_V", s2ch.btnResV.back, 16384);
-                setButton("RES_RELOAD_V", s2ch.btnResV.reload, 4096);
-                setButton("RES_DATDEL_V", s2ch.btnResV.datDel, 32768);
-                setButton("RES_SHIFT_V", s2ch.btnResV.change, 512);
-
-                setButton("RES_TOP_H", s2ch.btnResH.s.top, 16);
-                setButton("RES_END_H", s2ch.btnResH.s.end, 64);
-                setButton("RES_ADDFAV_H", s2ch.btnResH.addFav, 8192);
-                setButton("RES_DELFAV_H", s2ch.btnResH.delFav, 32768);
-                setButton("RES_TOP_V", s2ch.btnResV.s.top, 32);
-                setButton("RES_END_V", s2ch.btnResV.s.end, 128);
-                setButton("RES_ADDFAV_V", s2ch.btnResV.addFav, 8192);
-                setButton("RES_DELFAV_V", s2ch.btnResV.delFav, 32768);
-
-                setButton("RES_NUMRES_H", s2ch.btnResH.resForm, 8192);
-                setButton("RES_NUMRES_V", s2ch.btnResV.resForm, 8192);
-
-                setButton("RES_IDVIEW_H", s2ch.btnResH.idView, 8192);
-                setButton("RES_IDNG_H", s2ch.btnResH.idNG, 32768);
-                setButton("RES_IDVIEW_V", s2ch.btnResV.idView, 8192);
-                setButton("RES_IDNG_V", s2ch.btnResV.idNG, 32768);
-
-                setButton("RES_RESVIEW_H", s2ch.btnResH.resView, 8192);
-                setButton("RES_RESMOVE_H", s2ch.btnResH.resMove, 4096);
-                setButton("RES_RESVIEW_V", s2ch.btnResV.resView, 8192);
-                setButton("RES_RESMOVE_V", s2ch.btnResV.resMove, 4096);
-
-                setButton("RES_URL_H", s2ch.btnResH.url, 8192);
-                setButton("RES_URL_V", s2ch.btnResV.url, 8192);
-
-                setButton("RES_UP_H", s2ch.btnResH.s.up, 16);
-                setButton("RES_PAGEUP_H", s2ch.btnResH.s.pUp, 128);
-                setButton("RES_DOWN_H", s2ch.btnResH.s.down, 64);
-                setButton("RES_PAGEDOWN_H", s2ch.btnResH.s.pDown, 32);
-                setButton("RES_UP_V", s2ch.btnResV.s.up, 32);
-                setButton("RES_PAGEUP_V", s2ch.btnResV.s.pUp, 16);
-                setButton("RES_DOWN_V", s2ch.btnResV.s.down, 128);
-                setButton("RES_PAGEDOWN_V", s2ch.btnResV.s.pDown, 64);
-
-                setButton("SCROLL_UP_H", s2ch.listH.up, 16);
-                setButton("PAGE_UP_H", s2ch.listH.pUp, 128);
-                setButton("SCROLL_DOWN_H", s2ch.listH.down, 64);
-                setButton("PAGE_DOWN_H", s2ch.listH.pDown, 32);
-                setButton("LIST_TOP_H", s2ch.listH.top, 16);
-                setButton("LIST_END_H", s2ch.listH.end, 64);
-                setButton("SCROLL_UP_V", s2ch.listV.up, 32);
-                setButton("PAGE_UP_V", s2ch.listV.pUp, 16);
-                setButton("SCROLL_DOWN_V", s2ch.listV.down, 128);
-                setButton("PAGE_DOWN_V", s2ch.listV.pDown, 64);
-                setButton("LIST_TOP_V", s2ch.listV.top, 32);
-                setButton("LIST_END_V", s2ch.listV.end, 128);
-
-                setButton("ITA_OK_H", s2ch.itaH.ok, 8192);
-                setButton("ITA_ESC_H", s2ch.itaH.esc, 16384);
-                setButton("ITA_MOVEFAV_H", s2ch.itaH.move, 32768);
-                setButton("ITA_RELOAD_H", s2ch.itaH.reload, 4096);
-                setButton("ITA_SHIFT_H", s2ch.itaH.shift, 512);
-                setButton("ITA_OK_V", s2ch.itaV.ok, 256);
-                setButton("ITA_ESC_V", s2ch.itaV.esc, 16384);
-                setButton("ITA_MOVEFAV_V", s2ch.itaV.move, 32768);
-                setButton("ITA_RELOAD_V", s2ch.itaV.reload, 4096);
-                setButton("ITA_SHIFT_V", s2ch.itaV.shift, 512);
-
-                setButton("ITA_ADDFAV_H", s2ch.itaH.addFav, 4096);
-                setButton("ITA_2CHSEARCH_H", s2ch.itaH.search2ch, 32768);
-                setButton("ITA_ADDFAV_V", s2ch.itaV.addFav, 4096);
-                setButton("ITA_2CHSEARCH_V", s2ch.itaV.search2ch, 32768);
-
-                setButton("THREAD_OK_H", s2ch.thH.ok, 8192);
-                setButton("THREAD_ESC_H", s2ch.thH.esc, 16384);
-                setButton("THREAD_MOVEFAV_H", s2ch.thH.move, 32768);
-                setButton("THREAD_RELOAD_H", s2ch.thH.reload, 4096);
-                setButton("THREAD_SHIFT_H", s2ch.thH.shift, 512);
-                setButton("THREAD_OK_V", s2ch.thV.ok, 256);
-                setButton("THREAD_ESC_V", s2ch.thV.esc, 16384);
-                setButton("THREAD_MOVEFAV_V", s2ch.thV.move, 32768);
-                setButton("THREAD_RELOAD_V", s2ch.thV.reload, 4096);
-                setButton("THREAD_SHIFT_V", s2ch.thV.shift, 512);
-
-                setButton("THREAD_DORT_H", s2ch.thH.sort, 8192);
-                setButton("THREAD_SEARCH_H", s2ch.thH.search, 4096);
-                setButton("THREAD_2CHSEARCH_H", s2ch.thH.search2ch, 32768);
-                setButton("THREAD_DORT_V", s2ch.thV.sort, 8192);
-                setButton("THREAD_SEARCH_V", s2ch.thV.search, 4096);
-                setButton("THREAD_2CHSEARCH_V", s2ch.thV.search2ch, 32768);
-
-                setButton("FAV_OK_H", s2ch.favH.ok, 8192);
-                setButton("FAV_MOVEITS_H", s2ch.favH.move, 16384);
-                setButton("FAV_CHANGE_H", s2ch.favH.change, 4096);
-                setButton("FAV_DEL_H", s2ch.favH.del, 32768);
-                setButton("FAV_SHIFT_H", s2ch.favH.shift, 512);
-                setButton("FAV_OK_V", s2ch.favV.ok, 256);
-                setButton("FAV_MOVEITS_V", s2ch.favV.move, 16384);
-                setButton("FAV_CHANGE_V", s2ch.favV.change, 4096);
-                setButton("FAV_DEL_V", s2ch.favV.del, 32768);
-                setButton("FAV_SHIFT_V", s2ch.favV.shift, 512);
-
-                setButton("FAV_2CHSEARCH_H", s2ch.favH.search2ch, 32768);
-                setButton("FAV_2CHSEARCH_V", s2ch.favV.search2ch, 32768);
-
-                setButton("SEARCH_OK_H", s2ch.findH.ok, 8192);
-                setButton("SEARCH_ESC_H", s2ch.findH.esc, 16384);
-                setButton("SEARCH_ITA_H", s2ch.findH.ita, 32768);
-                setButton("SEARCH_FAV_H", s2ch.findH.fav, 4096);
-                setButton("SEARCH_SHIFT_H", s2ch.findH.shift, 512);
-                setButton("SEARCH_OK_V", s2ch.findV.ok, 256);
-                setButton("SEARCH_ESC_V", s2ch.findV.esc, 16384);
-                setButton("SEARCH_ITA_V", s2ch.findV.ita, 32768);
-                setButton("SEARCH_FAV_V", s2ch.findV.fav, 4096);
-                setButton("SEARCH_SHIFT_V", s2ch.findV.shift, 512);
-
-                setButton("SEARCH_2CHSEARCH_H", s2ch.findH.search2ch, 32768);
-                setButton("SEARCH_2CHSEARCH_V", s2ch.findV.search2ch, 32768);
-
-                setButton("MENUWIN_OK_H", s2ch.menuWinH.ok, 8192);
-                setButton("MENUWIN_ESC_H", s2ch.menuWinH.esc, 16384);
-                setButton("MENUWIN_OK_V", s2ch.menuWinV.ok, 256);
-                setButton("MENUWIN_ESC_V", s2ch.menuWinV.esc, 16384);
-
-                setButton("MENUNG_SAVE_H", s2ch.menuNGH.save, 8192);
-                setButton("MENUNG_ESC_H", s2ch.menuNGH.esc, 16384);
-                setButton("MENUNG_DEL_H", s2ch.menuNGH.del, 32768);
-                setButton("MENUNG_SAVE_V", s2ch.menuNGV.save, 256);
-                setButton("MENUNG_ESC_V", s2ch.menuNGV.esc, 16384);
-                setButton("MENUNG_DEL_V", s2ch.menuNGV.del, 32768);
-
-                free(buf);
-                return;
-            }
-            else
-            {
-                free(buf);
-            }
-        }
-    }
-    s2ch.btnResH.form     = PSP_CTRL_CIRCLE;
-    s2ch.btnResH.back     = PSP_CTRL_CROSS;
-    s2ch.btnResH.reload   = PSP_CTRL_TRIANGLE;
-    s2ch.btnResH.datDel   = PSP_CTRL_SQUARE;
-    s2ch.btnResH.change   = PSP_CTRL_RTRIGGER;
-
-    s2ch.btnResH.s.top      = PSP_CTRL_UP;
-    s2ch.btnResH.s.end      = PSP_CTRL_DOWN;
-    s2ch.btnResH.addFav   = PSP_CTRL_CIRCLE;
-    s2ch.btnResH.delFav   = PSP_CTRL_SQUARE;
-
-    s2ch.btnResH.resForm  = PSP_CTRL_CIRCLE;
-
-    s2ch.btnResH.idView   = PSP_CTRL_CIRCLE;
-    s2ch.btnResH.idNG     = PSP_CTRL_SQUARE;
-
-    s2ch.btnResH.resView  = PSP_CTRL_CIRCLE;
-    s2ch.btnResH.resMove  = PSP_CTRL_TRIANGLE;
-
-    s2ch.btnResH.url      = PSP_CTRL_CIRCLE;
-
-    s2ch.btnResH.s.up       = PSP_CTRL_UP;
-    s2ch.btnResH.s.pUp      = PSP_CTRL_LEFT;
-    s2ch.btnResH.s.down     = PSP_CTRL_DOWN;
-    s2ch.btnResH.s.pDown    = PSP_CTRL_RIGHT;
-
-    s2ch.btnResV.form     = PSP_CTRL_CIRCLE;
-    s2ch.btnResV.back     = PSP_CTRL_CROSS;
-    s2ch.btnResV.reload   = PSP_CTRL_TRIANGLE;
-    s2ch.btnResV.datDel   = PSP_CTRL_SQUARE;
-    s2ch.btnResV.change   = PSP_CTRL_RTRIGGER;
-
-    s2ch.btnResV.s.top      = PSP_CTRL_RIGHT;
-    s2ch.btnResV.s.end      = PSP_CTRL_LEFT;
-    s2ch.btnResV.addFav   = PSP_CTRL_CIRCLE;
-    s2ch.btnResV.delFav   = PSP_CTRL_SQUARE;
-
-    s2ch.btnResV.resForm  = PSP_CTRL_CIRCLE;
-
-    s2ch.btnResV.idView   = PSP_CTRL_CIRCLE;
-    s2ch.btnResV.idNG     = PSP_CTRL_SQUARE;
-
-    s2ch.btnResV.resView  = PSP_CTRL_CIRCLE;
-    s2ch.btnResV.resMove  = PSP_CTRL_TRIANGLE;
-
-    s2ch.btnResV.url      = PSP_CTRL_CIRCLE;
-
-    s2ch.btnResV.s.up       = PSP_CTRL_RIGHT;
-    s2ch.btnResV.s.pUp      = PSP_CTRL_UP;
-    s2ch.btnResV.s.down     = PSP_CTRL_LEFT;
-    s2ch.btnResV.s.pDown    = PSP_CTRL_DOWN;
-
-    s2ch.listH.up     = PSP_CTRL_UP;
-    s2ch.listH.pUp    = PSP_CTRL_LEFT;
-    s2ch.listH.down   = PSP_CTRL_DOWN;
-    s2ch.listH.pDown  = PSP_CTRL_RIGHT;
-    s2ch.listH.top    = PSP_CTRL_UP;
-    s2ch.listH.end    = PSP_CTRL_DOWN;
-    s2ch.listV.up     = PSP_CTRL_RIGHT;
-    s2ch.listV.pUp    = PSP_CTRL_UP;
-    s2ch.listV.down   = PSP_CTRL_LEFT;
-    s2ch.listV.pDown  = PSP_CTRL_DOWN;
-    s2ch.listV.top    = PSP_CTRL_RIGHT;
-    s2ch.listV.end    = PSP_CTRL_LEFT;
-
-    s2ch.itaH.ok = PSP_CTRL_CIRCLE;
-    s2ch.itaH.esc = PSP_CTRL_CROSS;
-    s2ch.itaH.move = PSP_CTRL_SQUARE;
-    s2ch.itaH.reload = PSP_CTRL_TRIANGLE;
-    s2ch.itaH.shift = PSP_CTRL_RTRIGGER;
-    s2ch.itaV.ok = PSP_CTRL_LTRIGGER;
-    s2ch.itaV.esc = PSP_CTRL_CROSS;
-    s2ch.itaV.move = PSP_CTRL_SQUARE;
-    s2ch.itaV.reload = PSP_CTRL_TRIANGLE;
-    s2ch.itaV.shift = PSP_CTRL_RTRIGGER;
-
-    s2ch.itaH.addFav = PSP_CTRL_TRIANGLE;
-    s2ch.itaH.search2ch = PSP_CTRL_SQUARE;
-    s2ch.itaV.addFav = PSP_CTRL_TRIANGLE;
-    s2ch.itaV.search2ch = PSP_CTRL_SQUARE;
-
-    s2ch.thH.ok = PSP_CTRL_CIRCLE;
-    s2ch.thH.esc = PSP_CTRL_CROSS;
-    s2ch.thH.move = PSP_CTRL_SQUARE;
-    s2ch.thH.reload = PSP_CTRL_TRIANGLE;
-    s2ch.thH.shift = PSP_CTRL_RTRIGGER;
-    s2ch.thV.ok = PSP_CTRL_LTRIGGER;
-    s2ch.thV.esc = PSP_CTRL_CROSS;
-    s2ch.thV.move = PSP_CTRL_SQUARE;
-    s2ch.thV.reload = PSP_CTRL_TRIANGLE;
-    s2ch.thV.shift = PSP_CTRL_RTRIGGER;
-
-    s2ch.thH.sort = PSP_CTRL_CIRCLE;
-    s2ch.thH.search = PSP_CTRL_TRIANGLE;
-    s2ch.thH.search2ch = PSP_CTRL_SQUARE;
-    s2ch.thV.sort = PSP_CTRL_CIRCLE;
-    s2ch.thV.search = PSP_CTRL_TRIANGLE;
-    s2ch.thV.search2ch = PSP_CTRL_SQUARE;
-
-    s2ch.favH.ok = PSP_CTRL_CIRCLE;
-    s2ch.favH.move = PSP_CTRL_CROSS;
-    s2ch.favH.change = PSP_CTRL_TRIANGLE;
-    s2ch.favH.del = PSP_CTRL_SQUARE;
-    s2ch.favH.shift = PSP_CTRL_RTRIGGER;
-    s2ch.favV.ok = PSP_CTRL_LTRIGGER;
-    s2ch.favV.move = PSP_CTRL_CROSS;
-    s2ch.favV.change = PSP_CTRL_TRIANGLE;
-    s2ch.favV.del = PSP_CTRL_SQUARE;
-    s2ch.favV.shift = PSP_CTRL_RTRIGGER;
-
-    s2ch.favH.search2ch = PSP_CTRL_SQUARE;
-    s2ch.favV.search2ch = PSP_CTRL_SQUARE;
-
-    s2ch.findH.ok = PSP_CTRL_CIRCLE;
-    s2ch.findH.esc = PSP_CTRL_CROSS;
-    s2ch.findH.ita = PSP_CTRL_SQUARE;
-    s2ch.findH.fav = PSP_CTRL_TRIANGLE;
-    s2ch.findH.shift = PSP_CTRL_RTRIGGER;
-    s2ch.findV.ok = PSP_CTRL_CIRCLE;
-    s2ch.findV.esc = PSP_CTRL_CROSS;
-    s2ch.findV.ita = PSP_CTRL_SQUARE;
-    s2ch.findV.fav = PSP_CTRL_TRIANGLE;
-    s2ch.findV.shift = PSP_CTRL_RTRIGGER;
-
-    s2ch.findH.search2ch = PSP_CTRL_SQUARE;
-    s2ch.findV.search2ch = PSP_CTRL_SQUARE;
-
-    s2ch.menuWinH.ok = PSP_CTRL_CIRCLE;
-    s2ch.menuWinH.esc = PSP_CTRL_CROSS;
-    s2ch.menuWinV.ok = PSP_CTRL_RTRIGGER;
-    s2ch.menuWinV.esc = PSP_CTRL_CROSS;
-
-    s2ch.menuNGH.save = PSP_CTRL_CIRCLE;
-    s2ch.menuNGH.esc = PSP_CTRL_CROSS;
-    s2ch.menuNGH.del = PSP_CTRL_SQUARE;
-    s2ch.menuNGV.save = PSP_CTRL_RTRIGGER;
-    s2ch.menuNGV.esc = PSP_CTRL_CROSS;
-    s2ch.menuNGV.del = PSP_CTRL_SQUARE;
 }
 
 /***********************************
@@ -899,14 +379,15 @@ int psp2chInit(void)
         pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         return ret;
     }
-    psp2chSetColor();
-    psp2chSetButtons();
+    psp2chIniSetColor();
+    psp2chIniSetButtons();
     psp2chItaSetMenuString();
     psp2chFavSetMenuString();
     psp2chThreadSetMenuString();
     psp2chSearchSetMenuString();
     psp2chResSetMenuString();
     psp2chMenuSetMenuString();
+    psp2chIniLoadConfig();
     s2ch.running = 1;
     s2ch.sel = 0;
     s2ch.tateFlag = 0;
@@ -1529,7 +1010,7 @@ int psp2chInputDialog(const unsigned short* text1, char* text2)
             sceGuStart(GU_DIRECT, list);
             sceGuClearDepth(0);
             sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
-            pgFillvram(BLUE, 80, 60, 320, 45);
+            pgFillvram(BLUE, 70, 60, 340, 45);
             pgEditBox(WHITE, 140, 85, 340, 100);
             s2ch.pgCursorX = 142;
             s2ch.pgCursorY =  87;

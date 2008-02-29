@@ -21,8 +21,8 @@ extern unsigned int list[512*512]; // pg.c
 extern intraFont* jpn0; // pg.c
 extern int preLine; // psp2chRes.c
 extern char keyWords[128]; //psp2ch.c
-extern const char *sBtnH[];
-extern const char *sBtnV[];
+extern const char *sBtnH[]; // psp2chRes.c
+extern const char *sBtnV[]; // psp2chRes.c
 
 int* threadSort = NULL;
 

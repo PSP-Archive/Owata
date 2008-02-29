@@ -21,6 +21,8 @@ extern S_2CH s2ch; // psp2ch.c
 extern int* threadSort; // psp2chThread.c
 extern const char* ngNameFile; // psp2chMenu.c
 extern const char* ngIDFile; // psp2chMenu.c
+extern const char* ngWordFile; // psp2chMenu.c
+extern const char* ngMailFile; // psp2chMenu.c
 
 int preLine = -2;
 char* resBuffer = NULL;
@@ -638,8 +640,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
 }
 
 /*****************************
-上下左右キーでの移動
-アナログパッドの移動も追加
+アンカー情報をリセット
 *****************************/
 void psp2chResResetAnchors(void)
 {
@@ -845,109 +846,170 @@ void psp2chResPadMove(int* cursorX, int* cursorY, int limitX, int limitY)
 
     padX = s2ch.pad.Lx - 127;
     padY = s2ch.pad.Ly - 127;
-    if(s2ch.pad.Buttons & PSP_CTRL_RTRIGGER)
+    if (s2ch.cfg.padAccel)
     {
-        dL = 4;
-        dS = 2;
+        if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.change) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.change))
+        {
+            dL = 5;
+        }
+        else
+        {
+            dL = 3;
+        }
+        if (s2ch.tateFlag)
+        {
+            if (padX < -s2ch.cfg.padCutoff)
+            {
+                padX = (1 - padX - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
+                *cursorY += padX >> dL;
+            }
+            else if (padX > s2ch.cfg.padCutoff)
+            {
+                padX = (padX - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
+                *cursorY -= padX >> dL;
+            }
+            if (padY < -s2ch.cfg.padCutoff)
+            {
+                padY = (1 - padY - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
+                *cursorX -= padY >> dL;
+            }
+            else if (padY > s2ch.cfg.padCutoff)
+            {
+                padY = (padY - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
+                *cursorX += padY >> dL;
+            }
+        }
+        else
+        {
+            dL++;
+            if (padX < -s2ch.cfg.padCutoff)
+            {
+                padX = (1 - padX - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
+                *cursorX -= padX >> dL;
+            }
+            else if (padX > s2ch.cfg.padCutoff)
+            {
+                padX = (padX - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
+                *cursorX += padX >> dL;
+            }
+            if (padY < -s2ch.cfg.padCutoff)
+            {
+                padY = (1 - padY - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
+                *cursorY -= padY >> dL;
+            }
+            else if (padY > s2ch.cfg.padCutoff)
+            {
+                padY = (padY - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
+                *cursorY += padY >> dL;
+            }
+        }
     }
     else
     {
-        dL = 16;
-        dS = 2;
-    }
-    if (s2ch.tateFlag)
-    {
-        if (padX < -PAD_CUTOFF)
+        if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.change) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.change))
         {
-            if (padX == -127)
+            dL = 4;
+            dS = 2;
+        }
+        else
+        {
+            dL = 16;
+            dS = 2;
+        }
+        if (s2ch.tateFlag)
+        {
+            if (padX < -s2ch.cfg.padCutoff)
             {
-                *cursorY += dL;
+                if (padX == -127)
+                {
+                    *cursorY += dL;
+                }
+                else
+                {
+                    *cursorY += dS;
+                }
             }
-            else
+            else if (padX > s2ch.cfg.padCutoff)
             {
-                *cursorY += dS;
+                if (padX == 128)
+                {
+                    *cursorY -= dL;
+                }
+                else
+                {
+                    *cursorY -= dS;
+                }
+            }
+            if (padY < -s2ch.cfg.padCutoff)
+            {
+                if (padY == -127)
+                {
+                    *cursorX -= dL;
+                }
+                else
+                {
+                    *cursorX -= dS;
+                }
+            }
+            else if (padY > s2ch.cfg.padCutoff)
+            {
+                if (padY == 128)
+                {
+                    *cursorX += dL;
+                }
+                else
+                {
+                    *cursorX += dS;
+                }
             }
         }
-        else if (padX > PAD_CUTOFF)
+        else
         {
-            if (padX == 128)
+            dL >>= 1;
+            dS >>= 1;
+            if (padX < -s2ch.cfg.padCutoff)
             {
-                *cursorY -= dL;
+                if (padX == -127)
+                {
+                    *cursorX -= dL;
+                }
+                else
+                {
+                    *cursorX -= dS;
+                }
             }
-            else
+            else if (padX > s2ch.cfg.padCutoff)
             {
-                *cursorY -= dS;
+                if (padX == 128)
+                {
+                    *cursorX += dL;
+                }
+                else
+                {
+                    *cursorX += dS;
+                }
             }
-        }
-        if (padY < -PAD_CUTOFF)
-        {
-            if (padY == -127)
+            if (padY < -s2ch.cfg.padCutoff)
             {
-                *cursorX -= dL;
+                if (padY == -127)
+                {
+                    *cursorY -= dL;
+                }
+                else
+                {
+                    *cursorY -= dS;
+                }
             }
-            else
+            else if (padY > s2ch.cfg.padCutoff)
             {
-                *cursorX -= dS;
-            }
-        }
-        else if (padY > PAD_CUTOFF)
-        {
-            if (padY == 128)
-            {
-                *cursorX += dL;
-            }
-            else
-            {
-                *cursorX += dS;
-            }
-        }
-    }
-    else
-    {
-        dL >>= 1;
-        dS >>= 1;
-        if (padX < -PAD_CUTOFF)
-        {
-            if (padX == -127)
-            {
-                *cursorX -= dL;
-            }
-            else
-            {
-                *cursorX -= dS;
-            }
-        }
-        else if (padX > PAD_CUTOFF)
-        {
-            if (padX == 128)
-            {
-                *cursorX += dL;
-            }
-            else
-            {
-                *cursorX += dS;
-            }
-        }
-        if (padY < -PAD_CUTOFF)
-        {
-            if (padY == -127)
-            {
-                *cursorY -= dL;
-            }
-            else
-            {
-                *cursorY -= dS;
-            }
-        }
-        else if (padY > PAD_CUTOFF)
-        {
-            if (padY == 128)
-            {
-                *cursorY += dL;
-            }
-            else
-            {
-                *cursorY += dS;
+                if (padY == 128)
+                {
+                    *cursorY += dL;
+                }
+                else
+                {
+                    *cursorY += dS;
+                }
             }
         }
     }
@@ -1025,6 +1087,54 @@ void psp2chResCheckNG(void)
             for (i = 0; i < s2ch.res.count; i++)
             {
                 if (strcmp(s2ch.resList[i].id, p) == 0)
+                {
+                    s2ch.resList[i].ng = 1;
+                }
+            }
+            p = q + 1;
+        }
+        free(buf);
+    }
+    buf = NULL;
+    buf = psp2chGetNGBuf(ngWordFile, buf);
+    if (buf)
+    {
+        p= buf;
+        while (*p)
+        {
+            q = strchr(p, '\n');
+            if (q == NULL)
+            {
+                break;
+            }
+            *q = '\0';
+            for (i = 0; i < s2ch.res.count; i++)
+            {
+                if (strstr(s2ch.resList[i].text, p))
+                {
+                    s2ch.resList[i].ng = 1;
+                }
+            }
+            p = q + 1;
+        }
+        free(buf);
+    }
+    buf = NULL;
+    buf = psp2chGetNGBuf(ngMailFile, buf);
+    if (buf)
+    {
+        p= buf;
+        while (*p)
+        {
+            q = strchr(p, '\n');
+            if (q == NULL)
+            {
+                break;
+            }
+            *q = '\0';
+            for (i = 0; i < s2ch.res.count; i++)
+            {
+                if (strstr(s2ch.resList[i].mail, p))
                 {
                     s2ch.resList[i].ng = 1;
                 }

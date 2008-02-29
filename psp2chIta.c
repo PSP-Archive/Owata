@@ -16,8 +16,8 @@
 
 extern S_2CH s2ch; // psp2ch.c
 extern char keyWords[128]; // psp2chThread.c
-extern const char *sBtnH[];
-extern const char *sBtnV[];
+extern const char *sBtnH[]; // psp2chRes.c
+extern const char *sBtnV[]; // psp2chRes.c
 
 static const char* boardFile = "2channel.brd";
 

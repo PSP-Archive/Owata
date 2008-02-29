@@ -271,11 +271,11 @@ void psp2chImageViewer(int* img[], int width, int height)
             }
             padX = pad.Lx - 127;
             padY = pad.Ly - 127;
-            if ((padX < -PAD_CUTOFF) || (padX > PAD_CUTOFF))
+            if ((padX < -s2ch.cfg.padCutoff) || (padX > s2ch.cfg.padCutoff))
             {
                 startX += (padX)/4;
             }
-            if ((padY < -PAD_CUTOFF) || (padY > PAD_CUTOFF))
+            if ((padY < -s2ch.cfg.padCutoff) || (padY > s2ch.cfg.padCutoff))
             {
                 startY += (padY)/4;
             }

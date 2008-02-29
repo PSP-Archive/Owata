@@ -31,8 +31,6 @@
 #define RES_A_HEIGHT_V 390
 #define RES_A_LINE_V 30
 
-#define PAD_CUTOFF 35
-
 typedef struct {
     char name[32];
     int itaId;
@@ -232,6 +230,11 @@ typedef struct {
 } S_2CH_MENU_NG;
 
 typedef struct {
+    int osk, esc, ok;
+    char main[112];
+} S_2CH_INPUT_DIALOG;
+
+typedef struct {
     int form, back, reload, datDel, change, addFav, delFav;
     int resForm, idView, idNG, resView, resMove, url;
     S_2CH_SCROLL_BUTTONS s;
@@ -239,18 +242,24 @@ typedef struct {
 
 typedef struct {
     char main[112];
-    char sub[96];
+    char sub[112];
 } S_2CH_MENU_STR;
 
 typedef struct {
     char main[112];
-    char sub1[96];
-    char sub2[96];
-    char aNum[96];
-    char aRes[96];
-    char aId[96];
-    char aUrl[96];
+    char sub1[112];
+    char sub2[112];
+    char aNum[112];
+    char aRes[112];
+    char aId[112];
+    char aUrl[112];
 } S_2CH_RES_MENU_STR;
+
+typedef struct {
+    int padReverse;
+    int padAccel;
+    int padCutoff;
+} S_2CH_CONFIG;
 
 typedef struct {
     S_2CH_CATEGORY* categoryList;
@@ -317,6 +326,7 @@ typedef struct {
     S_2CH_MENU_WIN menuWinV;
     S_2CH_MENU_NG menuNGH;
     S_2CH_MENU_NG menuNGV;
+    S_2CH_CONFIG cfg;
     int running;
     int sel;
     int tateFlag;
