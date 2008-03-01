@@ -24,12 +24,12 @@
 #define RES_A_Y 30
 #define RES_A_WIDTH 390
 #define RES_A_HEIGHT 195
-#define RES_A_LINE 15
+#define RES_A_LINE (RES_A_HEIGHT / LINE_PITCH)
 #define RES_A_X_V 30
 #define RES_A_Y_V 45
 #define RES_A_WIDTH_V 195
 #define RES_A_HEIGHT_V 390
-#define RES_A_LINE_V 30
+#define RES_A_LINE_V (RES_A_HEIGHT_V / LINE_PITCH)
 
 typedef struct {
     char name[32];

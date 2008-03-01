@@ -96,11 +96,11 @@ int psp2chThread(int retSel)
     }
     if (s2ch.tateFlag)
     {
-        lineEnd = 35;
+        lineEnd = DRAW_LINE_V;
     }
     else
     {
-        lineEnd = 20;
+        lineEnd = DRAW_LINE_H;
     }
     if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
     {
@@ -738,14 +738,14 @@ void psp2chDrawThread(int scrollX)
 
     if (s2ch.tateFlag)
     {
-        lineEnd = 35;
+        lineEnd = DRAW_LINE_V;
         scrW = SCR_HEIGHT;
         scrH = SCR_WIDTH;
         resCount = scrW - 50 + scrollX;
     }
     else
     {
-        lineEnd = 20;
+        lineEnd = DRAW_LINE_H;
         scrW = SCR_WIDTH;
         scrH = SCR_HEIGHT;
         resCount = THREAD_RES + scrollX;

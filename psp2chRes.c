@@ -158,11 +158,11 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
 
     if (s2ch.tateFlag)
     {
-        lineEnd = 35;
+        lineEnd = DRAW_LINE_V;
     }
     else
     {
-        lineEnd = 20;
+        lineEnd = DRAW_LINE_H;
     }
     if (s2ch.resList == NULL)
     {
@@ -1909,12 +1909,12 @@ void psp2chDrawRes(int drawLine)
     if (s2ch.tateFlag)
     {
         endX = RES_SCR_WIDTH_V;
-        lineEnd = 35;
+        lineEnd = DRAW_LINE_V;
     }
     else
     {
         endX = RES_SCR_WIDTH;
-        lineEnd = 20;
+        lineEnd = DRAW_LINE_H;
     }
     // ï\é¶çsÇ…ïœâªÇ»Çµ
     if (drawLine == preLine)

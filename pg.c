@@ -243,7 +243,7 @@ void pgMenuBar(char* str)
     s2ch.pgCursorX = 0;
     if (s2ch.tateFlag)
     {
-        pgFillvram(s2ch.menuColor.bg, 0, 0, SCR_HEIGHT, 25);
+        pgFillvram(s2ch.menuColor.bg, 0, 0, SCR_HEIGHT, FONT_PITCH + LINE_PITCH);
         s2ch.pgCursorY = 0;
         str = pgPrint(str, s2ch.menuColor.text, s2ch.menuColor.bg, SCR_HEIGHT);
         s2ch.pgCursorY += LINE_PITCH;
@@ -256,8 +256,8 @@ void pgMenuBar(char* str)
     }
     else
     {
-        pgFillvram(s2ch.menuColor.bg, 0, 0, SCR_WIDTH, 13);
-        s2ch.pgCursorY = 1;
+        pgFillvram(s2ch.menuColor.bg, 0, 0, SCR_WIDTH, FONT_PITCH);
+        s2ch.pgCursorY = 0;
         pgPrint(str, s2ch.menuColor.text, s2ch.menuColor.bg, SCR_WIDTH);
         s2ch.pgCursorX = SCR_WIDTH - 32;
     }
@@ -286,8 +286,8 @@ void pgMenuBar(char* str)
     if (s2ch.tateFlag)
     {
         src = printBuf;
-        dst0 = (unsigned int*)(0x04000000+framebuffer) + 24;
-        for (y = 0; y < 25; y++)
+        dst0 = (unsigned int*)(0x04000000+framebuffer) + FONT_PITCH + LINE_PITCH - 1;
+        for (y = 0; y < FONT_PITCH + LINE_PITCH; y++)
         {
             dst = dst0--;
             for (x = 0; x < SCR_HEIGHT; x++)
@@ -301,8 +301,8 @@ void pgMenuBar(char* str)
     else
     {
         src = printBuf;
-        dst = (unsigned int*)(0x04000000+framebuffer)+259*BUF_WIDTH;
-        for (y = 0; y < 13; y++)
+        dst = (unsigned int*)(0x04000000+framebuffer)+(SCR_HEIGHT - FONT_PITCH)*BUF_WIDTH;
+        for (y = 0; y < FONT_PITCH; y++)
         {
             for (x = 0; x < SCR_WIDTH; x++)
             {
@@ -611,7 +611,7 @@ void pgPrintNumber(int num, int color,int bgcolor)
         font = (unsigned short*)(monafontA + ((buf[j] - 0x20) << 5)) + 1;
         vptr0 = pgGetVramAddr(s2ch.pgCursorX, s2ch.pgCursorY);
         s2ch.pgCursorX += 6;
-        for (cy = 0; cy < 12; cy++) {
+        for (cy = 0; cy < FONT_PITCH; cy++) {
             vptr = vptr0;
             b = 0x8000;
             for (i = 0; i < 6; i++) {
@@ -655,7 +655,7 @@ int pgPutChar(unsigned char *cfont,int ch,int color,int bgcolor, int width)
     s2ch.pgCursorY &= 0x01FF;
     vptr0 = pgGetVramAddr(s2ch.pgCursorX, s2ch.pgCursorY);
     s2ch.pgCursorX += cx;
-    for (cy = 0; cy < 12; cy++) {
+    for (cy = 0; cy < FONT_PITCH; cy++) {
         vptr = vptr0;
         b = 0x8000;
         for (i = 0; i < cx; i++) {

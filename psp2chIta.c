@@ -103,11 +103,11 @@ int psp2chIta(void)
     }
     if (s2ch.tateFlag)
     {
-        lineEnd = 35;
+        lineEnd = DRAW_LINE_V;
     }
     else
     {
-        lineEnd = 20;
+        lineEnd = DRAW_LINE_H;
     }
     if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
     {
@@ -588,13 +588,13 @@ void psp2chDrawCategory(int start, int select, S_2CH_ITA_COLOR c)
 
     if (s2ch.tateFlag)
     {
-        lineEnd = 35;
+        lineEnd = DRAW_LINE_V;
         scrW = SCR_HEIGHT;
         scrH = SCR_WIDTH;
     }
     else
     {
-        lineEnd = 20;
+        lineEnd = DRAW_LINE_H;
         scrW = SCR_WIDTH;
         scrH = SCR_HEIGHT;
     }
@@ -629,13 +629,13 @@ void psp2chDrawIta(int start, int select, S_2CH_ITA_COLOR c)
 
     if (s2ch.tateFlag)
     {
-        lineEnd = 35;
+        lineEnd = DRAW_LINE_V;
         scrW = SCR_HEIGHT;
         scrH = SCR_WIDTH;
     }
     else
     {
-        lineEnd = 20;
+        lineEnd = DRAW_LINE_H;
         scrW = SCR_WIDTH;
         scrH = SCR_HEIGHT;
     }

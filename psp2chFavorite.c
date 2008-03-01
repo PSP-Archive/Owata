@@ -108,11 +108,11 @@ int psp2chFavorite(void)
     }
     if (s2ch.tateFlag)
     {
-        lineEnd = 35;
+        lineEnd = DRAW_LINE_V;
     }
     else
     {
-        lineEnd = 20;
+        lineEnd = DRAW_LINE_H;
     }
     if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
     {
@@ -638,13 +638,13 @@ void psp2chDrawFavorite(int scrollX)
 
     if (s2ch.tateFlag)
     {
-        lineEnd = 35;
+        lineEnd = DRAW_LINE_V;
         scrW = SCR_HEIGHT + scrollX;
         scrH = SCR_WIDTH;
     }
     else
     {
-        lineEnd = 20;
+        lineEnd = DRAW_LINE_H;
         scrW = SCR_WIDTH + scrollX;
         scrH = SCR_HEIGHT;
     }
@@ -703,13 +703,13 @@ void psp2chDrawFavoriteIta(void)
 
     if (s2ch.tateFlag)
     {
-        lineEnd = 35;
+        lineEnd = DRAW_LINE_V;
         scrW = SCR_HEIGHT;
         scrH = SCR_WIDTH;
     }
     else
     {
-        lineEnd = 20;
+        lineEnd = DRAW_LINE_H;
         scrW = SCR_WIDTH;
         scrH = SCR_HEIGHT;
     }
