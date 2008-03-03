@@ -435,17 +435,19 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                     if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.reload) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.reload))
                     {
                         psp2chSaveIdx(title, dat);
-                        psp2chGetDat(host, dir, title, dat);
-                        psp2chResList(host, dir, title, dat);
-                        totalLine = psp2chResSetLine(&bar);
-                        s2ch.res.start++;
-                        if (s2ch.res.start > totalLine - lineEnd)
+                        if (psp2chGetDat(host, dir, title, dat) >= 0)
                         {
-                            s2ch.res.start = totalLine - lineEnd;
-                        }
-                        if (s2ch.res.start < 0)
-                        {
-                            s2ch.res.start = 0;
+                            psp2chResList(host, dir, title, dat);
+                            totalLine = psp2chResSetLine(&bar);
+                            s2ch.res.start++;
+                            if (s2ch.res.start > totalLine - lineEnd)
+                            {
+                                s2ch.res.start = totalLine - lineEnd;
+                            }
+                            if (s2ch.res.start < 0)
+                            {
+                                s2ch.res.start = 0;
+                            }
                         }
                     }
                     // DATíœ
@@ -1463,17 +1465,6 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
         return -1;
     }
     // save dat.dat
-    sprintf(path, "%s/%s/%s/%d.dat", s2ch.cwDir, s2ch.logDir, title, dat);
-    fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777);
-    if (fd < 0)
-    {
-        psp2chCloseSocket(mySocket);
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "File open error\n%s", path);
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
-        return fd;
-    }
     sprintf(buf, "http://%s/%s/dat/%d.dat ‚©‚çƒf[ƒ^‚ğ“]‘—‚µ‚Ä‚¢‚Ü‚·...", host, dir, dat);
     pgMenuBar(buf);
     sceDisplayWaitVblankStart();
@@ -1486,6 +1477,17 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
         pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return -1;
+    }
+    sprintf(path, "%s/%s/%s/%d.dat", s2ch.cwDir, s2ch.logDir, title, dat);
+    fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777);
+    if (fd < 0)
+    {
+        psp2chCloseSocket(mySocket);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        sprintf(s2ch.mh.message, "File open error\n%s", path);
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        return fd;
     }
     while((ret = recv(mySocket, buf, sizeof(buf), 0)) > 0)
     {
