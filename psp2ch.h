@@ -259,6 +259,7 @@ typedef struct {
     int padReverse;
     int padAccel;
     int padCutoff;
+    int favSelect;
 } S_2CH_CONFIG;
 
 typedef struct {

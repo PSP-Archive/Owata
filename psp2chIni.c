@@ -78,6 +78,7 @@ void psp2chIniLoadConfig(void)
                 setInt("CFG_PAD_REVERSE", s2ch.cfg.padReverse, 1);
                 setInt("CFG_PAD_ACCEL", s2ch.cfg.padAccel, 1);
                 setInt("CFG_PAD_CUTOFF", s2ch.cfg.padCutoff, 35);
+                setInt("CFG_FAV_SELECT", s2ch.cfg.favSelect, 0);
 
                 free(buf);
                 return;
@@ -91,6 +92,7 @@ void psp2chIniLoadConfig(void)
     s2ch.cfg.padReverse = 1; // パッド横軸の移動方向(1:対象が移動,-1:視点が移動)
     s2ch.cfg.padAccel = 1; // 0:2段階速, 1:8段階速
     s2ch.cfg.padCutoff = 35; // アナログパッドのニュートラルあそび値
+    s2ch.cfg.favSelect = 0; // お気に入りのデフォルト表示 0:スレ, 1:板
 }
 
 /***********************************

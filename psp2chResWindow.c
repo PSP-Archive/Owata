@@ -223,7 +223,14 @@ void psp2chResAnchor(int anc)
     {
         if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
         {
-            psp2chCursorSet(&anchor, lineEnd, 0);
+            if (s2ch.tateFlag)
+            {
+                psp2chCursorSet(&anchor, lineEnd, s2ch.btnResV.change);
+            }
+            else
+            {
+                psp2chCursorSet(&anchor, lineEnd, s2ch.btnResH.change);
+            }
             if (anchor.select > anchor.count - lineEnd)
             {
                 anchor.select = anchor.count - lineEnd;

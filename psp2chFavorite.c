@@ -86,7 +86,7 @@ int psp2chFavorite(void)
 {
     static int scrollX = 0;
     static char* menuStr = "";
-    static int focus = 1;
+    static int focus = -1;
     int lineEnd, rMenu;
     int i;
 
@@ -96,15 +96,27 @@ int psp2chFavorite(void)
     }
     if (s2ch.favItaList == NULL)
     {
-        if (psp2chLoadFavoriteIta() < 0)
-        {
-            focus = 0;
-        }
+        psp2chLoadFavoriteIta();
     }
     if (s2ch.favList == NULL && s2ch.favItaList == NULL)
     {
         s2ch.sel = 2;
         return -1;
+    }
+    if (focus < 0)
+    {
+        if (s2ch.favList && s2ch.cfg.favSelect == 0)
+        {
+            focus = s2ch.cfg.favSelect;
+        }
+        else if (s2ch.favItaList && s2ch.cfg.favSelect == 1)
+        {
+            focus = s2ch.cfg.favSelect;
+        }
+        else
+        {
+            focus = 1;
+        }
     }
     if (s2ch.tateFlag)
     {

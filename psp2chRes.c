@@ -435,7 +435,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                     if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.reload) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.reload))
                     {
                         psp2chSaveIdx(title, dat);
-                        if (psp2chGetDat(host, dir, title, dat) >= 0)
+                        if (psp2chGetDat(host, dir, title, dat) == 0)
                         {
                             psp2chResList(host, dir, title, dat);
                             totalLine = psp2chResSetLine(&bar);
@@ -1364,6 +1364,7 @@ int psp2chResList(char* host, char* dir, char* title, int dat)
 
 /*****************************
 datファイルにアクセスして保存
+戻り値 0:データ取得, 1:更新なし, <0:error
 *****************************/
 int psp2chGetDat(char* host, char* dir, char* title, int dat)
 {
@@ -1444,11 +1445,11 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
             sceDisplayWaitVblankStart();
             framebuffer = sceGuSwapBuffers();
             pgWaitVn(60);
-            return -1;
+            return 1;
             break;
         case 304: // Not modified
             psp2chCloseSocket(mySocket);
-            return 0;
+            return 1;
         default:
             memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
             sprintf(s2ch.mh.message, "HTTP error\nhost %s path %s\nStatus code %d", host, path, ret);
