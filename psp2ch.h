@@ -260,6 +260,7 @@ typedef struct {
     int padAccel;
     int padCutoff;
     int favSelect;
+    char imageDir[32];
 } S_2CH_CONFIG;
 
 typedef struct {

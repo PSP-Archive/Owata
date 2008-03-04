@@ -22,7 +22,7 @@ void psp2chImageViewJpeg(char* fname)
     FILE* infile;
     JSAMPARRAY img;
     JSAMPROW buf, imgbuf, tmp;
-    int width;
+    int width, bufWidth;
     int height;
     int i;
     struct jpeg_decompress_struct cinfo;
@@ -48,6 +48,7 @@ void psp2chImageViewJpeg(char* fname)
     jpeg_read_header(&cinfo, TRUE);
     jpeg_start_decompress(&cinfo);
     width = cinfo.output_width;
+    bufWidth = width + (8 - width % 8);
     height = cinfo.output_height;
     img = (JSAMPARRAY)malloc(sizeof(JSAMPROW) * height);
     if (!img)
@@ -55,14 +56,14 @@ void psp2chImageViewJpeg(char* fname)
         fclose(infile);
         return;
     }
-    imgbuf = (JSAMPROW)calloc(sizeof(JSAMPLE), 4 * width * height + 16);
+    imgbuf = (JSAMPROW)calloc(sizeof(JSAMPLE), 4 * bufWidth * height + 16);
     if (!imgbuf)
     {
         free(img);
         fclose(infile);
         return;
     }
-    buf = (JSAMPROW)calloc(sizeof(JSAMPLE), 3 * width);
+    buf = (JSAMPROW)calloc(sizeof(JSAMPLE), 3 * bufWidth);
     if (!buf)
     {
         free(imgbuf);
@@ -77,7 +78,7 @@ void psp2chImageViewJpeg(char* fname)
     }
     for (i = 0; i < height; i++ )
     {
-        img[i] = &tmp[i * width * 4];
+        img[i] = &tmp[i * bufWidth * 4];
     }
     if (cinfo.out_color_components == 3)
     {
@@ -120,7 +121,7 @@ void psp2chImageViewJpeg(char* fname)
     jpeg_finish_decompress(&cinfo);
     jpeg_destroy_decompress(&cinfo);
     fclose(infile);
-    psp2chImageViewer((int**)img, width, height);
+    psp2chImageViewer((int**)img, width, height, bufWidth, fname);
     free(imgbuf);
     free(img);
     preLine = -2;
@@ -131,7 +132,7 @@ void psp2chImageViewPng(char* fname)
     FILE* infile;
     png_structp png_ptr;
     png_infop info_ptr;
-    unsigned long width, height;
+    unsigned long width, height, bufWidth;
     int bit_depth, color_type, interlace_type;
     png_bytepp img;
     png_bytep imgbuf;
@@ -155,6 +156,7 @@ void psp2chImageViewPng(char* fname)
     png_init_io(png_ptr, infile);
     png_read_info(png_ptr, info_ptr);
     png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, &interlace_type, NULL, NULL);
+    bufWidth = width + (8 - width % 8);
     //パレット系->RGB系に拡張
     if (color_type == PNG_COLOR_TYPE_PALETTE ||
         (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8) ||
@@ -179,15 +181,15 @@ void psp2chImageViewPng(char* fname)
     }
     png_read_update_info(png_ptr, info_ptr);
     img = (png_bytepp)malloc(height * sizeof(png_bytep));
-    imgbuf = (png_bytep)malloc(png_get_rowbytes(png_ptr, info_ptr) * width);
+    imgbuf = (png_bytep)malloc(png_get_rowbytes(png_ptr, info_ptr) * bufWidth);
     for (i = 0; i < height; i++)
     {
-        img[i] = &imgbuf[i * width * 4];
+        img[i] = &imgbuf[i * bufWidth * 4];
     }
     png_read_image(png_ptr, img);
     png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
     fclose(infile);
-    psp2chImageViewer((int**)img, (int)width, (int)height);
+    psp2chImageViewer((int**)img, (int)width, (int)height, (int)bufWidth, fname);
     free(imgbuf);
     free(img);
     preLine = -2;
@@ -214,7 +216,7 @@ void psp2chBitBlt(int sx, int sy, int sw, int sh, int dx, int dy)
     sceGuDrawArray(GU_SPRITES,GU_TEXTURE_16BIT|GU_COLOR_4444|GU_VERTEX_16BIT|GU_TRANSFORM_2D,2,0,vertices);
 }
 
-void psp2chImageViewer(int* img[], int width, int height)
+void psp2chImageViewer(int* img[], int width, int height, int bufWidth, char* fname)
 {
     int i, j, w, h, startX, startY;
     SceCtrlData pad;
@@ -223,8 +225,12 @@ void psp2chImageViewer(int* img[], int width, int height)
     unsigned int* vptr;
     int thumb;
     int thumbFlag = 0;
-    int menu = 1;
+    int menu = 1, rMenu = 0;
     int padX, padY;
+    char picturePath[256], buf[256];
+    char *p;
+    SceUID src, dst;
+    int ret;
 
     thumb = (width/SCR_WIDTH > height/SCR_HEIGHT) ? width/SCR_WIDTH : height/SCR_HEIGHT;
     thumb++;
@@ -235,22 +241,87 @@ void psp2chImageViewer(int* img[], int width, int height)
     {
         if(sceCtrlPeekBufferPositive(&pad, 1))
         {
+            if(pad.Buttons & PSP_CTRL_RTRIGGER)
+            {
+                rMenu = 1;
+            }
+            else
+            {
+                rMenu = 0;
+            }
             if (pad.Buttons != oldPad.Buttons)
             {
                 oldPad = pad;
-                if(pad.Buttons & PSP_CTRL_CIRCLE && thumb > 1)
+                if (rMenu)
                 {
-                    thumbFlag = thumbFlag ? 0 : 1;
-                    startX = 0;
-                    startY = 0;
+                    if(pad.Buttons & PSP_CTRL_CIRCLE)
+                    {
+                        if (s2ch.cfg.imageDir[0])
+                        {
+                            sprintf(picturePath, "ms0:/PICTURE/%s", s2ch.cfg.imageDir);
+                            src = sceIoDopen(picturePath);
+                            if (src < 0)
+                            {
+                                ret = sceIoMkdir(picturePath, 0777);
+                                if (ret < 0)
+                                {
+                                    continue;
+                                }
+                            }
+                            else
+                            {
+                                sceIoDclose(src);
+                            }
+                        }
+                        else
+                        {
+                            strcpy(picturePath, "ms0:/PICTURE");
+                        }
+                        p = strrchr(fname, '/');
+                        if (p == NULL)
+                        {
+                            continue;
+                        }
+                        strcat(picturePath, p);
+                        src = sceIoOpen(fname, PSP_O_RDONLY, 0777);
+                        if (src < 0)
+                        {
+                            continue;
+                        }
+                        dst = sceIoOpen(picturePath, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777);
+                        if (dst < 0)
+                        {
+                            continue;
+                        }
+                        while((ret = sceIoRead(src, buf, 256)))
+                        {
+                            sceIoWrite(dst, buf, ret);
+                        }
+                        sceIoClose(dst);
+                        sceIoClose(src);
+                    }
                 }
-                else if(pad.Buttons & PSP_CTRL_CROSS)
+                else
                 {
-                    break;
-                }
-                else if(pad.Buttons & PSP_CTRL_TRIANGLE)
-                {
-                    menu = menu ? 0 : 1;
+                    if(pad.Buttons & PSP_CTRL_CIRCLE && thumb > 1)
+                    {
+                        thumbFlag = thumbFlag ? 0 : 1;
+                        startX = 0;
+                        startY = 0;
+                    }
+                    else if(pad.Buttons & PSP_CTRL_CROSS)
+                    {
+                        break;
+                    }
+                    else if(pad.Buttons & PSP_CTRL_TRIANGLE)
+                    {
+                        menu = menu ? 0 : 1;
+                    }
+                    else if(pad.Buttons & PSP_CTRL_SQUARE)
+                    {
+                        sceIoRemove(fname);
+                        break;
+                    }
                 }
             }
             if(pad.Buttons & PSP_CTRL_UP)
@@ -326,50 +397,24 @@ void psp2chImageViewer(int* img[], int width, int height)
         }
         else
         {
-            /*
+            w = (width > SCR_WIDTH) ? SCR_WIDTH : width;
+            h = (height > SCR_HEIGHT) ? SCR_HEIGHT : height;
             sceGuStart(GU_DIRECT,list);
-            sceGuCopyImage(GU_PSM_8888,startX,startY,width,height,width,img[0],0,0,width,(void*)(0x04000000+(u32)framebuffer));
+            sceGuCopyImage(GU_PSM_8888, startX, startY, w, h, bufWidth, img[0], 0, 0, BUF_WIDTH, framebuffer + 0x04000000);
             sceGuTexSync();
             sceGuFinish();
             sceGuSync(0,0);
-            */
-            vptr0 = framebuffer + 0x04000000;
-            for (i = 0, h = 0; h < height && h < SCR_HEIGHT; i++)
-            {
-                if (i < startY)
-                {
-                    continue;
-                }
-                vptr = vptr0;
-                for (j = 0, w = 0; w < width && w < SCR_WIDTH; j++)
-                {
-                    if (j < startX)
-                    {
-                        continue;
-                    }
-                    *vptr++ = img[i][j];
-                    w++;
-                }
-                for (; w < SCR_WIDTH; w++)
-                {
-                    *vptr++ = GRAY;
-                }
-                vptr0 += BUF_WIDTH;
-                h++;
-            }
-            for (; h < SCR_HEIGHT; h++)
-            {
-                vptr = vptr0;
-                for (i = 0; i < SCR_WIDTH; i++)
-                {
-                    *vptr++ = GRAY;
-                }
-                vptr0 += BUF_WIDTH;
-            }
         }
         if (menu)
         {
-            pgMenuBar("　○ : 拡大縮小　　　× : 戻る　　　△ : メニューオン・オフ　　　");
+            if (rMenu)
+            {
+                pgMenuBar("　○ : PICTUREフォルダへコピー　");
+            }
+            else
+            {
+                pgMenuBar("　○ : 拡大縮小　　　× : 戻る　　　△ : メニューオン・オフ　　　□ : 削除");
+            }
         }
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();

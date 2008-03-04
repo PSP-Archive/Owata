@@ -25,8 +25,8 @@ extern const char* ngWordFile; // psp2chMenu.c
 extern const char* ngMailFile; // psp2chMenu.c
 
 int preLine = -2;
-char* resBuffer = NULL;
 
+static char* resBuffer = NULL;
 static char jmpHost[32], jmpDir[32], jmpTitle[32];
 static int jmpDat;
 const char *sBtnH[] = {"Sel", "", "", "St", "Å™", "Å®", "Å´", "Å©", "L", "R", "", "", "Å¢", "Åõ", "Å~", "Å†", ""};
@@ -1239,8 +1239,16 @@ int psp2chResList(char* host, char* dir, char* title, int dat)
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return -1;
     }
-    sceIoRead(fd, resBuffer, st.st_size);
+    ret = sceIoRead(fd, resBuffer, st.st_size);
     sceIoClose(fd);
+    if (ret != st.st_size)
+    {
+        free(resBuffer);
+        resBuffer = NULL;
+        pgMenuBar("DATÇÃì«Ç›çûÇ›Ç…é∏îsÇµÇ‹ÇµÇΩ");
+        sceDisplayWaitVblankStart();
+        framebuffer = sceGuSwapBuffers();
+    }
     resBuffer[st.st_size] = '\0';
     s2ch.res.count = 0;
     p = resBuffer;

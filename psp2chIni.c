@@ -44,7 +44,7 @@ extern S_2CH s2ch; // psp2ch.c
                 if (i >= (D)) break;\
                 (B)[i] = *p++;\
             }\
-            (B)[i] = '\0'\
+            (B)[i] = '\0';\
         }\
         else{strcpy((B), (C));}\
     }\
@@ -79,6 +79,7 @@ void psp2chIniLoadConfig(void)
                 setInt("CFG_PAD_ACCEL", s2ch.cfg.padAccel, 1);
                 setInt("CFG_PAD_CUTOFF", s2ch.cfg.padCutoff, 35);
                 setInt("CFG_FAV_SELECT", s2ch.cfg.favSelect, 0);
+                setString("CFG_IMAGE_DIR", s2ch.cfg.imageDir, "", 32);
 
                 free(buf);
                 return;
@@ -93,6 +94,7 @@ void psp2chIniLoadConfig(void)
     s2ch.cfg.padAccel = 1; // 0:2段階速, 1:8段階速
     s2ch.cfg.padCutoff = 35; // アナログパッドのニュートラルあそび値
     s2ch.cfg.favSelect = 0; // お気に入りのデフォルト表示 0:スレ, 1:板
+    strcpy(s2ch.cfg.imageDir, ""); // PICTUREフォルダに作成するフォルダ名
 }
 
 /***********************************
