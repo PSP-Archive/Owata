@@ -48,7 +48,7 @@ void psp2chImageViewJpeg(char* fname)
     jpeg_read_header(&cinfo, TRUE);
     jpeg_start_decompress(&cinfo);
     width = cinfo.output_width;
-    bufWidth = width + (8 - width % 8);
+    bufWidth = width + (8 - width % 8) % 8;
     height = cinfo.output_height;
     img = (JSAMPARRAY)malloc(sizeof(JSAMPROW) * height);
     if (!img)
@@ -156,7 +156,7 @@ void psp2chImageViewPng(char* fname)
     png_init_io(png_ptr, infile);
     png_read_info(png_ptr, info_ptr);
     png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, &interlace_type, NULL, NULL);
-    bufWidth = width + (8 - width % 8);
+    bufWidth = width + (8 - width % 8) % 8;
     //ƒpƒŒƒbƒgŒn->RGBŒn‚ÉŠg’£
     if (color_type == PNG_COLOR_TYPE_PALETTE ||
         (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8) ||
@@ -201,7 +201,7 @@ struct Vertex
     unsigned short color;
     short x, y, z;
 };
-void psp2chBitBlt(int sx, int sy, int sw, int sh, int dx, int dy)
+void psp2chBitBlt(int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh)
 {
     struct Vertex* vertices = (struct Vertex*)sceGuGetMemory(2 * sizeof(struct Vertex));
 
@@ -211,19 +211,18 @@ void psp2chBitBlt(int sx, int sy, int sw, int sh, int dx, int dy)
 
     vertices[1].u = sx+sw; vertices[1].v = sy+sh;
     vertices[1].color = 0;
-    vertices[1].x = dx+sw; vertices[1].y = dy+sh; vertices[1].z = 0;
+    vertices[1].x = dx+dw; vertices[1].y = dy+dh; vertices[1].z = 0;
 
     sceGuDrawArray(GU_SPRITES,GU_TEXTURE_16BIT|GU_COLOR_4444|GU_VERTEX_16BIT|GU_TRANSFORM_2D,2,0,vertices);
 }
 
 void psp2chImageViewer(int* img[], int width, int height, int bufWidth, char* fname)
 {
-    int i, j, w, h, startX, startY;
+    int w, h, startX, startY;
     SceCtrlData pad;
     SceCtrlData oldPad;
-    unsigned int* vptr0;
-    unsigned int* vptr;
-    int thumb;
+    double thumb;
+    double sx, sy, sw, sh, dx, dy, dw, dh;
     int thumbFlag = 0;
     int menu = 1, rMenu = 0;
     int padX, padY;
@@ -232,8 +231,7 @@ void psp2chImageViewer(int* img[], int width, int height, int bufWidth, char* fn
     SceUID src, dst;
     int ret;
 
-    thumb = (width/SCR_WIDTH > height/SCR_HEIGHT) ? width/SCR_WIDTH : height/SCR_HEIGHT;
-    thumb++;
+    thumb = (width/SCR_WIDTH > height/SCR_HEIGHT) ? (double)width/SCR_WIDTH : (double)height/SCR_HEIGHT;
     startX = 0;
     startY = 0;
     sceCtrlPeekBufferPositive(&oldPad, 1);
@@ -369,37 +367,50 @@ void psp2chImageViewer(int* img[], int width, int height, int bufWidth, char* fn
         }
         if (thumbFlag)
         {
-            vptr0 = framebuffer + 0x04000000;
-            for (i = 0, h = 0;i < height &&  h < height && h < SCR_HEIGHT; i += thumb)
+            sceGuStart(GU_DIRECT,list);
+            sceGuClearColor(GRAY);
+            sceGuClear(GU_COLOR_BUFFER_BIT);
+            sceGuTexMode(GU_PSM_8888,0,0,0);
+            sceGuTexFunc(GU_TFX_REPLACE,GU_TCC_RGBA);
+            sceGuTexFilter(GU_NEAREST,GU_NEAREST);
+            for (sx = 0; sx < width; sx += BUF_WIDTH)
             {
-                vptr = vptr0;
-                for (j = 0, w = 0;j < width && w < width && w < SCR_WIDTH; j += thumb)
+                for (sy = 0; sy < height; sy += BUF_HEIGHT)
                 {
-                    *vptr++ = img[i][j];
-                    w++;
+                    dx = sx / thumb;
+                    dy = sy / thumb;
+                    if ((width - sx) < 512)
+                    {
+                        sw = width - sx;
+                    }
+                    else
+                    {
+                        sw = 512;
+                    }
+                    dw = sw / thumb;
+                    if ((height - sy) < 512)
+                    {
+                        sh = height - sy;
+                    }
+                    else
+                    {
+                        sh = 512;
+                    }
+                    dh = sh / thumb;
+                    sceGuTexImage(0,512,512,bufWidth,img[0]+(int)sx+((int)sy*bufWidth));
+                    psp2chBitBlt((int)sx, (int)sy, (int)sw, (int)sh, (int)dx, (int)dy, (int)dw, (int)dh);
                 }
-                for (; w < SCR_WIDTH; w++)
-                {
-                    *vptr++ = GRAY;
-                }
-                vptr0 += BUF_WIDTH;
-                h++;
             }
-            for (; h < SCR_HEIGHT; h++)
-            {
-                vptr = vptr0;
-                for (i = 0; i < SCR_WIDTH; i++)
-                {
-                    *vptr++ = GRAY;
-                }
-                vptr0 += BUF_WIDTH;
-            }
+            sceGuFinish();
+            sceGuSync(0,0);
         }
         else
         {
             w = (width > SCR_WIDTH) ? SCR_WIDTH : width;
             h = (height > SCR_HEIGHT) ? SCR_HEIGHT : height;
             sceGuStart(GU_DIRECT,list);
+            sceGuClearColor(GRAY);
+            sceGuClear(GU_COLOR_BUFFER_BIT);
             sceGuCopyImage(GU_PSM_8888, startX, startY, w, h, bufWidth, img[0], 0, 0, BUF_WIDTH, framebuffer + 0x04000000);
             sceGuTexSync();
             sceGuFinish();
