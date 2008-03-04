@@ -29,7 +29,8 @@
 extern unsigned int list[512*512]; // pg.c
 extern intraFont* jpn0; // pg.c
 
-const char* userAgent = "Monazilla/1.00 (Compatible; PSP; ja) owata(^o^)/0.5.4";
+const char* userAgent = "Monazilla/1.00 (Compatible; PSP; ja) owata(^o^)";
+char* ver = "0.5.4";
 S_2CH s2ch;
 char cookie[128] = {0};
 char keyWords[128];
@@ -117,6 +118,9 @@ void psp2chStart(void)
             }
         }
         pgPrintMona();
+        s2ch.pgCursorX = 450;
+        s2ch.pgCursorY = 260;
+        pgPrint(ver, BLUE, WHITE, SCR_WIDTH);
         pgCopy(0, 0);
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
@@ -521,10 +525,10 @@ int psp2chRequest(const char* host, const char* path, const char* header) {
     sprintf(requestText,
         "GET /%s HTTP/1.1\r\n"
         "Host: %s\r\n"
-        "User-Agent: %s\r\n"
+        "User-Agent: %s/%s\r\n"
         "%s"
         "Connection: close\r\n\r\n"
-        , path, host, userAgent, header);
+        , path, host, userAgent, ver, header);
     ret = psp2chResolve(host, &addr);
     if (ret < 0) {
         return ret;
@@ -583,12 +587,12 @@ int psp2chPost(char* host, char* dir, int dat, char* cook, char* body)
     sprintf(requestText,
         "POST /test/bbs.cgi HTTP/1.1\r\n"
         "Host: %s\r\n"
-        "User-Agent: %s\r\n"
+        "User-Agent: %s/%s\r\n"
         "Referer: http://%s/test/read.cgi/%s/%d/l50\r\n"
         "Cookie: %s\r\n"
         "Content-Type: application/x-www-form-urlencoded\r\n"
         "Content-Length: %d\r\n\r\n"
-        , host, userAgent, host, dir, dat, cook, strlen(body));
+        , host, userAgent, ver, host, dir, dat, cook, strlen(body));
     ret = psp2chResolve(host, &addr);
     if (ret < 0) {
         return -1;
