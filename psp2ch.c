@@ -997,12 +997,12 @@ int psp2chInputDialog(const unsigned short* text1, char* text2)
                 {
                     psp2chGets(text2, keyWords, 128, 1);
                 }
-                if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
+                else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
                 {
                     s2ch.tateFlag = temp;
                     return -1;
                 }
-                if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
+                else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
                 {
                     break;
                 }

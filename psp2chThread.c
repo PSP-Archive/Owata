@@ -154,7 +154,7 @@ int psp2chThread(int retSel)
                     psp2chThreadSort();
                 }
                 // 検索
-                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thH.search) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thV.search))
+                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thH.search) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thV.search))
                 {
                     if (psp2chThreadSearch() == 0 && keyWords[0])
                     {
@@ -162,7 +162,7 @@ int psp2chThread(int retSel)
                     }
                 }
                 // 2ちゃんねる検索
-                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thH.search2ch) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thV.search2ch))
+                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thH.search2ch) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thV.search2ch))
                 {
                     if (psp2chThreadSearch() == 0 && keyWords[0])
                     {
@@ -186,14 +186,14 @@ int psp2chThread(int retSel)
                     s2ch.sel = 5;
                 }
                 // 戻る
-                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thH.esc) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thV.esc))
+                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thH.esc) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thV.esc))
                 {
                     s2ch.sel = ret;
                     ret = 0;
                     return 0;
                 }
                 // スレ一覧の更新
-                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thH.reload) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thV.reload))
+                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thH.reload) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thV.reload))
                 {
                     psp2chGetSubject(s2ch.ita.select);
                     psp2chThreadList(s2ch.ita.select);
@@ -201,7 +201,7 @@ int psp2chThread(int retSel)
                     s2ch.thread.select = 0;
                 }
                 // お気に入りへ移動
-                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thH.move) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thV.move))
+                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thH.move) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thV.move))
                 {
                     s2ch.sel = 1;
                 }

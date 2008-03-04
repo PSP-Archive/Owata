@@ -269,12 +269,12 @@ int psp2chFavorite(void)
                     }
                 }
                 // ”Âˆê——‚ÉˆÚ“®
-                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favH.move) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favV.move))
+                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favH.move) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favV.move))
                 {
                     s2ch.sel = 2;
                 }
                 // ‚¨‹C‚É“ü‚èØ‚è‘Ö‚¦
-                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favH.change) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favV.change))
+                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favH.change) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favV.change))
                 {
                     focus = focus ? 0 : 1;
                     if (focus && s2ch.favItaList == NULL)
@@ -287,7 +287,7 @@ int psp2chFavorite(void)
                     }
                 }
                 // íœ
-                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favH.del) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favV.del))
+                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favH.del) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favV.del))
                 {
                     if (focus)
                     {

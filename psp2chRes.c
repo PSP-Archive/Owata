@@ -190,8 +190,27 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
             // SELECTボタン
             if (s2ch.pad.Buttons & PSP_CTRL_SELECT)
             {
+                for (i = 0; s2ch.res.start > 0; i++)
+                {
+                    s2ch.res.start -= s2ch.resList[i].line;
+                    s2ch.res.start--;
+                }
                 s2ch.tateFlag = (s2ch.tateFlag) ? 0 : 1;
                 totalLine = psp2chResSetLine(&bar);
+                s2ch.res.start = 0;
+                for (j = 0; j < i; j++)
+                {
+                    s2ch.res.start += s2ch.resList[j].line;
+                    s2ch.res.start++;
+                }
+                if (s2ch.tateFlag)
+                {
+                    lineEnd = DRAW_LINE_V;
+                }
+                else
+                {
+                    lineEnd = DRAW_LINE_H;
+                }
                 if (s2ch.res.start > totalLine - lineEnd)
                 {
                     s2ch.res.start = totalLine - lineEnd;
@@ -383,7 +402,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                         psp2chAddFavorite(host, dir, title, dat);
                     }
                     // お気に入り削除
-                    if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.delFav) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.delFav))
+                    else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.delFav) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.delFav))
                     {
                         psp2chDelFavorite(title, dat);
                     }
@@ -402,7 +421,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                         return ret;
                     }
                     // 書き込み
-                    if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.form) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.form))
+                    else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.form) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.form))
                     {
                         tmp = s2ch.tateFlag;
                         s2ch.tateFlag = 0;
@@ -432,7 +451,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                         preLine = -2;
                     }
                     // 更新
-                    if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.reload) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.reload))
+                    else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.reload) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.reload))
                     {
                         psp2chSaveIdx(title, dat);
                         if (psp2chGetDat(host, dir, title, dat) == 0)
@@ -451,7 +470,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                         }
                     }
                     // DAT削除
-                    if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.datDel) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.datDel))
+                    else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.datDel) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.datDel))
                     {
                         memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
                         s2ch.mh.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT |

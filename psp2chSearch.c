@@ -161,15 +161,15 @@ int psp2chSearch(int retSel)
                     s2ch.sel = 8;
                     return 0;
                 }
-                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.findH.esc) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.findV.esc))
+                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.findH.esc) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.findV.esc))
                 {
                     s2ch.sel = ret;
                 }
-                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.findH.fav) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.findV.fav))
+                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.findH.fav) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.findV.fav))
                 {
                     s2ch.sel = 1;
                 }
-                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.findH.ita) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.findV.ita))
+                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.findH.ita) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.findV.ita))
                 {
                     s2ch.sel = 2;
                 }
