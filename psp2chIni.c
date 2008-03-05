@@ -163,14 +163,14 @@ void psp2chIniSetColor(void)
                 setHex("THREAD_TEXT_2", s2ch.threadColor.text2, RED);
                 setHex("THREAD_BG", s2ch.threadColor.bg, RGB(0xCC, 0xFF, 0xCC));
                 setHex("THREAD_COUNT_1", s2ch.threadColor.count1, BLACK);
-                setHex("THREAD_COUNT_2", s2ch.threadColor.count2, BLACK);
+                setHex("THREAD_COUNT_2", s2ch.threadColor.count2, RED);
                 setHex("THREAD_SELECT_NUMBER", s2ch.threadColor.s_num, RED);
                 setHex("THREAD_SELECT_CATEGORY", s2ch.threadColor.s_category, RGB(0x99, 0x00, 0x00));
                 setHex("THREAD_SELECT_TEXT_1", s2ch.threadColor.s_text1, RGB(0x00, 0x00, 0x99));
                 setHex("THREAD_SELECT_TEXT_2", s2ch.threadColor.s_text2, RGB(0x99, 0x00, 0x00));
                 setHex("THREAD_SELECT_BG", s2ch.threadColor.s_bg, GRAY);
                 setHex("THREAD_SELECT_COUNT_1", s2ch.threadColor.s_count1, BLACK);
-                setHex("THREAD_SELECT_COUNT_2", s2ch.threadColor.s_count2, BLACK);
+                setHex("THREAD_SELECT_COUNT_2", s2ch.threadColor.s_count2, RED);
 
                 setHex("CATE_ON_TEXT", s2ch.cateOnColor.cate.text, RGB(0xCC, 0x33, 0x00));
                 setHex("CATE_ON_BG", s2ch.cateOnColor.cate.bg, WHITE);
@@ -250,14 +250,14 @@ void psp2chIniSetColor(void)
     s2ch.threadColor.text2 = RED;
     s2ch.threadColor.bg = RGB(0xCC, 0xFF,0xCC);
     s2ch.threadColor.count1 = BLACK;
-    s2ch.threadColor.count2 = BLACK;
+    s2ch.threadColor.count2 = RED;
     s2ch.threadColor.s_num = RED;
     s2ch.threadColor.s_category = RGB(0x99, 0x00, 0x00);
     s2ch.threadColor.s_text1 = RGB(0x00, 0x00, 0x99);
     s2ch.threadColor.s_text2 = RGB(0x99, 0x00, 0x00);
     s2ch.threadColor.s_bg = GRAY;
     s2ch.threadColor.s_count1 = BLACK;
-    s2ch.threadColor.s_count2 = BLACK;
+    s2ch.threadColor.s_count2 = RED;
     // カテゴリー・板一覧
     s2ch.cateOnColor.cate.text = RGB(0xCC, 0x33, 0x00);
     s2ch.cateOnColor.cate.bg = WHITE;
@@ -417,7 +417,9 @@ void psp2chIniSetButtons(void)
                 setInt("FAV_SHIFT_V", s2ch.favV.shift, 512);
 
                 setInt("FAV_2CHSEARCH_H", s2ch.favH.search2ch, 32768);
+                setInt("FAV_UPDATE_H", s2ch.favH.update, 4096);
                 setInt("FAV_2CHSEARCH_V", s2ch.favV.search2ch, 32768);
+                setInt("FAV_UPDATE_V", s2ch.favV.update, 4096);
 
                 setInt("SEARCH_OK_H", s2ch.findH.ok, 8192);
                 setInt("SEARCH_ESC_H", s2ch.findH.esc, 16384);
@@ -565,7 +567,9 @@ void psp2chIniSetButtons(void)
     s2ch.favV.shift = PSP_CTRL_RTRIGGER;
 
     s2ch.favH.search2ch = PSP_CTRL_SQUARE;
+    s2ch.favH.update = PSP_CTRL_TRIANGLE;
     s2ch.favV.search2ch = PSP_CTRL_SQUARE;
+    s2ch.favV.update = PSP_CTRL_TRIANGLE;
 
     s2ch.findH.ok = PSP_CTRL_CIRCLE;
     s2ch.findH.esc = PSP_CTRL_CROSS;

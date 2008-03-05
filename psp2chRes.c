@@ -93,7 +93,7 @@ void psp2chResSetMenuString(void)
     getIndex(s2ch.btnResV.reload, index3);
     getIndex(s2ch.btnResV.datDel, index4);
     getIndex(s2ch.btnResV.change, index5);
-    sprintf(s2ch.menuResV.main, "　%s : 書き込み　　　%s : 戻る　　　　　%s : 更新　　　　　%s : 削除　　　%s : メニュー切替",
+    sprintf(s2ch.menuResV.main, "　%s : 書き込み　　　%s : 戻る　　　　　%s : 更新　　　　　　%s : 削除　　　%s : メニュー切替",
             sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4], sBtnV[index5]);
 
     getIndex(s2ch.btnResV.s.top, index1);

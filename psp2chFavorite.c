@@ -55,16 +55,17 @@ void psp2chFavSetMenuString(void)
     getIndex(s2ch.listH.top, index1);
     getIndex(s2ch.listH.end, index2);
     getIndex(s2ch.favH.search2ch, index3);
-    sprintf(s2ch.menuFavH.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索",
-            sBtnH[index1], sBtnH[index2], sBtnH[index3]);
+    getIndex(s2ch.favH.update, index4);
+    sprintf(s2ch.menuFavH.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索　　　%s : 一括取得",
+            sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index4]);
     sprintf(s2ch.menuFavItaH.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索",
             sBtnH[index1], sBtnH[index2], sBtnH[index3]);
 
-    getIndex(s2ch.favH.ok, index1);
-    getIndex(s2ch.favH.move, index2);
-    getIndex(s2ch.favH.change, index3);
-    getIndex(s2ch.favH.del, index4);
-    getIndex(s2ch.favH.shift, index5);
+    getIndex(s2ch.favV.ok, index1);
+    getIndex(s2ch.favV.move, index2);
+    getIndex(s2ch.favV.change, index3);
+    getIndex(s2ch.favV.del, index4);
+    getIndex(s2ch.favV.shift, index5);
     sprintf(s2ch.menuFavV.main, "　%s : 決定　　　　　%s : 板一覧　　　　%s : お気に板　　　　%s : 削除　　　　%s : メニュー切替",
             sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4], sBtnV[index5]);
     sprintf(s2ch.menuFavItaV.main,"　%s : 決定　　　　　%s : 板一覧　　　　%s : お気にスレ　　　%s : 削除　　　　%s : メニュー切替",
@@ -72,9 +73,10 @@ void psp2chFavSetMenuString(void)
 
     getIndex(s2ch.listV.top, index1);
     getIndex(s2ch.listV.end, index2);
-    getIndex(s2ch.favH.search2ch, index3);
-    sprintf(s2ch.menuFavV.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索",
-            sBtnV[index1], sBtnV[index2], sBtnV[index3]);
+    getIndex(s2ch.favV.search2ch, index3);
+    getIndex(s2ch.favV.update, index4);
+    sprintf(s2ch.menuFavV.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索　　　　　　　%s : 一括取得",
+            sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4]);
     sprintf(s2ch.menuFavItaV.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索",
             sBtnV[index1], sBtnV[index2], sBtnV[index3]);
 }
@@ -88,7 +90,7 @@ int psp2chFavorite(void)
     static char* menuStr = "";
     static int focus = -1;
     int lineEnd, rMenu;
-    int i;
+    int i, res;
 
     if (s2ch.favList == NULL)
     {
@@ -227,6 +229,26 @@ int psp2chFavorite(void)
                         s2ch.sel = 7;
                     }
                 }
+                // 一括取得
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favH.update) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favV.update))
+                {
+                    for (i = 0; i < s2ch.fav.count; i++)
+                    {
+                        psp2chGetDat(s2ch.favList[i].host, s2ch.favList[i].dir, s2ch.favList[i].title, s2ch.favList[i].dat);
+                        psp2chResList(s2ch.favList[i].host, s2ch.favList[i].dir, s2ch.favList[i].title, s2ch.favList[i].dat);
+                        res = psp2chGetResCount(s2ch.favList[i].title, s2ch.favList[i].dat);
+                        if (res > s2ch.favList[i].res)
+                        {
+                            s2ch.favList[i].res = res;
+                            s2ch.favList[i].update = 1;
+                        }
+                        else
+                        {
+                            s2ch.favList[i].update = 0;
+                        }
+                    }
+                    sceNetApctlDisconnect();
+                }
             }
             else
             {
@@ -317,6 +339,38 @@ int psp2chFavorite(void)
     return 0;
 }
 
+int psp2chGetResCount(char* title, int dat)
+{
+    SceUID fd;
+    char path[256];
+    char *p;
+    int res;
+
+    sprintf(path, "%s/%s/%s/%d.idx", s2ch.cwDir, s2ch.logDir, title, dat);
+    fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
+    if (fd < 0)
+    {
+        res = 0;
+    }
+    else
+    {
+        sceIoRead(fd, path, 128);
+        sceIoClose(fd);
+        p = strchr(path, '\n');
+        p++;
+        p =  strchr(p, '\n');
+        p++;
+        p =  strchr(p, '\n');
+        p++;
+        p =  strchr(p, '\n');
+        p++;
+        p =  strchr(p, '\n');
+        p++;
+        sscanf(p, "%d", &res );
+    }
+    return res;
+}
+
 /**********************
 favorite.brdがあれば読み込んで
 s2ch.favListのメモリ再確保とデータ作成
@@ -398,6 +452,8 @@ int psp2chLoadFavorite(void)
         *p= '\0';
         strcpy(s2ch.favList[i].subject, r);
         r = ++p;
+        s2ch.favList[i].res = psp2chGetResCount(s2ch.favList[i].title, s2ch.favList[i].dat);
+        s2ch.favList[i].update = 0;
         i++;
     }
     free(buf);
@@ -693,12 +749,30 @@ void psp2chDrawFavorite(int scrollX)
             pgPrint(s2ch.favList[i].title, s2ch.threadColor.s_category, s2ch.threadColor.s_bg, scrW);
             s2ch.pgCursorX += 8;
             pgPrint(s2ch.favList[i].subject, s2ch.threadColor.s_text1, s2ch.threadColor.s_bg, scrW);
+            s2ch.pgCursorX = scrW - 24;
+            if (s2ch.favList[i].update)
+            {
+                pgPrintNumber(s2ch.favList[i].res, s2ch.threadColor.s_count2, s2ch.threadColor.s_bg);
+            }
+            else
+            {
+                pgPrintNumber(s2ch.favList[i].res, s2ch.threadColor.s_count1, s2ch.threadColor.s_bg);
+            }
         }
         else
         {
             pgPrint(s2ch.favList[i].title, s2ch.threadColor.category, s2ch.threadColor.bg, scrW);
             s2ch.pgCursorX += 8;
             pgPrint(s2ch.favList[i].subject, s2ch.threadColor.text1, s2ch.threadColor.bg, scrW);
+            s2ch.pgCursorX = scrW - 24;
+            if (s2ch.favList[i].update)
+            {
+                pgPrintNumber(s2ch.favList[i].res, s2ch.threadColor.count2, s2ch.threadColor.bg);
+            }
+            else
+            {
+                pgPrintNumber(s2ch.favList[i].res, s2ch.threadColor.count1, s2ch.threadColor.bg);
+            }
         }
         s2ch.pgCursorY += LINE_PITCH;
     }

@@ -48,6 +48,8 @@ typedef struct {
     char title[32];
     int dat;
     char subject[128];
+    int res;
+    int update;
 } S_2CH_FAVORITE;
 
 typedef struct {
@@ -206,7 +208,7 @@ typedef struct {
 
 typedef struct {
     int ok, move, change, del, shift;
-    int search2ch;
+    int search2ch, update;
 } S_2CH_FAV_BUTTONS;
 
 typedef struct {

@@ -77,7 +77,7 @@ void psp2chItaSetMenuString(void)
     getIndex(s2ch.itaV.addFav, index4);
     sprintf(s2ch.menuCateV.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索",
             sBtnV[index1], sBtnV[index2], sBtnV[index3]);
-    sprintf(s2ch.menuItaV.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索　　　　　%s : お気に入りに追加",
+    sprintf(s2ch.menuItaV.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索　　　　　　　%s : お気に入りに追加",
             sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4]);
 }
 

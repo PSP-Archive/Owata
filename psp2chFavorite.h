@@ -7,6 +7,7 @@
 
 void psp2chFavSetMenuString(void);
 int psp2chFavorite(void);
+int psp2chGetResCount(char* title, int dat);
 int psp2chLoadFavorite(void);
 int psp2chLoadFavoriteIta(void);
 int psp2chAddFavorite(char* host, char* dir, char* title, int dat);

@@ -48,7 +48,7 @@ void psp2chImageViewJpeg(char* fname)
     jpeg_read_header(&cinfo, TRUE);
     jpeg_start_decompress(&cinfo);
     width = cinfo.output_width;
-    bufWidth = width + (8 - width % 8) % 8;
+    bufWidth = width + (16 - width % 16) % 16;
     height = cinfo.output_height;
     img = (JSAMPARRAY)malloc(sizeof(JSAMPROW) * height);
     if (!img)
@@ -156,7 +156,7 @@ void psp2chImageViewPng(char* fname)
     png_init_io(png_ptr, infile);
     png_read_info(png_ptr, info_ptr);
     png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, &interlace_type, NULL, NULL);
-    bufWidth = width + (8 - width % 8) % 8;
+    bufWidth = width + (16 - width % 16) % 16;
     //ƒpƒŒƒbƒgŒn->RGBŒn‚ÉŠg’£
     if (color_type == PNG_COLOR_TYPE_PALETTE ||
         (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8) ||
@@ -221,7 +221,7 @@ void psp2chImageViewer(int* img[], int width, int height, int bufWidth, char* fn
     int w, h, startX, startY;
     SceCtrlData pad;
     SceCtrlData oldPad;
-    double thumb;
+    double thumb, thumbW, thumbH;
     double sx, sy, sw, sh, dx, dy, dw, dh;
     int thumbFlag = 0;
     int menu = 1, rMenu = 0;
@@ -231,7 +231,8 @@ void psp2chImageViewer(int* img[], int width, int height, int bufWidth, char* fn
     SceUID src, dst;
     int ret;
 
-    thumb = (width/SCR_WIDTH > height/SCR_HEIGHT) ? (double)width/SCR_WIDTH : (double)height/SCR_HEIGHT;
+    thumbW = (double)width/SCR_WIDTH;
+    thumbH = (double)height/SCR_HEIGHT;
     startX = 0;
     startY = 0;
     sceCtrlPeekBufferPositive(&oldPad, 1);
@@ -301,9 +302,13 @@ void psp2chImageViewer(int* img[], int width, int height, int bufWidth, char* fn
                 }
                 else
                 {
-                    if(pad.Buttons & PSP_CTRL_CIRCLE && thumb > 1)
+                    if(pad.Buttons & PSP_CTRL_CIRCLE)
                     {
-                        thumbFlag = thumbFlag ? 0 : 1;
+                        thumbFlag++;
+                        if (thumbFlag > 2)
+                        {
+                            thumbFlag = 0;
+                        }
                         startX = 0;
                         startY = 0;
                     }
@@ -348,6 +353,72 @@ void psp2chImageViewer(int* img[], int width, int height, int bufWidth, char* fn
             {
                 startY += (padY)/4;
             }
+        }
+        if (thumbFlag)
+        {
+            if (thumbFlag == 1)
+            {
+                thumb = thumbW;
+            }
+            else
+            {
+                thumb = thumbH;
+            }
+            if (startX >= width / thumb - SCR_WIDTH)
+            {
+                startX = width / thumb - SCR_WIDTH;
+            }
+            if (startY >= height / thumb - SCR_HEIGHT)
+            {
+                startY = height / thumb - SCR_HEIGHT;
+            }
+            if (startX < 0)
+            {
+                startX = 0;
+            }
+            if (startY < 0)
+            {
+                startY = 0;
+            }
+            sceGuStart(GU_DIRECT,list);
+            sceGuClearColor(GRAY);
+            sceGuClear(GU_COLOR_BUFFER_BIT);
+            sceGuTexMode(GU_PSM_8888,0,0,0);
+            sceGuTexFunc(GU_TFX_REPLACE,GU_TCC_RGBA);
+            sceGuTexFilter(GU_NEAREST,GU_NEAREST);
+            for (sx = 0; sx < width; sx += BUF_WIDTH)
+            {
+                dx = sx / thumb - startX;
+                if ((width - sx) < BUF_WIDTH)
+                {
+                    sw = width - sx;
+                }
+                else
+                {
+                    sw = 512;
+                }
+                dw = sw / thumb;
+                for (sy = 0; sy < height; sy += BUF_HEIGHT)
+                {
+                    dy = sy / thumb - startY;
+                    if ((height - sy) < BUF_HEIGHT)
+                    {
+                        sh = height - sy;
+                    }
+                    else
+                    {
+                        sh = 512;
+                    }
+                    dh = sh / thumb;
+                    sceGuTexImage(0, BUF_WIDTH, BUF_HEIGHT, bufWidth, img[0] + (int)sx + (int)sy * bufWidth);
+                    psp2chBitBlt((int)sx, (int)sy, (int)sw, (int)sh, (int)dx, (int)dy, (int)dw, (int)dh);
+                }
+            }
+            sceGuFinish();
+            sceGuSync(0,0);
+        }
+        else
+        {
             if (startX >= width - SCR_WIDTH)
             {
                 startX = width - SCR_WIDTH;
@@ -364,48 +435,6 @@ void psp2chImageViewer(int* img[], int width, int height, int bufWidth, char* fn
             {
                 startY = 0;
             }
-        }
-        if (thumbFlag)
-        {
-            sceGuStart(GU_DIRECT,list);
-            sceGuClearColor(GRAY);
-            sceGuClear(GU_COLOR_BUFFER_BIT);
-            sceGuTexMode(GU_PSM_8888,0,0,0);
-            sceGuTexFunc(GU_TFX_REPLACE,GU_TCC_RGBA);
-            sceGuTexFilter(GU_NEAREST,GU_NEAREST);
-            for (sx = 0; sx < width; sx += BUF_WIDTH)
-            {
-                for (sy = 0; sy < height; sy += BUF_HEIGHT)
-                {
-                    dx = sx / thumb;
-                    dy = sy / thumb;
-                    if ((width - sx) < 512)
-                    {
-                        sw = width - sx;
-                    }
-                    else
-                    {
-                        sw = 512;
-                    }
-                    dw = sw / thumb;
-                    if ((height - sy) < 512)
-                    {
-                        sh = height - sy;
-                    }
-                    else
-                    {
-                        sh = 512;
-                    }
-                    dh = sh / thumb;
-                    sceGuTexImage(0,512,512,bufWidth,img[0]+(int)sx+((int)sy*bufWidth));
-                    psp2chBitBlt((int)sx, (int)sy, (int)sw, (int)sh, (int)dx, (int)dy, (int)dw, (int)dh);
-                }
-            }
-            sceGuFinish();
-            sceGuSync(0,0);
-        }
-        else
-        {
             w = (width > SCR_WIDTH) ? SCR_WIDTH : width;
             h = (height > SCR_HEIGHT) ? SCR_HEIGHT : height;
             sceGuStart(GU_DIRECT,list);

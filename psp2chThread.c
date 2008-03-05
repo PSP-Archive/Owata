@@ -68,7 +68,7 @@ void psp2chThreadSetMenuString(void)
     getIndex(s2ch.thV.reload, index3);
     getIndex(s2ch.thV.move, index4);
     getIndex(s2ch.thV.shift, index5);
-    sprintf(s2ch.menuThreadV.main, "　%s : 決定　　　　　%s : 戻る　　　　　%s : 更新　　　　　%s : お気に入り　　　%s : メニュー切替",
+    sprintf(s2ch.menuThreadV.main, "　%s : 決定　　　　　%s : 戻る　　　　　%s : 更新　　　　　　　%s : お気に入り　　　%s : メニュー切替",
             sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4], sBtnV[index5]);
 
     getIndex(s2ch.listV.top, index1);
@@ -76,7 +76,7 @@ void psp2chThreadSetMenuString(void)
     getIndex(s2ch.thV.sort, index3);
     getIndex(s2ch.thV.search, index4);
     getIndex(s2ch.thV.search2ch, index5);
-    sprintf(s2ch.menuThreadV.sub, "　%s : 先頭　　　%s : 最後　　　%s : ソ\ート　　　%s : 検索　　　%s : 全板検索",
+    sprintf(s2ch.menuThreadV.sub, "　%s : 先頭　　　%s : 最後　　　%s : ソ\ート　　　　　　　　　%s : 検索　　　%s : 全板検索",
             sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4], sBtnV[index5]);
 }
 
