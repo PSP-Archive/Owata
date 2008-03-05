@@ -234,17 +234,21 @@ int psp2chFavorite(void)
                 {
                     for (i = 0; i < s2ch.fav.count; i++)
                     {
-                        psp2chGetDat(s2ch.favList[i].host, s2ch.favList[i].dir, s2ch.favList[i].title, s2ch.favList[i].dat);
-                        psp2chResList(s2ch.favList[i].host, s2ch.favList[i].dir, s2ch.favList[i].title, s2ch.favList[i].dat);
-                        res = psp2chGetResCount(s2ch.favList[i].title, s2ch.favList[i].dat);
-                        if (res > s2ch.favList[i].res)
+                        res = psp2chGetDat(s2ch.favList[i].host, s2ch.favList[i].dir, s2ch.favList[i].title, s2ch.favList[i].dat);
+                        if (res == 0)
                         {
-                            s2ch.favList[i].res = res;
+                            psp2chResList(s2ch.favList[i].host, s2ch.favList[i].dir, s2ch.favList[i].title, s2ch.favList[i].dat);
+                            s2ch.favList[i].res = psp2chGetResCount(s2ch.favList[i].title, s2ch.favList[i].dat);
                             s2ch.favList[i].update = 1;
+                        }
+                        else if (res == 1)
+                        {
+                            s2ch.favList[i].update = 0;
                         }
                         else
                         {
-                            s2ch.favList[i].update = 0;
+                            i = s2ch.fav.count;
+                            continue;
                         }
                     }
                     sceNetApctlDisconnect();

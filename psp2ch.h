@@ -238,7 +238,7 @@ typedef struct {
 
 typedef struct {
     int form, back, reload, datDel, change, addFav, delFav;
-    int resForm, idView, idNG, resView, resMove, url;
+    int resForm, resFBack, idView, idNG, idBack, resView, resMove, resBack, url, urlBack;
     S_2CH_SCROLL_BUTTONS s;
 } S_2CH_RES_BUTTONS;
 

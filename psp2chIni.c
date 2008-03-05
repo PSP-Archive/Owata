@@ -334,20 +334,28 @@ void psp2chIniSetButtons(void)
                 setInt("RES_DELFAV_V", s2ch.btnResV.delFav, 32768);
 
                 setInt("RES_NUMRES_H", s2ch.btnResH.resForm, 8192);
+                setInt("RES_NUMBACK_H", s2ch.btnResH.resFBack, 16384);
                 setInt("RES_NUMRES_V", s2ch.btnResV.resForm, 8192);
+                setInt("RES_NUMBACK_V", s2ch.btnResV.resFBack, 16384);
 
                 setInt("RES_IDVIEW_H", s2ch.btnResH.idView, 8192);
                 setInt("RES_IDNG_H", s2ch.btnResH.idNG, 32768);
+                setInt("RES_IDBACK_H", s2ch.btnResH.idBack, 16384);
                 setInt("RES_IDVIEW_V", s2ch.btnResV.idView, 8192);
                 setInt("RES_IDNG_V", s2ch.btnResV.idNG, 32768);
+                setInt("RES_IDBACK_V", s2ch.btnResV.idBack, 16384);
 
                 setInt("RES_RESVIEW_H", s2ch.btnResH.resView, 8192);
                 setInt("RES_RESMOVE_H", s2ch.btnResH.resMove, 4096);
+                setInt("RES_RESBACK_H", s2ch.btnResH.resBack, 16384);
                 setInt("RES_RESVIEW_V", s2ch.btnResV.resView, 8192);
                 setInt("RES_RESMOVE_V", s2ch.btnResV.resMove, 4096);
+                setInt("RES_RESBACK_V", s2ch.btnResV.resBack, 16384);
 
                 setInt("RES_URL_H", s2ch.btnResH.url, 8192);
+                setInt("RES_URLBACK_H", s2ch.btnResH.urlBack, 16384);
                 setInt("RES_URL_V", s2ch.btnResV.url, 8192);
+                setInt("RES_URLBACK_V", s2ch.btnResV.urlBack, 16384);
 
                 setInt("RES_UP_H", s2ch.btnResH.s.up, 16);
                 setInt("RES_PAGEUP_H", s2ch.btnResH.s.pUp, 128);
@@ -468,14 +476,18 @@ void psp2chIniSetButtons(void)
     s2ch.btnResH.delFav   = PSP_CTRL_SQUARE;
 
     s2ch.btnResH.resForm  = PSP_CTRL_CIRCLE;
+    s2ch.btnResH.resFBack  = PSP_CTRL_CROSS;
 
     s2ch.btnResH.idView   = PSP_CTRL_CIRCLE;
     s2ch.btnResH.idNG     = PSP_CTRL_SQUARE;
+    s2ch.btnResH.idBack  = PSP_CTRL_CROSS;
 
     s2ch.btnResH.resView  = PSP_CTRL_CIRCLE;
     s2ch.btnResH.resMove  = PSP_CTRL_TRIANGLE;
+    s2ch.btnResH.resBack  = PSP_CTRL_CROSS;
 
     s2ch.btnResH.url      = PSP_CTRL_CIRCLE;
+    s2ch.btnResH.urlBack  = PSP_CTRL_CROSS;
 
     s2ch.btnResH.s.up       = PSP_CTRL_UP;
     s2ch.btnResH.s.pUp      = PSP_CTRL_LEFT;
@@ -494,14 +506,18 @@ void psp2chIniSetButtons(void)
     s2ch.btnResV.delFav   = PSP_CTRL_SQUARE;
 
     s2ch.btnResV.resForm  = PSP_CTRL_CIRCLE;
+    s2ch.btnResV.resFBack  = PSP_CTRL_CROSS;
 
     s2ch.btnResV.idView   = PSP_CTRL_CIRCLE;
     s2ch.btnResV.idNG     = PSP_CTRL_SQUARE;
+    s2ch.btnResV.idBack  = PSP_CTRL_CROSS;
 
     s2ch.btnResV.resView  = PSP_CTRL_CIRCLE;
     s2ch.btnResV.resMove  = PSP_CTRL_TRIANGLE;
+    s2ch.btnResV.resBack  = PSP_CTRL_CROSS;
 
     s2ch.btnResV.url      = PSP_CTRL_CIRCLE;
+    s2ch.btnResV.urlBack  = PSP_CTRL_CROSS;
 
     s2ch.btnResV.s.up       = PSP_CTRL_RIGHT;
     s2ch.btnResV.s.pUp      = PSP_CTRL_UP;
