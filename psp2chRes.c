@@ -198,18 +198,23 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
             // SELECTボタン
             if (s2ch.pad.Buttons & PSP_CTRL_SELECT)
             {
-                for (i = 0; s2ch.res.start > 0; i++)
+                for (i = 0; s2ch.res.start > s2ch.resList[i].line; i++)
                 {
-                    s2ch.res.start -= s2ch.resList[i].line;
-                    s2ch.res.start--;
+                    if (s2ch.resList[i].ng == 0)
+                    {
+                        s2ch.res.start -= s2ch.resList[i].line;
+                        s2ch.res.start--;
+                    }
                 }
                 s2ch.tateFlag = (s2ch.tateFlag) ? 0 : 1;
                 totalLine = psp2chResSetLine(&bar);
-                s2ch.res.start = 0;
                 for (j = 0; j < i; j++)
                 {
-                    s2ch.res.start += s2ch.resList[j].line;
-                    s2ch.res.start++;
+                    if (s2ch.resList[j].ng == 0)
+                    {
+                        s2ch.res.start += s2ch.resList[j].line;
+                        s2ch.res.start++;
+                    }
                 }
                 if (s2ch.tateFlag)
                 {
@@ -248,18 +253,23 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
             // レスアンカーメニュー
             else if (resMenu >= 0)
             {
+                // レスウィンドウ表示
                 if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.resView) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.resView))
                 {
                     psp2chResAnchor(resMenu);
                 }
+                // アンカーレス番に移動
                 else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.resMove) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.resMove))
                 {
                     if (s2ch.resList[s2ch.resAnchor[resMenu].res[0]].ng == 0)
                     {
                         for (i = 0, j = 0; i < s2ch.resAnchor[resMenu].res[0]; i++)
                         {
-                            j += s2ch.resList[i].line;
-                            j++;
+                            if (s2ch.resList[i].ng == 0)
+                            {
+                                j += s2ch.resList[i].line;
+                                j++;
+                            }
                         }
                         s2ch.res.start = j;
                         if (s2ch.res.start > totalLine - lineEnd)
@@ -1159,6 +1169,10 @@ void psp2chResCheckNG(void)
             *q = '\0';
             for (i = 0; i < s2ch.res.count; i++)
             {
+                if (s2ch.resList[i].id == NULL)
+                {
+                    continue;
+                }
                 if (strcmp(s2ch.resList[i].id, p) == 0)
                 {
                     s2ch.resList[i].ng = 1;

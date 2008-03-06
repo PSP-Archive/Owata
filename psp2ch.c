@@ -30,7 +30,7 @@ extern unsigned int list[512*512]; // pg.c
 extern intraFont* jpn0; // pg.c
 
 const char* userAgent = "Monazilla/1.00 (Compatible; PSP; ja) owata(^o^)";
-char* ver = "0.5.5";
+char* ver = "0.5.6";
 S_2CH s2ch;
 char cookie[128] = {0};
 char keyWords[128];
