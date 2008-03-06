@@ -48,6 +48,7 @@ void psp2chImageViewJpeg(char* fname)
     jpeg_read_header(&cinfo, TRUE);
     jpeg_start_decompress(&cinfo);
     width = cinfo.output_width;
+    // バッファの幅を16バイトアラインに
     bufWidth = width + (16 - width % 16) % 16;
     height = cinfo.output_height;
     img = (JSAMPARRAY)malloc(sizeof(JSAMPROW) * height);
@@ -56,7 +57,7 @@ void psp2chImageViewJpeg(char* fname)
         fclose(infile);
         return;
     }
-    imgbuf = (JSAMPROW)calloc(sizeof(JSAMPLE), 4 * bufWidth * height + 16);
+    imgbuf = (JSAMPROW)calloc(sizeof(JSAMPLE), 4 * bufWidth * height);
     if (!imgbuf)
     {
         free(img);
@@ -72,14 +73,11 @@ void psp2chImageViewJpeg(char* fname)
         return;
     }
     tmp = imgbuf;
-    while (((int)tmp & 0xF) != 0)
-    {
-        tmp++;
-    }
     for (i = 0; i < height; i++ )
     {
         img[i] = &tmp[i * bufWidth * 4];
     }
+    // RGBカラーをRGBAに
     if (cinfo.out_color_components == 3)
     {
         while(cinfo.output_scanline < cinfo.output_height)
@@ -94,6 +92,7 @@ void psp2chImageViewJpeg(char* fname)
             }
         }
     }
+    // グレースケールをRGBAに
     else if (cinfo.out_color_components == 1)
     {
         while(cinfo.output_scanline < cinfo.output_height)
@@ -156,6 +155,7 @@ void psp2chImageViewPng(char* fname)
     png_init_io(png_ptr, infile);
     png_read_info(png_ptr, info_ptr);
     png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, &interlace_type, NULL, NULL);
+    // バッファの幅を16バイトアラインに
     bufWidth = width + (16 - width % 16) % 16;
     //パレット系->RGB系に拡張
     if (color_type == PNG_COLOR_TYPE_PALETTE ||

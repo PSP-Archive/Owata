@@ -88,7 +88,7 @@ int psp2chFavorite(void)
 {
     static int scrollX = 0;
     static char* menuStr = "";
-    static int focus = -1;
+    static int focus = -1, update = -1;
     int lineEnd, rMenu;
     int i, res;
 
@@ -202,7 +202,46 @@ int psp2chFavorite(void)
                 }
             }
         }
-        if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
+        // ˆêŠ‡Žæ“¾ˆ—(1ƒXƒŒ‚²‚Æ‚É•`‰æ)
+        if (update >= 0)
+        {
+            if (update < s2ch.fav.count)
+            {
+                psp2chDrawFavorite(scrollX);
+                pgCopy(scrollX, 0);
+                pgMenuBar(menuStr);
+                sceDisplayWaitVblankStart();
+                framebuffer = sceGuSwapBuffers();
+                s2ch.fav.select = update;
+                if (s2ch.fav.select >= s2ch.fav.start + lineEnd)
+                {
+                    s2ch.fav.start = s2ch.fav.select - lineEnd + 1;
+                }
+                res = psp2chGetDat(s2ch.favList[update].host, s2ch.favList[update].dir, s2ch.favList[update].title, s2ch.favList[update].dat);
+                if (res == 0)
+                {
+                    psp2chResList(s2ch.favList[update].host, s2ch.favList[update].dir, s2ch.favList[update].title, s2ch.favList[update].dat);
+                    s2ch.favList[update].res = psp2chGetResCount(s2ch.favList[update].title, s2ch.favList[update].dat);
+                    s2ch.favList[update].update = 1;
+                    update++;
+                }
+                else if (res == 1)
+                {
+                    s2ch.favList[update].update = 0;
+                    update++;
+                }
+                else
+                {
+                    update = -1;
+                }
+            }
+            else
+            {
+                update = -1;
+                sceNetApctlDisconnect();
+            }
+        }
+        else if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
             s2ch.oldPad = s2ch.pad;
             if (s2ch.pad.Buttons & PSP_CTRL_SELECT)
@@ -229,29 +268,10 @@ int psp2chFavorite(void)
                         s2ch.sel = 7;
                     }
                 }
-                // ˆêŠ‡Žæ“¾
+                // ˆêŠ‡Žæ“¾ŠJŽn
                 if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favH.update) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favV.update))
                 {
-                    for (i = 0; i < s2ch.fav.count; i++)
-                    {
-                        res = psp2chGetDat(s2ch.favList[i].host, s2ch.favList[i].dir, s2ch.favList[i].title, s2ch.favList[i].dat);
-                        if (res == 0)
-                        {
-                            psp2chResList(s2ch.favList[i].host, s2ch.favList[i].dir, s2ch.favList[i].title, s2ch.favList[i].dat);
-                            s2ch.favList[i].res = psp2chGetResCount(s2ch.favList[i].title, s2ch.favList[i].dat);
-                            s2ch.favList[i].update = 1;
-                        }
-                        else if (res == 1)
-                        {
-                            s2ch.favList[i].update = 0;
-                        }
-                        else
-                        {
-                            i = s2ch.fav.count;
-                            continue;
-                        }
-                    }
-                    sceNetApctlDisconnect();
+                    update = 0;
                 }
             }
             else
