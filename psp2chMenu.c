@@ -41,7 +41,7 @@ const char* ngMailFile = "ngmail.txt";
 
 void psp2chMenuSetMenuString(void)
 {
-    int index1, index2, index3;
+    int index1, index2;
     int i, tmp;
 
     getIndex(s2ch.menuWinH.ok, index1);
@@ -54,17 +54,15 @@ void psp2chMenuSetMenuString(void)
     sprintf(s2ch.menuWinV.main, "　%s : 決定　　　　　%s : 戻る",
             sBtnV[index1], sBtnV[index2]);
 
-    getIndex(s2ch.menuNGH.save, index1);
+    getIndex(s2ch.menuNGH.del, index1);
     getIndex(s2ch.menuNGH.esc, index2);
-    getIndex(s2ch.menuNGH.del, index3);
-    sprintf(s2ch.menuNGH.main, "　%s : 保存　　　　%s : 取消し　　　%s : 削除",
-            sBtnH[index1], sBtnH[index2], sBtnH[index3]);
+    sprintf(s2ch.menuNGH.main, "　%s : 削除　　　　%s : 戻る",
+            sBtnH[index1], sBtnH[index2]);
 
-    getIndex(s2ch.menuNGV.save, index1);
+    getIndex(s2ch.menuNGV.del, index1);
     getIndex(s2ch.menuNGV.esc, index2);
-    getIndex(s2ch.menuNGV.del, index3);
-    sprintf(s2ch.menuNGV.main, "　%s : 保存　　　　%s : 取消し　　　%s : 削除",
-            sBtnV[index1], sBtnV[index2], sBtnV[index3]);
+    sprintf(s2ch.menuNGV.main, "　%s : 削除　　　　%s : 戻る",
+            sBtnV[index1], sBtnV[index2]);
 }
 
 /****************
@@ -384,7 +382,7 @@ int psp2chNGDel(const char* file, int pixelsX, int pixelsY)
             if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
             {
                 s2ch.oldPad = s2ch.pad;
-                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuNGH.save) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuNGV.save))
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuNGH.esc) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuNGV.esc))
                 {
                     fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
                     if (fd < 0)
@@ -404,10 +402,6 @@ int psp2chNGDel(const char* file, int pixelsX, int pixelsY)
                     }
                     sceIoClose(fd);
                     psp2chResCheckNG();
-                    break;
-                }
-                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuNGH.esc) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuNGV.esc))
-                {
                     break;
                 }
                 else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuNGH.del) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuNGV.del))

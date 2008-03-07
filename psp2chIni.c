@@ -448,12 +448,10 @@ void psp2chIniSetButtons(void)
                 setInt("MENUWIN_OK_V", s2ch.menuWinV.ok, 256);
                 setInt("MENUWIN_ESC_V", s2ch.menuWinV.esc, 16384);
 
-                setInt("MENUNG_SAVE_H", s2ch.menuNGH.save, 8192);
+                setInt("MENUNG_DEL_H", s2ch.menuNGH.del, 8192);
                 setInt("MENUNG_ESC_H", s2ch.menuNGH.esc, 16384);
-                setInt("MENUNG_DEL_H", s2ch.menuNGH.del, 32768);
-                setInt("MENUNG_SAVE_V", s2ch.menuNGV.save, 256);
+                setInt("MENUNG_DEL_V", s2ch.menuNGV.del, 256);
                 setInt("MENUNG_ESC_V", s2ch.menuNGV.esc, 16384);
-                setInt("MENUNG_DEL_V", s2ch.menuNGV.del, 32768);
 
                 free(buf);
                 return;
@@ -606,10 +604,8 @@ void psp2chIniSetButtons(void)
     s2ch.menuWinV.ok = PSP_CTRL_RTRIGGER;
     s2ch.menuWinV.esc = PSP_CTRL_CROSS;
 
-    s2ch.menuNGH.save = PSP_CTRL_CIRCLE;
+    s2ch.menuNGH.del = PSP_CTRL_CIRCLE;
     s2ch.menuNGH.esc = PSP_CTRL_CROSS;
-    s2ch.menuNGH.del = PSP_CTRL_SQUARE;
-    s2ch.menuNGV.save = PSP_CTRL_RTRIGGER;
+    s2ch.menuNGV.del = PSP_CTRL_RTRIGGER;
     s2ch.menuNGV.esc = PSP_CTRL_CROSS;
-    s2ch.menuNGV.del = PSP_CTRL_SQUARE;
 }

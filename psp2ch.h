@@ -227,7 +227,7 @@ typedef struct {
 } S_2CH_MENU_WIN;
 
 typedef struct {
-    int save, esc, del;
+    int del, esc;
     char main[112];
 } S_2CH_MENU_NG;
 
