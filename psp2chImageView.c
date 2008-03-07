@@ -229,10 +229,11 @@ void psp2chImageViewer(int* img[], int width, int height, int bufWidth, char* fn
     char picturePath[256], buf[256];
     char *p;
     SceUID src, dst;
-    int ret;
+    int i, j, ret, mip, r, g, b, c;
     int* img2 = NULL;
-    int mip;
 
+    // ‰æ‘œ‚ª‘å‚«‚¢‚Æ‚«‚Í’á‰ð‘œ“x‚Ìmipmapì¬
+    // Texture‚Ì‰¡•‚Í1024‚Ü‚Å?
     if (width > 1024)
     {
         mip = 1;
@@ -240,19 +241,37 @@ void psp2chImageViewer(int* img[], int width, int height, int bufWidth, char* fn
         {
             mip++;
         }
-        img2 = malloc(sizeof(int) * (width >> mip) * ((height + 1) >> mip));
+        width2 = width >> mip;
+        height2 = height >> mip;
+        bufWidth2 = bufWidth >> mip;
+        img2 = malloc(sizeof(int) * width2 * height2);
         if (img2 == NULL)
         {
             return;
         }
-        width2 = width >> mip;
-        height2 = height >> mip;
-        bufWidth2 = bufWidth >> mip;
         for (h = 0; h < height2; h++)
         {
             for (w = 0; w < width2; w++)
             {
-                img2[w + h * bufWidth2] = img[h << mip][w << mip];
+                // F‚Ì•½‹Ï’l‚ð‹‚ß‚é
+                r = g = b = 0;
+                for (i = 0; i < (1 << mip); i++)
+                {
+                    for (j = 0; j < (1 << mip); j++)
+                    {
+                        c =  img[(h << mip) + i][(w << mip) + j];
+                        r += c & 0xFF;
+                        g += (c >> 8) & 0xFF;
+                        b += (c >> 16) & 0xFF;
+                    }
+                }
+                r >>= mip;
+                r >>= mip;
+                g >>= mip;
+                g >>= mip;
+                b >>= mip;
+                b >>= mip;
+                img2[w + h * bufWidth2] = RGB(r, g, b);
             }
         }
     }

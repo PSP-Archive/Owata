@@ -72,9 +72,11 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return -1;
     }
+    // 送信しますかダイアログで画面消えてるので再描画
     pgCopy(0, 0);
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
+    // URLエンコードしてformデータ作成
     strcpy(encode, "submit=%8F%91%82%AB%8D%9E%82%DE&FROM=");
     psp2chUrlEncode(buffer, name);
     strcat(encode, buffer);
@@ -205,7 +207,7 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
     static char name[64] = {0};
     static char mail[64] = {0};
     SceUID fd;
-    int focus, sage;
+    int focus, sage, ret = 0;
     char buf[256];
     char  *str, *p;
 
@@ -301,7 +303,7 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
                     sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
                     if (s2ch.mh.buttonPressed == PSP_UTILITY_MSGDIALOG_RESULT_YES)
                     {
-                        psp2chFormResPost(host, dir, dat, name, mail, message);
+                        ret = psp2chFormResPost(host, dir, dat, name, mail, message);
                     }
                 }
                 else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
@@ -412,6 +414,6 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
         sceIoWrite(fd, buf, strlen(buf));
         sceIoClose(fd);
     }
-    return 0;
+    return ret;
 }
 

@@ -63,6 +63,7 @@ typedef struct {
     char title[128];
     int res;
     int old;
+    int ikioi;
 } S_2CH_THREAD;
 
 typedef struct {

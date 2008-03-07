@@ -501,8 +501,6 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                         }
                         if (psp2chForm(host, dir, dat, s2ch.resList[0].title, message) == 1)
                         {
-                            free(message);
-                            message = NULL;
                             psp2chSaveIdx(title, dat);
                             psp2chGetDat(host, dir, title, dat);
                             psp2chResList(host, dir, title, dat);
