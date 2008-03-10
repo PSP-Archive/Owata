@@ -9,7 +9,7 @@
 #define BUF_HEIGHT (512)
 #define SCR_WIDTH (480)
 #define SCR_HEIGHT (272)
-#define FONT_PITCH (12)
+#define FONT_PITCH (s2ch.font.fontHeight)
 #define LINE_PITCH (FONT_PITCH + 1)
 #define DRAW_LINE_H ((SCR_HEIGHT-FONT_PITCH)/LINE_PITCH)
 #define DRAW_LINE_V ((SCR_WIDTH-FONT_PITCH-LINE_PITCH)/LINE_PITCH)

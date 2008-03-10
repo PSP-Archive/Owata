@@ -8,9 +8,8 @@
 #include <psppower.h>
 #include <stdio.h>
 #include <string.h>
+#include <malloc.h>
 #include "pg.h"
-#include "monafontA.h"
-#include "monafontW.h"
 #include "intraFont.h"
 
 unsigned int __attribute__((aligned(16))) list[512*512];
@@ -20,6 +19,8 @@ unsigned int __attribute__((aligned(16))) barPixels[BUF_WIDTH*25];
 unsigned int* printBuf;
 void* framebuffer;
 intraFont* jpn0;
+static unsigned char *fontA, *fontJ;
+static int size_fontA, size_fontJ;
 
 extern S_2CH s2ch; // psp2chRes.c
 
@@ -131,6 +132,84 @@ void pgEntitiesSet(void)
     entity[10].str = "&#160;";entity[10].len = 5;entity[10].byte = 1;entity[10].c1 = ' '; entity[10].c2 = 0;
 }
 
+int pgExtraFontInit(void)
+{
+    SceUID fd;
+    SceIoStat st;
+    char path[256];
+    int ret;
+
+    sprintf(path, "%s/%s", s2ch.cwDir, s2ch.font.fontFileA);
+    ret = sceIoGetstat(path, &st);
+    if (ret < 0)
+    {
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        sprintf(s2ch.mh.message, "Getstate error font file\n%s", path);
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        return -1;
+    }
+    size_fontA = st.st_size;
+    fontA = (unsigned char*)malloc(st.st_size);
+    if (fontA == NULL)
+    {
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        strcpy(s2ch.mh.message, "memorry error\nfontA");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        return -1;
+    }
+    fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
+    if (fd < 0)
+    {
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        sprintf(s2ch.mh.message, "Open error font file\n%s", path);
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        return -1;
+    }
+    else
+    {
+        sceIoRead(fd, fontA, st.st_size);
+        sceIoClose(fd);
+    }
+    sprintf(path, "%s/%s", s2ch.cwDir, s2ch.font.fontFileJ);
+    ret = sceIoGetstat(path, &st);
+    if (ret < 0)
+    {
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        sprintf(s2ch.mh.message, "Getstate error font file\n%s", path);
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        return -1;
+    }
+    size_fontJ = st.st_size;
+    fontJ = (unsigned char*)malloc(st.st_size);
+    if (fontJ == NULL)
+    {
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        strcpy(s2ch.mh.message, "memorry error\nfontJ");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        return -1;
+    }
+    fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
+    if (fd < 0)
+    {
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        sprintf(s2ch.mh.message, "Open error font file\n%s", path);
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        return -1;
+    }
+    else
+    {
+        sceIoRead(fd, fontJ, st.st_size);
+        sceIoClose(fd);
+    }
+    return 0;
+}
+
 void pgSetupGu(void)
 {
     printBuf = pixels;
@@ -161,6 +240,7 @@ void pgSetupGu(void)
 
     sceDisplayWaitVblankStart();
     sceGuDisplay(GU_TRUE);
+    pgExtraFontInit();
 }
 
 /*****************************
@@ -608,7 +688,7 @@ void pgPrintNumber(int num, int color,int bgcolor)
     s2ch.pgCursorY &= 0x01FF;
     sprintf(buf, "%4d", num);
     for (j = 0; j < 4;j++) {
-        font = (unsigned short*)(monafontA + ((buf[j] - 0x20) << 5)) + 1;
+        font = (unsigned short*)(fontA + ((buf[j] - 0x20) << 5)) + 1;
         vptr0 = pgGetVramAddr(s2ch.pgCursorX, s2ch.pgCursorY);
         s2ch.pgCursorX += 6;
         for (cy = 0; cy < FONT_PITCH; cy++) {
@@ -690,10 +770,10 @@ int pgPutCharA(const unsigned char c,int color,int bgcolor, int width)
     } else {
         return 0;
     }
-    if ((index << 5) >= size_monafontA) {
+    if ((index << 5) >= size_fontA) {
         index = '?' - 0x20;
     }
-    return pgPutChar(monafontA, index, color, bgcolor, width);
+    return pgPutChar(fontA, index, color, bgcolor, width);
 }
 
 int pgPutCharW(unsigned char hi,unsigned char lo,int color,int bgcolor, int width)
@@ -718,10 +798,10 @@ int pgPutCharW(unsigned char hi,unsigned char lo,int color,int bgcolor, int widt
     lo -= 0x21;
     index = hi * (0x7e - 0x20);
     index += lo;
-    if ((index << 5) >= size_monafontW) {
+    if ((index << 5) >= size_fontJ) {
         index = 8; // 'ÅH'
     }
-    return pgPutChar(monafontW, index, color, bgcolor, width);
+    return pgPutChar(fontJ, index, color, bgcolor, width);
 }
 
 /*****************************
@@ -1051,10 +1131,10 @@ int pgCountCharA(const unsigned char c, int width)
     } else {
         return 0;
     }
-    if ((index<<5) >= size_monafontA) {
+    if ((index<<5) >= size_fontA) {
         index = '?' - 0x20;
     }
-    font = (unsigned short*)(monafontA + (index<<5));
+    font = (unsigned short*)(fontA + (index<<5));
     if ((s2ch.pgCursorX + *font) >= width) {
         return 1;
     }
@@ -1085,10 +1165,10 @@ int pgCountCharW(unsigned char hi,unsigned char lo, int width)
     lo -= 0x21;
     index = hi * (0x7e - 0x20);
     index += lo;
-    if ((index<<5) >= size_monafontW) {
+    if ((index<<5) >= size_fontJ) {
         index = 8; // 'ÅH'
     }
-    font = (unsigned short*)(monafontW + (index<<5));
+    font = (unsigned short*)(fontJ + (index<<5));
     if ((s2ch.pgCursorX + *font) >= width) {
         return 1;
     }

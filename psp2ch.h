@@ -267,6 +267,12 @@ typedef struct {
 } S_2CH_CONFIG;
 
 typedef struct {
+    int fontHeight;
+    char fontFileA[32];
+    char fontFileJ[32];
+} S_2CH_FONT;
+
+typedef struct {
     S_2CH_CATEGORY* categoryList;
     S_2CH_ITA* itaList;
     S_2CH_FAVORITE* favList;
@@ -332,6 +338,7 @@ typedef struct {
     S_2CH_MENU_NG menuNGH;
     S_2CH_MENU_NG menuNGV;
     S_2CH_CONFIG cfg;
+    S_2CH_FONT font;
     int running;
     int sel;
     int tateFlag;
