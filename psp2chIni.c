@@ -80,8 +80,8 @@ void psp2chIniLoadConfig(void)
                 setInt("CFG_PAD_CUTOFF", s2ch.cfg.padCutoff, 35);
                 setInt("CFG_FAV_SELECT", s2ch.cfg.favSelect, 0);
                 setString("CFG_IMAGE_DIR", s2ch.cfg.imageDir, "", 32);
-                setString("CFG_FONT_FILEA", s2ch.font.fileA, "monafontA", 32);
-                setString("CFG_FONT_FILEJ", s2ch.font.fileJ, "monafontJ", 32);
+                setString("CFG_FONT_FILEA", s2ch.font.fileA, "monafontA.bin", 32);
+                setString("CFG_FONT_FILEJ", s2ch.font.fileJ, "monafontJ.bin", 32);
                 setInt("CFG_FONT_HEIGHT", s2ch.font.height, 12);
                 setInt("CFG_FONT_PITCH", s2ch.font.pitch, 13);
 
@@ -99,8 +99,8 @@ void psp2chIniLoadConfig(void)
     s2ch.cfg.padCutoff = 35; // アナログパッドのニュートラルあそび値
     s2ch.cfg.favSelect = 0; // お気に入りのデフォルト表示 0:スレ, 1:板
     strcpy(s2ch.cfg.imageDir, ""); // PICTUREフォルダに作成するフォルダ名
-    strcpy(s2ch.font.fileA, "monafontA"); // ASCIIコードフォント
-    strcpy(s2ch.font.fileJ, "monafontJ"); // JIS漢字コードフォント
+    strcpy(s2ch.font.fileA, "monafontA.bin"); // ASCIIコードフォント
+    strcpy(s2ch.font.fileJ, "monafontJ.bin"); // JIS漢字コードフォント
     s2ch.font.height = 12;
     s2ch.font.pitch = 13;
 }

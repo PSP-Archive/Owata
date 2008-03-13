@@ -181,7 +181,18 @@ void psp2chImageViewPng(char* fname)
     }
     png_read_update_info(png_ptr, info_ptr);
     img = (png_bytepp)malloc(height * sizeof(png_bytep));
+    if (!img)
+    {
+        fclose(infile);
+        return;
+    }
     imgbuf = (png_bytep)malloc(png_get_rowbytes(png_ptr, info_ptr) * bufWidth);
+    if (!imgbuf)
+    {
+        free(img);
+        fclose(infile);
+        return;
+    }
     for (i = 0; i < height; i++)
     {
         img[i] = &imgbuf[i * bufWidth * 4];
