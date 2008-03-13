@@ -267,9 +267,12 @@ typedef struct {
 } S_2CH_CONFIG;
 
 typedef struct {
-    int fontHeight;
-    char fontFileA[32];
-    char fontFileJ[32];
+    int height;
+    int pitch;
+    int lineH;
+    int lineV;
+    char fileA[32];
+    char fileJ[32];
 } S_2CH_FONT;
 
 typedef struct {
@@ -344,6 +347,7 @@ typedef struct {
     int tateFlag;
     char cwDir[256];
     char* logDir;
+    char* fontDir;
     int pgCursorX, pgCursorY;
     SceCtrlData pad;
     SceCtrlData oldPad;

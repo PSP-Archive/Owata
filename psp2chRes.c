@@ -881,11 +881,11 @@ int psp2chResSetLine(S_SCROLLBAR* bar)
 
     if (s2ch.tateFlag)
     {
-        bar->view = 455;
+        bar->view = SCR_WIDTH - s2ch.font.height - s2ch.font.pitch;
         bar->x = RES_SCR_WIDTH_V;
         bar->y = 0;
         bar->w = RES_BAR_WIDTH_V;
-        bar->h = 455;
+        bar->h = bar->view;
         for (i = 0, j = 0; i < s2ch.res.count; i++)
         {
             s2ch.resList[i].line = psp2chCountRes(i, RES_SCR_WIDTH_V);
@@ -898,11 +898,11 @@ int psp2chResSetLine(S_SCROLLBAR* bar)
     }
     else
     {
-        bar->view = 259;
+        bar->view = SCR_HEIGHT - s2ch.font.height;
         bar->x = RES_SCR_WIDTH;
         bar->y = 0;
         bar->w = RES_BAR_WIDTH;
-        bar->h = 259;
+        bar->h = bar->view;
         for (i = 0, j = 0; i < s2ch.res.count; i++)
         {
             s2ch.resList[i].line = psp2chCountRes(i, RES_SCR_WIDTH);
@@ -2046,6 +2046,7 @@ void psp2chDrawRes(int drawLine)
         line = psp2chDrawResHeader(re, &skip, lineEnd, lineEnd, 0, endX, s2ch.resColor, s2ch.resHeaderColor, &drawLine);
         if (line > lineEnd)
         {
+            pgFillvram(s2ch.resColor.bg, 0, s2ch.pgCursorY, endX, LINE_PITCH);
             return;
         }
         line = psp2chDrawResText(re, &skip, lineEnd, lineEnd, 0, endX, s2ch.resColor, &drawLine);

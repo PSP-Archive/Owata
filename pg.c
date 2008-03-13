@@ -139,7 +139,7 @@ int pgExtraFontInit(void)
     char path[256];
     int ret;
 
-    sprintf(path, "%s/%s", s2ch.cwDir, s2ch.font.fontFileA);
+    sprintf(path, "%s/%s/%s", s2ch.cwDir, s2ch.fontDir, s2ch.font.fileA);
     ret = sceIoGetstat(path, &st);
     if (ret < 0)
     {
@@ -173,7 +173,7 @@ int pgExtraFontInit(void)
         sceIoRead(fd, fontA, st.st_size);
         sceIoClose(fd);
     }
-    sprintf(path, "%s/%s", s2ch.cwDir, s2ch.font.fontFileJ);
+    sprintf(path, "%s/%s/%s", s2ch.cwDir, s2ch.fontDir, s2ch.font.fileJ);
     ret = sceIoGetstat(path, &st);
     if (ret < 0)
     {
@@ -240,7 +240,10 @@ void pgSetupGu(void)
 
     sceDisplayWaitVblankStart();
     sceGuDisplay(GU_TRUE);
-    pgExtraFontInit();
+    if (pgExtraFontInit() < 0)
+    {
+        s2ch.running = 0;
+    }
 }
 
 /*****************************
@@ -323,7 +326,7 @@ void pgMenuBar(char* str)
     s2ch.pgCursorX = 0;
     if (s2ch.tateFlag)
     {
-        pgFillvram(s2ch.menuColor.bg, 0, 0, SCR_HEIGHT, FONT_PITCH + LINE_PITCH);
+        pgFillvram(s2ch.menuColor.bg, 0, 0, SCR_HEIGHT, FONT_HEIGHT + LINE_PITCH);
         s2ch.pgCursorY = 0;
         str = pgPrint(str, s2ch.menuColor.text, s2ch.menuColor.bg, SCR_HEIGHT);
         s2ch.pgCursorY += LINE_PITCH;
@@ -336,7 +339,7 @@ void pgMenuBar(char* str)
     }
     else
     {
-        pgFillvram(s2ch.menuColor.bg, 0, 0, SCR_WIDTH, FONT_PITCH);
+        pgFillvram(s2ch.menuColor.bg, 0, 0, SCR_WIDTH, FONT_HEIGHT);
         s2ch.pgCursorY = 0;
         pgPrint(str, s2ch.menuColor.text, s2ch.menuColor.bg, SCR_WIDTH);
         s2ch.pgCursorX = SCR_WIDTH - 32;
@@ -366,8 +369,8 @@ void pgMenuBar(char* str)
     if (s2ch.tateFlag)
     {
         src = printBuf;
-        dst0 = (unsigned int*)(0x04000000+framebuffer) + FONT_PITCH + LINE_PITCH - 1;
-        for (y = 0; y < FONT_PITCH + LINE_PITCH; y++)
+        dst0 = (unsigned int*)(0x04000000+framebuffer) + FONT_HEIGHT + LINE_PITCH - 1;
+        for (y = 0; y < FONT_HEIGHT + LINE_PITCH; y++)
         {
             dst = dst0--;
             for (x = 0; x < SCR_HEIGHT; x++)
@@ -381,8 +384,8 @@ void pgMenuBar(char* str)
     else
     {
         src = printBuf;
-        dst = (unsigned int*)(0x04000000+framebuffer)+(SCR_HEIGHT - FONT_PITCH)*BUF_WIDTH;
-        for (y = 0; y < FONT_PITCH; y++)
+        dst = (unsigned int*)(0x04000000+framebuffer)+(SCR_HEIGHT - FONT_HEIGHT)*BUF_WIDTH;
+        for (y = 0; y < FONT_HEIGHT; y++)
         {
             for (x = 0; x < SCR_WIDTH; x++)
             {
@@ -676,7 +679,6 @@ void pgCopy(int offsetX, int offsetY)
 
 /*****************************
 数字を等幅(6pixels)で表示
-"1"は1ドット右にずらした
 *****************************/
 void pgPrintNumber(int num, int color,int bgcolor)
 {
@@ -691,14 +693,10 @@ void pgPrintNumber(int num, int color,int bgcolor)
         font = (unsigned short*)(fontA + ((buf[j] - 0x20) << 5)) + 1;
         vptr0 = pgGetVramAddr(s2ch.pgCursorX, s2ch.pgCursorY);
         s2ch.pgCursorX += 6;
-        for (cy = 0; cy < FONT_PITCH; cy++) {
+        for (cy = 0; cy < FONT_HEIGHT; cy++) {
             vptr = vptr0;
             b = 0x8000;
             for (i = 0; i < 6; i++) {
-                if (buf[j] == '1' && i == 0) {
-                    *vptr++ = bgcolor;
-                    i++;
-                }
                 if ((*font & b)!=0) {
                     *vptr=color;
                 } else {
@@ -735,7 +733,7 @@ int pgPutChar(unsigned char *cfont,int ch,int color,int bgcolor, int width)
     s2ch.pgCursorY &= 0x01FF;
     vptr0 = pgGetVramAddr(s2ch.pgCursorX, s2ch.pgCursorY);
     s2ch.pgCursorX += cx;
-    for (cy = 0; cy < FONT_PITCH; cy++) {
+    for (cy = 0; cy < FONT_HEIGHT; cy++) {
         vptr = vptr0;
         b = 0x8000;
         for (i = 0; i < cx; i++) {

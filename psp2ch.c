@@ -30,7 +30,7 @@ extern unsigned int list[512*512]; // pg.c
 extern intraFont* jpn0; // pg.c
 
 const char* userAgent = "Monazilla/1.00 (Compatible; PSP; ja) owata(^o^)";
-char* ver = "0.5.8";
+char* ver = "0.6.0";
 S_2CH s2ch;
 char cookie[128] = {0};
 char keyWords[128];
@@ -396,6 +396,7 @@ int psp2chInit(void)
     s2ch.sel = 0;
     s2ch.tateFlag = 0;
     s2ch.logDir = "log";
+    s2ch.fontDir = "font";
     s2ch.urlAnchorCount = 0;
     s2ch.resAnchorCount = 0;
     s2ch.idAnchorCount = 0;
@@ -409,6 +410,37 @@ int psp2chInit(void)
     s2ch.favItaList = NULL;
     s2ch.threadList = NULL;
     s2ch.resList = NULL;
+    switch(s2ch.font.pitch)
+    {
+    case 10:
+        s2ch.font.lineH = 26;
+        s2ch.font.lineV = 46;
+        break;
+    case 11:
+        s2ch.font.lineH = 24;
+        s2ch.font.lineV = 42;
+        break;
+    case 12:
+        s2ch.font.lineH = 22;
+        s2ch.font.lineV = 38;
+        break;
+    case 13:
+        s2ch.font.lineH = 20;
+        s2ch.font.lineV = 35;
+        break;
+    case 14:
+        s2ch.font.lineH = 18;
+        s2ch.font.lineV = 32;
+        break;
+    case 15:
+        s2ch.font.lineH = 17;
+        s2ch.font.lineV = 30;
+        break;
+    case 16:
+        s2ch.font.lineH = 16;
+        s2ch.font.lineV = 28;
+        break;
+    }
     return 0;
 }
 
