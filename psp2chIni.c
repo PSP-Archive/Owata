@@ -99,13 +99,8 @@ void psp2chIniLoadConfig(void)
     s2ch.cfg.padCutoff = 35; // アナログパッドのニュートラルあそび値
     s2ch.cfg.favSelect = 0; // お気に入りのデフォルト表示 0:スレ, 1:板
     strcpy(s2ch.cfg.imageDir, ""); // PICTUREフォルダに作成するフォルダ名
-<<<<<<< .mine
     strcpy(s2ch.font.fileA, "monafontA.bin"); // シングルバイト(ASCII, 半角カナ)フォント
     strcpy(s2ch.font.fileJ, "monafontJ.bin"); // マルチバイトフォント
-=======
-    strcpy(s2ch.font.fileA, "monafontA.bin"); // ASCIIコードフォント
-    strcpy(s2ch.font.fileJ, "monafontJ.bin"); // JIS漢字コードフォント
->>>>>>> .r53
     s2ch.font.height = 12;
     s2ch.font.pitch = 13;
 }
