@@ -775,14 +775,14 @@ void psp2chDrawThread(int scrollX)
         lineEnd = DRAW_LINE_V;
         scrW = SCR_HEIGHT;
         scrH = SCR_WIDTH;
-        resCount = scrW - 50 + scrollX;
+        resCount = scrW - FONT_HEIGHT * 4 + scrollX;
     }
     else
     {
         lineEnd = DRAW_LINE_H;
         scrW = SCR_WIDTH;
         scrH = SCR_HEIGHT;
-        resCount = THREAD_RES + scrollX;
+        resCount = scrW - FONT_HEIGHT * 4 + scrollX;
     }
     start = s2ch.thread.start;
     if (start + lineEnd > s2ch.thread.count)
@@ -811,7 +811,7 @@ void psp2chDrawThread(int scrollX)
         {
             pgPrintNumber(s2ch.threadList[threadSort[i]].id + 1, s2ch.threadColor.num, s2ch.threadColor.bg);
         }
-        s2ch.pgCursorX = THREAD_ID;
+        s2ch.pgCursorX = FONT_HEIGHT * 2;
         if (i == s2ch.thread.select)
         {
             if (s2ch.threadList[threadSort[i]].old > 0)
@@ -840,7 +840,6 @@ void psp2chDrawThread(int scrollX)
             pgPrintNumber(s2ch.threadList[threadSort[i]].res, s2ch.threadColor.s_count1, s2ch.threadColor.s_bg);
             if (s2ch.threadList[threadSort[i]].old > 0)
             {
-                s2ch.pgCursorX += 2;
                 pgPrintNumber(s2ch.threadList[threadSort[i]].old, s2ch.threadColor.s_count2, s2ch.threadColor.s_bg);
             }
         }
@@ -849,7 +848,6 @@ void psp2chDrawThread(int scrollX)
             pgPrintNumber(s2ch.threadList[threadSort[i]].res, s2ch.threadColor.count1, s2ch.threadColor.bg);
             if (s2ch.threadList[threadSort[i]].old > 0)
             {
-                s2ch.pgCursorX += 2;
                 pgPrintNumber(s2ch.threadList[threadSort[i]].old, s2ch.threadColor.count2, s2ch.threadColor.bg);
             }
         }

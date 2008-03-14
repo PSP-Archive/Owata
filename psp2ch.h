@@ -18,8 +18,6 @@
 #define RES_SCR_WIDTH (SCR_WIDTH - RES_BAR_WIDTH)
 #define RES_BAR_WIDTH_V (6)
 #define RES_SCR_WIDTH_V (SCR_HEIGHT - RES_BAR_WIDTH_V)
-#define THREAD_ID 26
-#define THREAD_RES 430
 #define RES_A_X 45
 #define RES_A_Y 30
 #define RES_A_WIDTH 390

@@ -336,8 +336,8 @@ void pgTitleBar(char* ita, char* title)
     s2ch.pgCursorX = 0;
     if (s2ch.tateFlag)
     {
-        pgFillvram(s2ch.formColor.title_bg, 0, 0, SCR_HEIGHT, FONT_HEIGHT + LINE_PITCH);
-        s2ch.pgCursorY = 0;
+        pgFillvram(s2ch.formColor.title_bg, 0, 0, SCR_HEIGHT, FONT_HEIGHT + LINE_PITCH + 1);
+        s2ch.pgCursorY = 1;
         pgPrint(buf, s2ch.formColor.ita, s2ch.formColor.title_bg, SCR_HEIGHT);
         s2ch.pgCursorX += 8;
         title = pgPrint(title, s2ch.formColor.title, s2ch.formColor.title_bg, SCR_HEIGHT);
@@ -363,8 +363,8 @@ void pgTitleBar(char* ita, char* title)
     if (s2ch.tateFlag)
     {
         src = printBuf;
-        dst0 = (unsigned int*)(0x04000000+framebuffer) + SCR_WIDTH;
-        for (y = 0; y < FONT_HEIGHT + LINE_PITCH; y++)
+        dst0 = (unsigned int*)(0x04000000+framebuffer) + SCR_WIDTH - 1;
+        for (y = 0; y < FONT_HEIGHT + LINE_PITCH + 1; y++)
         {
             dst = dst0--;
             for (x = 0; x < SCR_HEIGHT; x++)
@@ -642,7 +642,7 @@ void pgPadCursor(int x, int y)
 
     if (s2ch.tateFlag)
     {
-        vptr = (unsigned int*)(0x04000000+framebuffer) + x * BUF_WIDTH + SCR_WIDTH - y - 18;
+        vptr = (unsigned int*)(0x04000000+framebuffer) + x * BUF_WIDTH + SCR_WIDTH - y - 19;
         for (i = 0; i < 48; i++)
         {
             vptr[cursorImgBV[i]] = BLACK;
@@ -678,7 +678,7 @@ void pgCopyWindow(int offset, int x, int y, int w, int h)
     if (s2ch.tateFlag)
     {
         src = printBuf + ((offset + y) & 0x01FF) * BUF_WIDTH + x;
-        dst0 = (unsigned int*)(0x04000000 + framebuffer) + SCR_WIDTH;
+        dst0 = (unsigned int*)(0x04000000 + framebuffer) + SCR_WIDTH - 1;
         dst0 += x * BUF_WIDTH - (y & 0x01FF);
         for (i = 0; i < h; i++)
         {
@@ -727,7 +727,7 @@ void pgCopy(int offsetX, int offsetY)
     if (s2ch.tateFlag)
     {
         src = printBuf + offsetX + (offsetY * BUF_WIDTH);
-        dst0 = (unsigned int*)(0x04000000+framebuffer) + SCR_WIDTH;
+        dst0 = (unsigned int*)(0x04000000+framebuffer) + SCR_WIDTH - 1;
         for (y = 0; y < SCR_WIDTH; y++)
         {
             dst = dst0--;
@@ -762,25 +762,30 @@ void pgCopy(int offsetX, int offsetY)
 }
 
 /*****************************
-”Žš‚ð“™•(6pixels)‚Å•\Ž¦
+”Žš‚ð•\Ž¦
 *****************************/
 void pgPrintNumber(int num, int color,int bgcolor)
 {
     unsigned int *vptr0, *vptr;
     char buf[16];
-    int i, j, cy, b;
+    int i, j, cx, cy, b, count;
     unsigned short* font;
 
     s2ch.pgCursorY &= 0x01FF;
-    sprintf(buf, "%4d", num);
-    for (j = 0; j < 4;j++) {
-        font = (unsigned short*)(fontA + ((buf[j] - 0x20) << 5)) + 1;
+    sprintf(buf, "%d", num);
+    count = strlen(buf);
+    font = (unsigned short*)(fontA + (('0' - 0x20) << 5));
+    cx = *font;
+    s2ch.pgCursorX += (4 - count) * cx;
+    for (j = 0; j < count;j++) {
+        font = (unsigned short*)(fontA + ((buf[j] - 0x20) << 5));
+        cx = *font++;
         vptr0 = pgGetVramAddr(s2ch.pgCursorX, s2ch.pgCursorY);
-        s2ch.pgCursorX += 6;
+        s2ch.pgCursorX += cx;
         for (cy = 0; cy < FONT_HEIGHT; cy++) {
             vptr = vptr0;
             b = 0x8000;
-            for (i = 0; i < 6; i++) {
+            for (i = 0; i < cx; i++) {
                 if ((*font & b)!=0) {
                     *vptr=color;
                 } else {

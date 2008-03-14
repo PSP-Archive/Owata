@@ -767,13 +767,13 @@ void psp2chDrawFavorite(int scrollX)
         {
             pgPrintNumber(i + 1, s2ch.threadColor.num, s2ch.threadColor.bg);
         }
-        s2ch.pgCursorX = THREAD_ID;
+        s2ch.pgCursorX = FONT_HEIGHT * 2;
         if (i == s2ch.fav.select)
         {
             pgPrint(s2ch.favList[i].title, s2ch.threadColor.s_category, s2ch.threadColor.s_bg, scrW);
             s2ch.pgCursorX += 8;
             pgPrint(s2ch.favList[i].subject, s2ch.threadColor.s_text1, s2ch.threadColor.s_bg, scrW);
-            s2ch.pgCursorX = scrW - 24;
+            s2ch.pgCursorX = scrW - FONT_HEIGHT * 2;
             if (s2ch.favList[i].update)
             {
                 pgPrintNumber(s2ch.favList[i].res, s2ch.threadColor.s_count2, s2ch.threadColor.s_bg);
@@ -788,7 +788,7 @@ void psp2chDrawFavorite(int scrollX)
             pgPrint(s2ch.favList[i].title, s2ch.threadColor.category, s2ch.threadColor.bg, scrW);
             s2ch.pgCursorX += 8;
             pgPrint(s2ch.favList[i].subject, s2ch.threadColor.text1, s2ch.threadColor.bg, scrW);
-            s2ch.pgCursorX = scrW - 24;
+            s2ch.pgCursorX = scrW - FONT_HEIGHT * 2;
             if (s2ch.favList[i].update)
             {
                 pgPrintNumber(s2ch.favList[i].res, s2ch.threadColor.count2, s2ch.threadColor.bg);

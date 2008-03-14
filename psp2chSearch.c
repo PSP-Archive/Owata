@@ -448,7 +448,7 @@ void psp2chDrawSearch(int scrollX)
         {
             pgPrintNumber(i + 1, s2ch.threadColor.num, s2ch.threadColor.bg);
         }
-        s2ch.pgCursorX = THREAD_ID;
+        s2ch.pgCursorX = FONT_HEIGHT * 2;
         if (i == s2ch.find.select)
         {
             pgPrint(s2ch.findList[i].title, s2ch.threadColor.s_category, s2ch.threadColor.s_bg, scrW);
