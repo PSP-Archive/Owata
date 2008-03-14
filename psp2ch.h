@@ -274,6 +274,10 @@ typedef struct {
     int lineV;
     char fileA[32];
     char fileJ[32];
+    char name[32];
+    char** set;
+    int count;
+    int select;
 } S_2CH_FONT;
 
 typedef struct {
@@ -366,7 +370,7 @@ int psp2chCloseSocket(int mySocket);
 int psp2chRequest(const char* host, const char* path, const char* header);
 int psp2chPost(char* host, char* dir, int dat, char* cook, char* body);
 int psp2chGetStatusLine(int mySocket);
-int psp2chGetHttpHeaders(int mySocket, HTTP_HEADERS* header);
+int psp2chGetHttpHeaders(int mySocket, HTTP_HEADERS* header, char* cookie);
 int psp2chApConnect(void);
 void psp2chGets(char* title, char* text, int num, int lines);
 int psp2chInputDialog(const unsigned short* text1, char* text2);

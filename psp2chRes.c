@@ -499,7 +499,8 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                             sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
                             return 0;
                         }
-                        if (psp2chForm(host, dir, dat, s2ch.resList[0].title, message) == 1)
+                        // ‘‚«ž‚Ý‚ª‚ ‚Á‚½‚Æ‚«‚Ì‚ÝXV
+                        if (psp2chForm(host, dir, dat, s2ch.resList[0].title, message) > 0)
                         {
                             psp2chSaveIdx(title, dat);
                             psp2chGetDat(host, dir, title, dat);
@@ -1554,7 +1555,7 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
             return -1;
     }
     // Receive and Save dat
-    contentLength = psp2chGetHttpHeaders(mySocket, &resHeader);
+    contentLength = psp2chGetHttpHeaders(mySocket, &resHeader, NULL);
     if (contentLength <= 0)
     {
         psp2chCloseSocket(mySocket);

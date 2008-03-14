@@ -9,7 +9,6 @@
 #include "utf8.h"
 
 extern S_2CH s2ch; // psp2ch.c
-extern char cookie[128]; // psp2ch.c
 
 /*********************
 src文字列をURLエンコードしてdst文字列に格納　
@@ -52,6 +51,7 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
     HTTP_HEADERS resHeader;
     int ret, mySocket;
     char *encode, *buffer, *str;
+    char cookie[128] = {0};
 
     encode = (char*)malloc(2048*4);
     if (encode == NULL)
@@ -90,37 +90,34 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
     strcat(encode, buffer);
     free(buffer);
     // 仮送信して2ちゃんからSet-CookieのPON HAP 取得
-    if (cookie[0] == 0)
+    mySocket = psp2chPost(host, dir, dat, cookie, encode);
+    if (mySocket < 0)
     {
-        mySocket = psp2chPost(host, dir, dat, cookie, encode);
-        if (mySocket < 0)
-        {
+        free(encode);
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        sprintf(s2ch.mh.message, "POST error");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        return mySocket;
+    }
+    ret = psp2chGetStatusLine(mySocket);
+    switch(ret)
+    {
+        case 200: // OK
+            break;
+        default:
             free(encode);
             memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "POST error");
+            sprintf(s2ch.mh.message, "Status code %d", ret);
             pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
             sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
-            return mySocket;
-        }
-        ret = psp2chGetStatusLine(mySocket);
-        switch(ret)
-        {
-            case 200: // OK
-                break;
-            default:
-                free(encode);
-                memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-                sprintf(s2ch.mh.message, "Status code %d", ret);
-                pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-                sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
-                psp2chCloseSocket(mySocket);
-                return -1;
-        }
-        psp2chGetHttpHeaders(mySocket, &resHeader);
-        // Cookieにhana=mogeraも追加(encodeに&hana=mogera追加でもいいけど)
-        strcat(cookie, "; NAME=\"\"; MAIL=\"\"; hana=mogera");
-        psp2chCloseSocket(mySocket);
+            psp2chCloseSocket(mySocket);
+            return -1;
     }
+    psp2chGetHttpHeaders(mySocket, &resHeader, cookie);
+    // Cookieにhana=mogeraも追加(encodeに&hana=mogera追加でもいいけど)
+    strcat(cookie, "; NAME=\"\"; MAIL=\"\"; hana=mogera");
+    psp2chCloseSocket(mySocket);
     // Cookieをセットして本送信
     mySocket = psp2chPost(host, dir, dat, cookie, encode);
     if (mySocket < 0)
@@ -146,7 +143,7 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
             psp2chCloseSocket(mySocket);
             return -1;
     }
-    psp2chGetHttpHeaders(mySocket, &resHeader);
+    psp2chGetHttpHeaders(mySocket, &resHeader, NULL);
     ret = recv(mySocket, encode, 2048*4, 0);
     encode[ret] = '\0';
     psp2chCloseSocket(mySocket);
@@ -182,16 +179,20 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
     while (s2ch.running)
     {
         pgCopy(0,0);
-        pgMenuBar("画面は切り替わりません　×で戻ってください");
+        pgMenuBar("画面は切り替わりません　○で入力画面に　×でレス表\示に戻ります");
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
         sceCtrlPeekBufferPositive(&s2ch.pad, 1);
         if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
             s2ch.oldPad = s2ch.pad;
-            if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
+            if(s2ch.pad.Buttons & PSP_CTRL_CIRCLE)
             {
                 break;
+            }
+            if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
+            {
+                return 2;
             }
         }
     }
@@ -279,13 +280,13 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
                     switch (focus)
                     {
                     case 0:
-                        psp2chGets("名前", name, 64, 1);
+                        psp2chGets("名前", name, 32, 1);
                         break;
                     case 1:
-                        psp2chGets("mail", mail, 64, 1);
+                        psp2chGets("mail", mail, 32, 1);
                         break;
                     case 2:
-                        psp2chGets(NULL, message, 2048, 32);
+                        psp2chGets(NULL, message, 1024, 32);
                         break;
                     }
                 }
@@ -304,6 +305,10 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
                     if (s2ch.mh.buttonPressed == PSP_UTILITY_MSGDIALOG_RESULT_YES)
                     {
                         ret = psp2chFormResPost(host, dir, dat, name, mail, message);
+                        if (ret == 2)
+                        {
+                            break;
+                        }
                     }
                 }
                 else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)

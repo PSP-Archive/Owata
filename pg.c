@@ -151,6 +151,7 @@ int pgExtraFontInit(void)
         return -1;
     }
     size_fontA = st.st_size;
+    free(fontA);
     fontA = (unsigned char*)malloc(st.st_size);
     if (fontA == NULL)
     {
@@ -185,6 +186,7 @@ int pgExtraFontInit(void)
         return -1;
     }
     size_fontJ = st.st_size;
+    free(fontJ);
     fontJ = (unsigned char*)malloc(st.st_size);
     if (fontJ == NULL)
     {

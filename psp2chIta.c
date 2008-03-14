@@ -475,7 +475,7 @@ int psp2chGetMenu(void)
             psp2chCloseSocket(mySocket);
             return -1;
     }
-    contentLength = psp2chGetHttpHeaders(mySocket, &resHeader);
+    contentLength = psp2chGetHttpHeaders(mySocket, &resHeader, NULL);
     if (contentLength <= 0)
     {
         psp2chCloseSocket(mySocket);

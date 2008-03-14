@@ -30,6 +30,7 @@
 
 #include "psp2ch.h"
 
+int pgExtraFontInit(void);
 void pgSetupGu(void);
 void pgTermGu(void);
 void pgFontLoad(void);

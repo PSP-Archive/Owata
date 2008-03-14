@@ -307,7 +307,7 @@ int psp2chSearchList(void)
             psp2chCloseSocket(mySocket);
             return -1;
     }
-    ret = psp2chGetHttpHeaders(mySocket, &resHeader);
+    ret = psp2chGetHttpHeaders(mySocket, &resHeader, NULL);
     s2ch.findList = (S_2CH_FAVORITE*)realloc(s2ch.findList, sizeof(S_2CH_FAVORITE) * FIND_MAX_COUNT);
     if (s2ch.findList == NULL)
     {

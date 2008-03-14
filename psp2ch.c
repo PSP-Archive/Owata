@@ -32,7 +32,6 @@ extern intraFont* jpn0; // pg.c
 const char* userAgent = "Monazilla/1.00 (Compatible; PSP; ja) owata(^o^)";
 char* ver = "0.6.1";
 S_2CH s2ch;
-char cookie[128] = {0};
 char keyWords[128];
 
 /*********************************
@@ -392,6 +391,7 @@ int psp2chInit(void)
     psp2chResSetMenuString();
     psp2chMenuSetMenuString();
     psp2chIniLoadConfig();
+    psp2chMenuFontSet(0);
     s2ch.running = 1;
     s2ch.sel = 0;
     s2ch.tateFlag = 0;
@@ -464,6 +464,7 @@ int psp2chOpenSocket(void)
     int mySocket, ret;
 
     ret = psp2chApConnect();
+    sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
     if (ret < 0 && ret != 0x80110405)
     {
         return ret;
@@ -704,7 +705,7 @@ cookie[]にSet-Cookieの内容が追加されます。
 Content-Lengthがintで返されます
 Content-Lengthを返さない場合もあるので注意（CGI等）
 *****************************/
-int psp2chGetHttpHeaders(int mySocket, HTTP_HEADERS* header)
+int psp2chGetHttpHeaders(int mySocket, HTTP_HEADERS* header, char* cookie)
 {
     int i = 0;
     char in;
@@ -744,7 +745,7 @@ int psp2chGetHttpHeaders(int mySocket, HTTP_HEADERS* header)
             {
                 strcpy(header->ETag, &incomingBuffer[6]);
             }
-            else if (strstr(incomingBuffer, "Set-Cookie:"))
+            else if (cookie && strstr(incomingBuffer, "Set-Cookie:"))
             {
                 p = strchr(incomingBuffer, ';');
                 *p = '\0';

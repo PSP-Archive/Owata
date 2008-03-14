@@ -482,7 +482,7 @@ int psp2chGetSubject(int ita)
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return fd;
     }
-    contentLength = psp2chGetHttpHeaders(mySocket, &resHeader);
+    contentLength = psp2chGetHttpHeaders(mySocket, &resHeader, NULL);
     if (contentLength <= 0)
     {
         psp2chCloseSocket(mySocket);

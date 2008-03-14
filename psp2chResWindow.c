@@ -485,7 +485,7 @@ int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
             return -1;
     }
     // Receive and Save dat
-    contentLength = psp2chGetHttpHeaders(mySocket, &resHeader);
+    contentLength = psp2chGetHttpHeaders(mySocket, &resHeader, NULL);
     if (contentLength < 0)
     {
         psp2chCloseSocket(mySocket);

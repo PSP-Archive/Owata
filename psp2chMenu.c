@@ -73,7 +73,7 @@ void psp2chMenuSetMenuString(void)
 #define MENU_HEIGHT (MENU_ITEM * LINE_PITCH)
 int psp2chMenu(int pixelsX, int pixelsY)
 {
-    const char* menuList[] = {"NG 設定", "LAN 切断"};
+    const char* menuList[] = {"NG 設定", "LAN 切断", "フォント変更"};
     static char* menuStr = "";
     int lineEnd;
     static S_2CH_SCREEN menu;
@@ -91,7 +91,7 @@ int psp2chMenu(int pixelsX, int pixelsY)
     scrX = MENU_WIDTH;
     scrY = MENU_HEIGHT;
     lineEnd = MENU_ITEM;
-    menu.count = 2;
+    menu.count = 3;
     printBuf = winPixels;
     while (s2ch.running)
     {
@@ -110,6 +110,9 @@ int psp2chMenu(int pixelsX, int pixelsY)
                         break;
                     case 1:
                         sceNetApctlDisconnect();
+                        break;
+                    case 2:
+                        psp2chMenuFont(pixelsX, pixelsY);
                         break;
                     }
                     printBuf = pixels;
@@ -461,6 +464,115 @@ int psp2chNGAdd(const char* file, char* val)
     pgWaitVn(60);
     psp2chResCheckNG();
     return 0;
+}
+
+void psp2chMenuFontSet(int select)
+{
+    if (s2ch.font.set == NULL)
+    {
+        return;
+    }
+    if (select >= s2ch.font.count)
+    {
+        return;
+    }
+    sscanf(s2ch.font.set[select], "%s %s %s %d %d",
+                    s2ch.font.name,
+                    s2ch.font.fileA,
+                    s2ch.font.fileJ,
+                    &s2ch.font.height,
+                    &s2ch.font.pitch
+    );
+    s2ch.font.select = select;
+}
+
+/****************
+フォント設定ウィンドウ
+****************/
+#define MENU_FONT_WIDTH (160)
+void psp2chMenuFont(int pixelsX, int pixelsY)
+{
+    char** menuList;
+    char* menuStr;
+    int lineEnd = 5;
+    static S_2CH_SCREEN menu;
+    int i, startX, startY, scrX, scrY;
+
+    if (s2ch.font.set == NULL)
+    {
+        return;
+    }
+    menuList = (char**)malloc(sizeof(char*) * s2ch.font.count);
+    for (i = 0; i < s2ch.font.count; i++)
+    {
+        menuList[i] = (char*)malloc(sizeof(char) * 32);
+        sscanf(s2ch.font.set[i], "%s", menuList[i]);
+    }
+    if (s2ch.tateFlag)
+    {
+        startX = (SCR_HEIGHT - MENU_FONT_WIDTH) / 2;
+        startY = (SCR_WIDTH - LINE_PITCH * lineEnd) / 2;
+    }
+    else
+    {
+        startX = (SCR_WIDTH - MENU_FONT_WIDTH) / 2;
+        startY = (SCR_HEIGHT - LINE_PITCH * lineEnd) / 2;
+    }
+    scrX = MENU_FONT_WIDTH;
+    scrY = LINE_PITCH * lineEnd;
+    printBuf = pixels;
+    pgCopy(pixelsX, pixelsY);
+    framebuffer = sceGuSwapBuffers();
+    pgCopy(pixelsX, pixelsY);
+    printBuf = winPixels;
+    menu.start = 0;
+    menu.count = s2ch.font.count;
+    menu.select = s2ch.font.select;
+    while (s2ch.running)
+    {
+        if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
+        {
+            psp2chCursorSet(&menu, lineEnd, 0);
+            if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
+            {
+                s2ch.oldPad = s2ch.pad;
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinH.ok) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinV.ok))
+                {
+                    psp2chMenuFontSet(menu.select);
+                    pgExtraFontInit();
+                    scrY = LINE_PITCH * lineEnd;
+                    printBuf = pixels;
+                    pgCopy(pixelsX, pixelsY);
+                    framebuffer = sceGuSwapBuffers();
+                    pgCopy(pixelsX, pixelsY);
+                    printBuf = winPixels;
+                }
+                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinH.esc) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinV.esc))
+                {
+                    break;
+                }
+            }
+            if (s2ch.tateFlag)
+            {
+                menuStr = s2ch.menuWinV.main;
+            }
+            else
+            {
+                menuStr = s2ch.menuWinH.main;
+            }
+            psp2chDrawMenu((char**)menuList, menu, startX, startY, scrX, scrY);
+            pgCopyWindow(0, startX, startY, scrX, scrY);
+            pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
+            pgMenuBar(menuStr);
+            sceDisplayWaitVblankStart();
+            framebuffer = sceGuSwapBuffers();
+        }
+    }
+    for (i = 0; i < s2ch.font.count; i++)
+    {
+        free(menuList[i]);
+    }
+    free(menuList);
 }
 
 /****************

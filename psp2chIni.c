@@ -35,7 +35,7 @@ extern S_2CH s2ch; // psp2ch.c
     else{(B) = (C);}
 
 #define setString(A, B, C, D) \
-    p = strstr(buf, (A));\
+    p = strstr(buf2, (A));\
     if (p) {\
         p = strchr(p, '"');\
         if(p){\
@@ -58,9 +58,9 @@ void psp2chIniLoadConfig(void)
     SceUID fd;
     SceIoStat st;
     char file[256];
-    char *buf;
+    char *buf, *buf2;
     char *p;
-    int i;
+    int i, j;
 
     sprintf(file, "%s/config.ini", s2ch.cwDir);
     i = sceIoGetstat(file, &st);
@@ -75,15 +75,42 @@ void psp2chIniLoadConfig(void)
                 sceIoRead(fd, buf, st.st_size);
                 sceIoClose(fd);
                 buf[st.st_size] = '\0';
+                buf2 = buf;
                 setInt("CFG_PAD_REVERSE", s2ch.cfg.padReverse, 1);
                 setInt("CFG_PAD_ACCEL", s2ch.cfg.padAccel, 1);
                 setInt("CFG_PAD_CUTOFF", s2ch.cfg.padCutoff, 35);
                 setInt("CFG_FAV_SELECT", s2ch.cfg.favSelect, 0);
                 setString("CFG_IMAGE_DIR", s2ch.cfg.imageDir, "", 32);
-                setString("CFG_FONT_FILEA", s2ch.font.fileA, "monafontA.bin", 32);
-                setString("CFG_FONT_FILEJ", s2ch.font.fileJ, "monafontJ.bin", 32);
-                setInt("CFG_FONT_HEIGHT", s2ch.font.height, 12);
-                setInt("CFG_FONT_PITCH", s2ch.font.pitch, 13);
+                s2ch.font.count = 0;
+                while ((p = strstr(buf2, "CFG_FONT_SET")))
+                {
+                    s2ch.font.count++;
+                    buf2 = p + 12;
+                }
+                if (s2ch.font.count == 0)
+                {
+                    s2ch.font.count = 1;
+                }
+                s2ch.font.set = (char**)malloc(sizeof(char*) * s2ch.font.count);
+                buf2 = buf;
+                if (s2ch.font.set == NULL)
+                {
+                    strcpy(s2ch.font.fileA, "monafontA.bin");
+                    strcpy(s2ch.font.fileJ, "monafontJ.bin");
+                    s2ch.font.height = 12;
+                    s2ch.font.pitch = 13;
+                    s2ch.font.count = 1;
+                }
+                else
+                {
+                    for (j = 0; j < s2ch.font.count; j++)
+                    {
+                        setString("CFG_FONT_SET", file, "モナー	monafontA.bin	monafontJ.bin	12	13", 256);
+                        s2ch.font.set[j] = (char*)malloc(sizeof(char) * strlen(file));
+                        strcpy(s2ch.font.set[j], file);
+                        buf2 = p;
+                    }
+                }
 
                 free(buf);
                 return;
@@ -103,6 +130,8 @@ void psp2chIniLoadConfig(void)
     strcpy(s2ch.font.fileJ, "monafontJ.bin"); // マルチバイトフォント
     s2ch.font.height = 12;
     s2ch.font.pitch = 13;
+    s2ch.font.count = 1;
+    s2ch.font.set = NULL;
 }
 
 /***********************************
