@@ -58,7 +58,7 @@ void psp2chResSetMenuString(void)
     getIndex(s2ch.btnResH.reload, index3);
     getIndex(s2ch.btnResH.datDel, index4);
     getIndex(s2ch.btnResH.change, index5);
-    sprintf(s2ch.menuResH.main, "　%s : 書き込み　　　%s : 戻る　　　　　%s : 更新　　　　　%s : 削除　　　%s : メニュー切替",
+    sprintf(s2ch.menuResH.main, "　%s : 書き込み　　%s : 戻る　　%s : 更新　　%s : 削除　　%s : メニュー切替",
             sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index4], sBtnH[index5]);
 
     getIndex(s2ch.btnResH.s.top, index1);
@@ -97,16 +97,16 @@ void psp2chResSetMenuString(void)
     getIndex(s2ch.btnResV.reload, index3);
     getIndex(s2ch.btnResV.datDel, index4);
     getIndex(s2ch.btnResV.change, index5);
-    sprintf(s2ch.menuResV.main, "　%s : 書き込み　　　%s : 戻る　　　　　%s : 更新　　　　　　%s : 削除　　　%s : メニュー切替",
+    sprintf(s2ch.menuResV.main, "　%s : 書き込み　　　%s : 戻る　　　　%s : 更新\n　%s : 削除　　　%s : メニュー切替",
             sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4], sBtnV[index5]);
 
     getIndex(s2ch.btnResV.s.top, index1);
     getIndex(s2ch.btnResV.s.end, index2);
     getIndex(s2ch.btnResV.addFav, index3);
     getIndex(s2ch.btnResV.delFav, index4);
-    sprintf(s2ch.menuResV.sub1, "　%s : 先頭　　　%s : 最後　　　%s : お気に入りに登録",
+    sprintf(s2ch.menuResV.sub1, "　%s : 先頭　　　%s : 最後\n　%s : お気に入りに登録",
             sBtnV[index1], sBtnV[index2], sBtnV[index3]);
-    sprintf(s2ch.menuResV.sub2, "　%s : 先頭　　　%s : 最後　　　%s : お気に入りから削除",
+    sprintf(s2ch.menuResV.sub2, "　%s : 先頭　　　%s : 最後\n　%s : お気に入りから削除",
             sBtnV[index1], sBtnV[index2], sBtnV[index4]);
 
     getIndex(s2ch.btnResV.resForm, index1);
@@ -713,6 +713,10 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         bar.start = s2ch.res.start * LINE_PITCH;
         pgScrollbar(bar, s2ch.resBarColor);
         pgMenuBar(menuStr);
+        if (rMenu)
+        {
+            pgTitleBar(title, s2ch.resList[0].title);
+        }
         pgPadCursor(cursorX,cursorY);
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();

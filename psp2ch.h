@@ -154,6 +154,7 @@ typedef struct {
 } S_2CH_ITA_COLOR;
 
 typedef struct {
+    int ita;
     int title;
     int title_bg;
 } S_2CH_FORM_COLOR;

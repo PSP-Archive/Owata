@@ -99,8 +99,13 @@ void psp2chIniLoadConfig(void)
     s2ch.cfg.padCutoff = 35; // アナログパッドのニュートラルあそび値
     s2ch.cfg.favSelect = 0; // お気に入りのデフォルト表示 0:スレ, 1:板
     strcpy(s2ch.cfg.imageDir, ""); // PICTUREフォルダに作成するフォルダ名
+<<<<<<< .mine
+    strcpy(s2ch.font.fileA, "monafontA.bin"); // シングルバイト(ASCII, 半角カナ)フォント
+    strcpy(s2ch.font.fileJ, "monafontJ.bin"); // マルチバイトフォント
+=======
     strcpy(s2ch.font.fileA, "monafontA.bin"); // ASCIIコードフォント
     strcpy(s2ch.font.fileJ, "monafontJ.bin"); // JIS漢字コードフォント
+>>>>>>> .r53
     s2ch.font.height = 12;
     s2ch.font.pitch = 13;
 }
@@ -200,6 +205,7 @@ void psp2chIniSetColor(void)
                 setHex("ITA_ON_S_BG", s2ch.cateOffColor.ita.s_bg, BLUE);
                 setHex("CATE_OFF_BASE", s2ch.cateOffColor.base, WHITE);
 
+                setHex("FORM_ITA_TEXT", s2ch.formColor.ita, GRAY);
                 setHex("FORM_TITLE_TEXT", s2ch.formColor.title, WHITE);
                 setHex("FORM_TITLE_BG", s2ch.formColor.title_bg, RED);
 
@@ -286,6 +292,7 @@ void psp2chIniSetColor(void)
     s2ch.cateOffColor.ita.s_bg = BLUE;
     s2ch.cateOffColor.base = WHITE;
     // 送信フォーム
+    s2ch.formColor.ita = GRAY;
     s2ch.formColor.title = WHITE;
     s2ch.formColor.title_bg = RED;
     // メニューウィンドウ

@@ -47,9 +47,9 @@ void psp2chFavSetMenuString(void)
     getIndex(s2ch.favH.change, index3);
     getIndex(s2ch.favH.del, index4);
     getIndex(s2ch.favH.shift, index5);
-    sprintf(s2ch.menuFavH.main, "　%s : 決定　　　　　%s : 板一覧　　　　%s : お気に板　　　　%s : 削除　　　　%s : メニュー切替",
+    sprintf(s2ch.menuFavH.main, "　%s : 決定　　%s : 板一覧　　%s : お気に板　　%s : 削除　　%s : メニュー切替",
             sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index4], sBtnH[index5]);
-    sprintf(s2ch.menuFavItaH.main, "　%s : 決定　　　　　%s : 板一覧　　　　%s : お気にスレ　　　%s : 削除　　　　%s : メニュー切替",
+    sprintf(s2ch.menuFavItaH.main, "　%s : 決定　　　%s : 板一覧　　%s : お気にスレ　　%s : 削除　　%s : メニュー切替",
             sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index4], sBtnH[index5]);
 
     getIndex(s2ch.listH.top, index1);
@@ -66,16 +66,16 @@ void psp2chFavSetMenuString(void)
     getIndex(s2ch.favV.change, index3);
     getIndex(s2ch.favV.del, index4);
     getIndex(s2ch.favV.shift, index5);
-    sprintf(s2ch.menuFavV.main, "　%s : 決定　　　　　%s : 板一覧　　　　%s : お気に板　　　　%s : 削除　　　　%s : メニュー切替",
+    sprintf(s2ch.menuFavV.main, "　%s : 決定　　%s : 板一覧　　%s : お気に板\n　%s : 削除　　%s : メニュー切替",
             sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4], sBtnV[index5]);
-    sprintf(s2ch.menuFavItaV.main,"　%s : 決定　　　　　%s : 板一覧　　　　%s : お気にスレ　　　%s : 削除　　　　%s : メニュー切替",
+    sprintf(s2ch.menuFavItaV.main,"　%s : 決定　　%s : 板一覧　　%s : お気にスレ\n　%s : 削除　　%s : メニュー切替",
             sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4], sBtnV[index5]);
 
     getIndex(s2ch.listV.top, index1);
     getIndex(s2ch.listV.end, index2);
     getIndex(s2ch.favV.search2ch, index3);
     getIndex(s2ch.favV.update, index4);
-    sprintf(s2ch.menuFavV.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索　　　　　　　%s : 一括取得",
+    sprintf(s2ch.menuFavV.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索\n　%s : 一括取得",
             sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4]);
     sprintf(s2ch.menuFavItaV.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索",
             sBtnV[index1], sBtnV[index2], sBtnV[index3]);

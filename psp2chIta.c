@@ -47,9 +47,9 @@ void psp2chItaSetMenuString(void)
     getIndex(s2ch.itaH.move, index3);
     getIndex(s2ch.itaH.reload, index4);
     getIndex(s2ch.itaH.shift, index5);
-    sprintf(s2ch.menuCateH.main, "　%s : 決定　　　　　%s : 終了　　　　%s : お気に入り　　　　%s : 更新　　　　　%s : メニュー切替",
+    sprintf(s2ch.menuCateH.main, "　%s : 決定　　%s : 終了　　%s : お気に入り　　%s : 更新　　%s : メニュー切替",
             sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index4], sBtnH[index5]);
-    sprintf(s2ch.menuItaH.main, "　%s : 決定　　　　　%s : 戻る　　　　%s : お気に入り　　　　%s : 更新　　　　　%s : メニュー切替",
+    sprintf(s2ch.menuItaH.main, "　%s : 決定　　%s : 戻る　　%s : お気に入り　　%s : 更新　　%s : メニュー切替",
             sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index4], sBtnH[index5]);
 
     getIndex(s2ch.listH.top, index1);
@@ -58,7 +58,7 @@ void psp2chItaSetMenuString(void)
     getIndex(s2ch.itaH.addFav, index4);
     sprintf(s2ch.menuCateH.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索",
             sBtnH[index1], sBtnH[index2], sBtnH[index3]);
-    sprintf(s2ch.menuItaH.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索　　　　　%s : お気に入りに追加",
+    sprintf(s2ch.menuItaH.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索　　　%s : お気に入りに追加",
             sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index4]);
 
     getIndex(s2ch.itaV.ok, index1);
@@ -66,9 +66,9 @@ void psp2chItaSetMenuString(void)
     getIndex(s2ch.itaV.move, index3);
     getIndex(s2ch.itaV.reload, index4);
     getIndex(s2ch.itaV.shift, index5);
-    sprintf(s2ch.menuCateV.main, "　%s : 決定　　　　　%s : 終了　　　　%s : お気に入り　　　　%s : 更新　　　　　%s : メニュー切替",
+    sprintf(s2ch.menuCateV.main, "　%s : 決定　　　　%s : 終了　　　%s : お気に入り\n　%s : 更新　　　%s : メニュー切替",
             sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4], sBtnV[index5]);
-    sprintf(s2ch.menuItaV.main, "　%s : 決定　　　　　%s : 戻る　　　　%s : お気に入り　　　　%s : 更新　　　　　%s : メニュー切替",
+    sprintf(s2ch.menuItaV.main, "　%s : 決定　　　　%s : 戻る　　　%s : お気に入り\n　%s : 更新　　　%s : メニュー切替",
             sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4], sBtnV[index5]);
 
     getIndex(s2ch.listV.top, index1);
@@ -77,7 +77,7 @@ void psp2chItaSetMenuString(void)
     getIndex(s2ch.itaV.addFav, index4);
     sprintf(s2ch.menuCateV.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索",
             sBtnV[index1], sBtnV[index2], sBtnV[index3]);
-    sprintf(s2ch.menuItaV.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索　　　　　　　%s : お気に入りに追加",
+    sprintf(s2ch.menuItaV.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索\n　%s : お気に入りに追加",
             sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4]);
 }
 

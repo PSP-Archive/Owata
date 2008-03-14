@@ -37,6 +37,7 @@ void pgWaitV();
 void pgWaitVn(unsigned long count);
 unsigned int* pgGetVramAddr(unsigned long x,unsigned long y);
 void pgFillvram(int color, int x1, int y1, int w, int h);
+void pgTitleBar(char* ita, char* title);
 void pgMenuBar(char* str);
 void pgEditBox(int color, int x1, int y1, int x2, int y2);
 void pgWindowFrame(int x1, int y1, int x2, int y2);

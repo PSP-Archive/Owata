@@ -9,13 +9,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <malloc.h>
+#include <time.h>
 #include "pg.h"
 #include "intraFont.h"
 
 unsigned int __attribute__((aligned(16))) list[512*512];
 unsigned int __attribute__((aligned(16))) winPixels[BUF_WIDTH*BUF_HEIGHT];
 unsigned int __attribute__((aligned(16))) pixels[BUF_WIDTH*BUF_HEIGHT];
-unsigned int __attribute__((aligned(16))) barPixels[BUF_WIDTH*25];
+unsigned int __attribute__((aligned(16))) barPixels[BUF_WIDTH*32];
 unsigned int* printBuf;
 void* framebuffer;
 intraFont* jpn0;
@@ -309,6 +310,87 @@ void pgFillvram(int color, int x1, int y1, int w, int h)
 }
 
 /*****************************
+タイトルバーを表示
+VRAMのバッファに直接書き込みます。
+*****************************/
+void pgTitleBar(char* ita, char* title)
+{
+    unsigned int *temp;
+    int x, y;
+    unsigned int *src;
+    unsigned int *dst, *dst0;
+    time_t timep;
+    struct tm *t;
+    char date[16];
+    char buf[32];
+
+    sceKernelLibcTime(&timep);
+    timep += 9 * 60 * 60;
+    t = localtime(&timep);
+    sprintf(date, "%02d:%02d:%02d", t->tm_hour, t->tm_min, t->tm_sec);
+    sprintf(buf, " [%s]", ita);
+    temp = printBuf;
+    printBuf = barPixels;
+    s2ch.pgCursorX = 0;
+    if (s2ch.tateFlag)
+    {
+        pgFillvram(s2ch.formColor.title_bg, 0, 0, SCR_HEIGHT, FONT_HEIGHT + LINE_PITCH);
+        s2ch.pgCursorY = 0;
+        pgPrint(buf, s2ch.formColor.ita, s2ch.formColor.title_bg, SCR_HEIGHT);
+        s2ch.pgCursorX += 8;
+        title = pgPrint(title, s2ch.formColor.title, s2ch.formColor.title_bg, SCR_HEIGHT);
+        s2ch.pgCursorY += LINE_PITCH;
+        if (title)
+        {
+            s2ch.pgCursorX = 0;
+            pgPrint(title, s2ch.formColor.title, s2ch.formColor.title_bg, SCR_HEIGHT);
+        }
+        s2ch.pgCursorX = SCR_HEIGHT - FONT_HEIGHT * 4 + 2;
+        pgPrint(date, s2ch.formColor.title, s2ch.formColor.title_bg, SCR_HEIGHT);
+    }
+    else
+    {
+        pgFillvram(s2ch.formColor.title_bg, 0, 0, SCR_WIDTH, FONT_HEIGHT);
+        s2ch.pgCursorY = 0;
+        pgPrint(buf, s2ch.formColor.ita, s2ch.formColor.title_bg, SCR_WIDTH);
+        s2ch.pgCursorX += 8;
+        pgPrint(title, s2ch.formColor.title, s2ch.formColor.title_bg, SCR_WIDTH);
+        s2ch.pgCursorX = SCR_WIDTH - FONT_HEIGHT * 4 + 2;
+        pgPrint(date, s2ch.formColor.title, s2ch.formColor.title_bg, SCR_WIDTH);
+    }
+    if (s2ch.tateFlag)
+    {
+        src = printBuf;
+        dst0 = (unsigned int*)(0x04000000+framebuffer) + SCR_WIDTH;
+        for (y = 0; y < FONT_HEIGHT + LINE_PITCH; y++)
+        {
+            dst = dst0--;
+            for (x = 0; x < SCR_HEIGHT; x++)
+            {
+                *dst = *src++;
+                dst += BUF_WIDTH;
+            }
+            src += (BUF_WIDTH - SCR_HEIGHT);
+        }
+    }
+    else
+    {
+        src = printBuf;
+        dst = (unsigned int*)(0x04000000+framebuffer);
+        for (y = 0; y < FONT_HEIGHT; y++)
+        {
+            for (x = 0; x < SCR_WIDTH; x++)
+            {
+                *dst++ = *src++;
+            }
+            dst += (BUF_WIDTH - SCR_WIDTH);
+            src += (BUF_WIDTH - SCR_WIDTH);
+        }
+    }
+    printBuf = temp;
+}
+
+/*****************************
 メニューバーを表示
 VRAMのバッファに直接書き込みます。
 *****************************/
@@ -335,14 +417,14 @@ void pgMenuBar(char* str)
             s2ch.pgCursorX = 0;
             pgPrint(str, s2ch.menuColor.text, s2ch.menuColor.bg, SCR_WIDTH);
         }
-        s2ch.pgCursorX = SCR_HEIGHT - 32;
+        s2ch.pgCursorX = SCR_HEIGHT - FONT_HEIGHT * 3;
     }
     else
     {
         pgFillvram(s2ch.menuColor.bg, 0, 0, SCR_WIDTH, FONT_HEIGHT);
         s2ch.pgCursorY = 0;
         pgPrint(str, s2ch.menuColor.text, s2ch.menuColor.bg, SCR_WIDTH);
-        s2ch.pgCursorX = SCR_WIDTH - 32;
+        s2ch.pgCursorX = SCR_WIDTH - FONT_HEIGHT * 3;
     }
     battery = scePowerGetBatteryLifePercent();
     if (battery < 0)

@@ -131,6 +131,7 @@ void psp2chImageViewPng(char* fname)
     FILE* infile;
     png_structp png_ptr;
     png_infop info_ptr;
+    png_infop end_info;
     unsigned long width, height, bufWidth;
     int bit_depth, color_type, interlace_type;
     png_bytepp img;
@@ -144,7 +145,6 @@ void psp2chImageViewPng(char* fname)
         return;
     }
     fread(header, 1, 8, infile);
-    fseek(infile, 0, SEEK_SET);
     if (png_sig_cmp(header, 0, 8))
     {
         fclose(infile);
@@ -152,7 +152,15 @@ void psp2chImageViewPng(char* fname)
     }
     png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     info_ptr = png_create_info_struct(png_ptr);
+    end_info = png_create_info_struct(png_ptr);
+    if (setjmp(png_jmpbuf(png_ptr)))
+    {
+        png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
+        fclose(infile);
+        return;
+    }
     png_init_io(png_ptr, infile);
+    png_set_sig_bytes(png_ptr, 8);
     png_read_info(png_ptr, info_ptr);
     png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, &interlace_type, NULL, NULL);
     // バッファの幅を16バイトアラインに
@@ -198,7 +206,8 @@ void psp2chImageViewPng(char* fname)
         img[i] = &imgbuf[i * bufWidth * 4];
     }
     png_read_image(png_ptr, img);
-    png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+    png_read_end(png_ptr, end_info);
+    png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
     fclose(infile);
     psp2chImageViewer((int**)img, (int)width, (int)height, (int)bufWidth, fname);
     free(imgbuf);
@@ -521,7 +530,7 @@ void psp2chImageViewer(int* img[], int width, int height, int bufWidth, char* fn
             }
             else
             {
-                pgMenuBar("　○ : 拡大縮小　　　× : 戻る　　　△ : メニューオン・オフ　　　□ : 削除");
+                pgMenuBar("　○ : 拡大縮小　　× : 戻る　　△ : メニューオン・オフ　　□ : 削除");
             }
         }
         sceDisplayWaitVblankStart();
