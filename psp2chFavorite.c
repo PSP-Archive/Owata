@@ -49,7 +49,7 @@ void psp2chFavSetMenuString(void)
     getIndex(s2ch.favH.shift, index5);
     sprintf(s2ch.menuFavH.main, "　%s : 決定　　%s : 板一覧　　%s : お気に板　　%s : 削除　　%s : メニュー切替",
             sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index4], sBtnH[index5]);
-    sprintf(s2ch.menuFavItaH.main, "　%s : 決定　　　%s : 板一覧　　%s : お気にスレ　　%s : 削除　　%s : メニュー切替",
+    sprintf(s2ch.menuFavItaH.main, "　%s : 決定　　%s : 板一覧　　%s : お気にスレ　　%s : 削除　　%s : メニュー切替",
             sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index4], sBtnH[index5]);
 
     getIndex(s2ch.listH.top, index1);

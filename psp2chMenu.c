@@ -113,6 +113,7 @@ int psp2chMenu(int pixelsX, int pixelsY)
                         break;
                     case 2:
                         psp2chMenuFont(pixelsX, pixelsY);
+                        scrY = MENU_HEIGHT;
                         break;
                     }
                     printBuf = pixels;
@@ -490,11 +491,12 @@ void psp2chMenuFontSet(int select)
 フォント設定ウィンドウ
 ****************/
 #define MENU_FONT_WIDTH (160)
+#define MENU_FONT_ITEM (5)
 void psp2chMenuFont(int pixelsX, int pixelsY)
 {
     char** menuList;
     char* menuStr;
-    int lineEnd = 5;
+    int lineEnd = MENU_FONT_ITEM;
     static S_2CH_SCREEN menu;
     int i, startX, startY, scrX, scrY;
 
@@ -528,6 +530,10 @@ void psp2chMenuFont(int pixelsX, int pixelsY)
     menu.start = 0;
     menu.count = s2ch.font.count;
     menu.select = s2ch.font.select;
+    if (menu.select >= MENU_FONT_ITEM)
+    {
+        menu.start = menu.select - MENU_FONT_ITEM + 1;
+    }
     while (s2ch.running)
     {
         if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
