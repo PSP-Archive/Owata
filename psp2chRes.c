@@ -427,11 +427,10 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
                         return 0;
                     }
-                    sprintf(message, ">>%d\n", s2ch.numAnchor[numMenu].num + 1);
-                    if (psp2chForm(host, dir, dat, s2ch.resList[0].title, message) == 1)
+                    sprintf(path, ">>%d\n", s2ch.numAnchor[numMenu].num + 1);
+                    strcat(message, path);
+                    if (psp2chForm(host, dir, dat, s2ch.resList[0].title, message) > 0)
                     {
-                        free(message);
-                        message = NULL;
                         psp2chSaveIdx(title, dat);
                         psp2chGetDat(host, dir, title, dat);
                         psp2chResList(host, dir, title, dat);

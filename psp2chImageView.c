@@ -241,6 +241,8 @@ void psp2chImageViewer(int* img[], int width, int height, int bufWidth, char* fn
     int w, h, startX, startY, width2, height2, bufWidth2;
     SceCtrlData pad;
     SceCtrlData oldPad;
+    unsigned int* vptr0;
+    unsigned int* vptr;
     double thumb, thumbW, thumbH;
     double sx, sy, sw, sh, dx, dy, dw, dh;
     int thumbFlag = 0;
@@ -512,6 +514,7 @@ void psp2chImageViewer(int* img[], int width, int height, int bufWidth, char* fn
             {
                 startY = 0;
             }
+            /*
             w = (width > SCR_WIDTH) ? SCR_WIDTH : width;
             h = (height > SCR_HEIGHT) ? SCR_HEIGHT : height;
             sceGuStart(GU_DIRECT,list);
@@ -521,6 +524,40 @@ void psp2chImageViewer(int* img[], int width, int height, int bufWidth, char* fn
             sceGuTexSync();
             sceGuFinish();
             sceGuSync(0,0);
+            */
+            vptr0 = framebuffer + 0x04000000;
+            for (i = 0, h = 0; h < height && h < SCR_HEIGHT; i++)
+            {
+                if (i < startY)
+                {
+                    continue;
+                }
+                vptr = vptr0;
+                for (j = 0, w = 0; w < width && w < SCR_WIDTH; j++)
+                {
+                    if (j < startX)
+                    {
+                        continue;
+                    }
+                    *vptr++ = img[i][j];
+                    w++;
+                }
+                for (; w < SCR_WIDTH; w++)
+                {
+                    *vptr++ = GRAY;
+                }
+                vptr0 += BUF_WIDTH;
+                h++;
+            }
+            for (; h < SCR_HEIGHT; h++)
+            {
+                vptr = vptr0;
+                for (i = 0; i < SCR_WIDTH; i++)
+                {
+                    *vptr++ = GRAY;
+                }
+                vptr0 += BUF_WIDTH;
+            }
         }
         if (menu)
         {
