@@ -208,7 +208,7 @@ typedef struct {
 
 typedef struct {
     int ok, move, change, del, shift;
-    int search2ch, update;
+    int sort, search2ch, update;
 } S_2CH_FAV_BUTTONS;
 
 typedef struct {

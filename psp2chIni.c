@@ -445,10 +445,10 @@ void psp2chIniSetButtons(void)
                 setInt("THREAD_RELOAD_V", s2ch.thV.reload, 4096);
                 setInt("THREAD_SHIFT_V", s2ch.thV.shift, 512);
 
-                setInt("THREAD_DORT_H", s2ch.thH.sort, 8192);
+                setInt("THREAD_SORT_H", s2ch.thH.sort, 8192);
                 setInt("THREAD_SEARCH_H", s2ch.thH.search, 4096);
                 setInt("THREAD_2CHSEARCH_H", s2ch.thH.search2ch, 32768);
-                setInt("THREAD_DORT_V", s2ch.thV.sort, 8192);
+                setInt("THREAD_SORT_V", s2ch.thV.sort, 8192);
                 setInt("THREAD_SEARCH_V", s2ch.thV.search, 4096);
                 setInt("THREAD_2CHSEARCH_V", s2ch.thV.search2ch, 32768);
 
@@ -463,8 +463,10 @@ void psp2chIniSetButtons(void)
                 setInt("FAV_DEL_V", s2ch.favV.del, 32768);
                 setInt("FAV_SHIFT_V", s2ch.favV.shift, 512);
 
+                setInt("FAV_SORT_H", s2ch.favH.sort, 8192);
                 setInt("FAV_2CHSEARCH_H", s2ch.favH.search2ch, 32768);
                 setInt("FAV_UPDATE_H", s2ch.favH.update, 4096);
+                setInt("FAV_SORT_V", s2ch.favV.sort, 8192);
                 setInt("FAV_2CHSEARCH_V", s2ch.favV.search2ch, 32768);
                 setInt("FAV_UPDATE_V", s2ch.favV.update, 4096);
 
@@ -619,8 +621,10 @@ void psp2chIniSetButtons(void)
     s2ch.favV.del = PSP_CTRL_SQUARE;
     s2ch.favV.shift = PSP_CTRL_RTRIGGER;
 
+    s2ch.favH.sort = PSP_CTRL_CIRCLE;
     s2ch.favH.search2ch = PSP_CTRL_SQUARE;
     s2ch.favH.update = PSP_CTRL_TRIANGLE;
+    s2ch.favV.sort = PSP_CTRL_CIRCLE;
     s2ch.favV.search2ch = PSP_CTRL_SQUARE;
     s2ch.favV.update = PSP_CTRL_TRIANGLE;
 

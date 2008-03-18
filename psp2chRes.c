@@ -18,6 +18,7 @@
 #include "utf8.h"
 
 extern S_2CH s2ch; // psp2ch.c
+extern int* favSort; // psp2chFavorite.c
 extern int* threadSort; // psp2chThread.c
 extern const char* ngNameFile; // psp2chMenu.c
 extern const char* ngIDFile; // psp2chMenu.c
@@ -137,7 +138,7 @@ void psp2chResSetMenuString(void)
 ***************/
 int psp2chFavoriteRes(int ret)
 {
-    return psp2chRes(s2ch.favList[s2ch.fav.select].host, s2ch.favList[s2ch.fav.select].dir, s2ch.favList[s2ch.fav.select].title, s2ch.favList[s2ch.fav.select].dat, ret);
+    return psp2chRes(s2ch.favList[favSort[s2ch.fav.select]].host, s2ch.favList[favSort[s2ch.fav.select]].dir, s2ch.favList[favSort[s2ch.fav.select]].title, s2ch.favList[favSort[s2ch.fav.select]].dat, ret);
 }
 int psp2chThreadRes(int ret)
 {
@@ -2054,6 +2055,7 @@ void psp2chDrawRes(int drawLine)
             return;
         }
         line = psp2chDrawResText(re, &skip, lineEnd, lineEnd, 0, endX, s2ch.resColor, &drawLine);
+        pgFillvram(s2ch.resColor.bg, 0, s2ch.pgCursorY+LINE_PITCH, endX, LINE_PITCH);
     }
     // 1çsè„Ç…à⁄ìÆ
     else if (drawLine == preLine-1)

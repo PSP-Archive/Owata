@@ -393,29 +393,14 @@ void psp2chIdAnchor(int anc)
 int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
 {
     SceUID fd;
-    int ret, mySocket, contentLength;
+    int i, ret, mySocket, contentLength;
     HTTP_HEADERS resHeader;
-    char path[256];
-    char ext[16];
+    char path[256], buf[256];
+    char ext[16], tmp[4];
+    unsigned char digest[16];
     char *p;
 
     sprintf(path, "%s/%s", s2ch.cwDir, cacheDir);
-    if ((fd = sceIoDopen(path)) < 0)
-    {
-        if (sceIoMkdir(path, 0777) < 0)
-        {
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "Make dir error\n%s", path);
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
-            return -1;
-        }
-    }
-    else
-    {
-        sceIoDclose(fd);
-    }
-    sprintf(path, "%s/%s/%s", s2ch.cwDir, cacheDir, title);
     if ((fd = sceIoDopen(path)) < 0)
     {
         if (sceIoMkdir(path, 0777) < 0)
@@ -446,7 +431,15 @@ int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
     {
         ext[0] = '\0';
     }
-    sprintf(path, "%s/%s/%s/%X_%X_%X_%d%s", s2ch.cwDir, cacheDir, title, dat, s2ch.urlAnchor[anchor].line, s2ch.urlAnchor[anchor].x1, s2ch.tateFlag, ext);
+    sprintf(path, "%s/%s", s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path);
+    sceKernelUtilsMd5Digest((u8*)path, strlen(path), digest);
+    sprintf(path, "%s/%s/", s2ch.cwDir, cacheDir);
+    for (i = 0; i < 16; i++)
+    {
+        sprintf(tmp, "%02x", digest[i]);
+        strcat(path, tmp);
+    }
+    strcat(path, ext);
     fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
     if (fd >= 0)
     {
@@ -497,23 +490,22 @@ int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
     {
         psp2chCloseSocket(mySocket);
         memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "File open error\n dat %d\n", dat);
+        sprintf(s2ch.mh.message, "File open error\n%s", path);
         pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return fd;
     }
-    sprintf(path, "http://%s/%s からデータを転送しています...", s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path);
+    sprintf(buf, "http://%s/%s からデータを転送しています...", s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path);
     pgCopy(0, offset);
-    pgMenuBar(path);
+    pgMenuBar(buf);
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
-    while((ret = recv(mySocket, path, sizeof(path), 0)) > 0)
+    while((ret = recv(mySocket, buf, sizeof(buf), 0)) > 0)
     {
-        sceIoWrite(fd, path, ret);
+        sceIoWrite(fd, buf, ret);
     }
     psp2chCloseSocket(mySocket);
     sceIoClose(fd);
-    sprintf(path, "%s/%s/%s/%X_%X_%X_%d%s", s2ch.cwDir, cacheDir, title, dat, s2ch.urlAnchor[anchor].line, s2ch.urlAnchor[anchor].x1, s2ch.tateFlag, ext);
     if ((ext[1] == 'j' || ext[1] == 'J') && (ext[2] == 'p' || ext[2] == 'P') && (ext[3] == 'g' || ext[3] == 'G'))
     {
         psp2chImageViewJpeg(path);

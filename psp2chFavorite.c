@@ -14,12 +14,17 @@
 #include "psp2chMenu.h"
 #include "utf8.h"
 #include "pg.h"
+#include "intraFont.h"
 
 extern S_2CH s2ch; // psp2ch.c
+extern unsigned int list[512*512]; // pg.c
+extern intraFont* jpn0; // pg.c
 extern int preLine; // psp2chRes.c
 extern char keyWords[128]; // psp2chThread.c
 extern const char *sBtnH[]; // psp2chRes.c
 extern const char *sBtnV[]; // psp2chRes.c
+
+int* favSort = NULL;
 
 /*********************
 メニュー文字列の作成
@@ -54,10 +59,11 @@ void psp2chFavSetMenuString(void)
 
     getIndex(s2ch.listH.top, index1);
     getIndex(s2ch.listH.end, index2);
-    getIndex(s2ch.favH.search2ch, index3);
-    getIndex(s2ch.favH.update, index4);
-    sprintf(s2ch.menuFavH.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索　　　%s : 一括取得",
-            sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index4]);
+    getIndex(s2ch.favH.sort, index3);
+    getIndex(s2ch.favH.search2ch, index4);
+    getIndex(s2ch.favH.update, index5);
+    sprintf(s2ch.menuFavH.sub, "　%s : 先頭　　%s : 最後　　%s : ソ\ート　　%s : 全板検索　　%s : 一括取得",
+            sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index4], sBtnH[index5]);
     sprintf(s2ch.menuFavItaH.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索",
             sBtnH[index1], sBtnH[index2], sBtnH[index3]);
 
@@ -73,10 +79,11 @@ void psp2chFavSetMenuString(void)
 
     getIndex(s2ch.listV.top, index1);
     getIndex(s2ch.listV.end, index2);
-    getIndex(s2ch.favV.search2ch, index3);
-    getIndex(s2ch.favV.update, index4);
-    sprintf(s2ch.menuFavV.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索\n　%s : 一括取得",
-            sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4]);
+    getIndex(s2ch.favV.sort, index3);
+    getIndex(s2ch.favV.search2ch, index4);
+    getIndex(s2ch.favV.update, index5);
+    sprintf(s2ch.menuFavV.sub, "　%s : 先頭　　%s : 最後　　%s : ソ\ート\n　%s : 全板検索　　%s : 一括取得",
+            sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4], sBtnH[index5]);
     sprintf(s2ch.menuFavItaV.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索",
             sBtnV[index1], sBtnV[index2], sBtnV[index3]);
 }
@@ -255,6 +262,11 @@ int psp2chFavorite(void)
             }
             else if (rMenu)
             {
+                // ソート
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favH.sort) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favV.sort))
+                {
+                    psp2chFavSortDialog();
+                }
                 // 全板検索
                 if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favH.search2ch) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favV.search2ch))
                 {
@@ -341,7 +353,7 @@ int psp2chFavorite(void)
                     }
                     else
                     {
-                        psp2chDelFavorite(s2ch.favList[s2ch.fav.select].title, s2ch.favList[s2ch.fav.select].dat);
+                        psp2chDelFavorite(s2ch.favList[favSort[s2ch.fav.select]].title, s2ch.favList[favSort[s2ch.fav.select]].dat);
                     }
                 }
             }
@@ -448,7 +460,15 @@ int psp2chLoadFavorite(void)
     if (s2ch.favList == NULL)
     {
         memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "memorry error");
+        strcpy(s2ch.mh.message, "memorry error\nfavList");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        return -1;
+    }
+    favSort = (int*)realloc(favSort, sizeof(int) * s2ch.fav.count);
+    if (favSort == NULL)
+    {
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        strcpy(s2ch.mh.message, "memorry error\nfavSort");
         pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         return -1;
     }
@@ -481,6 +501,7 @@ int psp2chLoadFavorite(void)
         i++;
     }
     free(buf);
+    psp2chFavSort(0);
     return 0;
 }
 
@@ -633,13 +654,13 @@ int psp2chAddFavoriteIta(char* cate, char* title)
 
 /**********************
 s2ch.favListからtitleとdatの一致する項目以外のリストのみをfavorite.brdに書き出す
-psp2chLoadFavorite()でリストを作成しなおす
+リストを作成しなおす
 **********************/
 int psp2chDelFavorite(char* title, int dat)
 {
     SceUID fd;
     char path[256];
-    int i;
+    int i, del;
 
     if (s2ch.favList == NULL || s2ch.fav.count <= 0)
     {
@@ -658,10 +679,11 @@ int psp2chDelFavorite(char* title, int dat)
         {
             return -1;
         }
-        for (i = 0; i < s2ch.fav.count; i++)
+        for (i = 0, del = -1; i < s2ch.fav.count; i++)
         {
             if (s2ch.favList[i].dat == dat && strcmp(s2ch.favList[i].title, title) == 0)
             {
+                del = i;
                 continue;
             }
             sprintf(path, "%s\t%s\t%s\t%d\t%s\n", s2ch.favList[i].host, s2ch.favList[i].dir, s2ch.favList[i].title, s2ch.favList[i].dat, s2ch.favList[i].subject);
@@ -670,8 +692,16 @@ int psp2chDelFavorite(char* title, int dat)
         sceIoClose(fd);
         s2ch.fav.start = 0;
         s2ch.fav.select = 0;
-        return psp2chLoadFavorite();
+        if (del >= 0)
+        {
+            s2ch.fav.count--;
+            for (i = del; i < s2ch.fav.count; i++)
+            {
+                s2ch.favList[i] = s2ch.favList[i+1];
+            }
+        }
     }
+    psp2chFavSort(-1);
     return 0;
 }
 
@@ -717,6 +747,188 @@ int psp2chDelFavoriteIta(int index)
         return psp2chLoadFavoriteIta();
     }
     return 0;
+}
+
+/****************
+お気に入りスレッドをソートする
+favSort配列にソートデータが入る
+sort:
+0=板名
+1=スレタイ
+2=作成日(降順)
+3=作成日(昇順)
+*****************/
+void psp2chFavSort(int sort)
+{
+    static int s = 0;
+    int i, j, tmp;
+
+    if (sort >= 0)
+    {
+        s = sort;
+    }
+    switch (s)
+    {
+    case 0:
+        for (i = 0; i < s2ch.fav.count; i++)
+        {
+            favSort[i] = i;
+        }
+        for (i = 0; i < s2ch.fav.count-1; i++)
+        {
+            for (j = i; j < s2ch.fav.count; j++)
+            {
+                if (strcmp(s2ch.favList[favSort[j]].title, s2ch.favList[favSort[i]].title) < 0)
+                {
+                    tmp = favSort[j];
+                    favSort[j] = favSort[i];
+                    favSort[i] = tmp;
+                }
+                else if (strcmp(s2ch.favList[favSort[j]].title, s2ch.favList[favSort[i]].title) == 0)
+                {
+                    if (strcmp(s2ch.favList[favSort[j]].subject, s2ch.favList[favSort[i]].subject) < 0)
+                    {
+                        tmp = favSort[j];
+                        favSort[j] = favSort[i];
+                        favSort[i] = tmp;
+                    }
+                }
+            }
+        }
+        break;
+    case 1:
+        for (i = 0; i < s2ch.fav.count; i++)
+        {
+            favSort[i] = i;
+        }
+        for (i = 0; i < s2ch.fav.count-1; i++)
+        {
+            for (j = i; j < s2ch.fav.count; j++)
+            {
+                if (strcmp(s2ch.favList[favSort[j]].subject, s2ch.favList[favSort[i]].subject) < 0)
+                {
+                    tmp = favSort[j];
+                    favSort[j] = favSort[i];
+                    favSort[i] = tmp;
+                }
+            }
+        }
+        break;
+    case 2:
+        for (i = 0; i < s2ch.fav.count; i++)
+        {
+            favSort[i] = i;
+        }
+        for (i = 0; i < s2ch.fav.count-1; i++)
+        {
+            for (j = i; j < s2ch.fav.count; j++)
+            {
+                if (s2ch.favList[favSort[j]].dat > s2ch.favList[favSort[i]].dat)
+                {
+                    tmp = favSort[j];
+                    favSort[j] = favSort[i];
+                    favSort[i] = tmp;
+                }
+            }
+        }
+        break;
+    case 3:
+        for (i = 0; i < s2ch.fav.count; i++)
+        {
+            favSort[i] = i;
+        }
+        for (i = 0; i < s2ch.fav.count-1; i++)
+        {
+            for (j = i; j < s2ch.fav.count; j++)
+            {
+                if (s2ch.favList[favSort[j]].dat < s2ch.favList[favSort[i]].dat)
+                {
+                    tmp = favSort[j];
+                    favSort[j] = favSort[i];
+                    favSort[i] = tmp;
+                }
+            }
+        }
+        break;
+    }
+}
+
+/****************
+ソート用ダイアログ表示
+*****************/
+#define MAX_SORT_COUNT (4)
+void psp2chFavSortDialog(void)
+{
+    const unsigned short title[] = {0x3069,0x306E,0x9805,0x76EE,0x3067,0x30BD,0x30FC,0x30C8,0x3057,0x307E,0x3059,0x304B,0};
+    const unsigned short text1[] = {0x677F,0x540D,0}; // 板名
+    const unsigned short text2[] = {0x30B9,0x30EC,0x30BF,0x30A4,0}; // スレタイ
+    const unsigned short text3[] = {0x4F5C,0x6210,0x65E5,0x0028,0x964D,0x9806,0x0029,0}; // 作成日(降順)
+    const unsigned short text4[] = {0x4F5C,0x6210,0x65E5,0x0028,0x6607,0x9806,0x0029,0}; // 作成日(昇順)
+    const unsigned short* text[MAX_SORT_COUNT] = {text1, text2, text3, text4};
+    int i, select = 0;
+
+    while (s2ch.running)
+    {
+        if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
+        {
+            if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
+            {
+                s2ch.oldPad = s2ch.pad;
+                if(s2ch.pad.Buttons & PSP_CTRL_UP)
+                {
+                    if (select)
+                    {
+                        select--;
+                    }
+                }
+                if(s2ch.pad.Buttons & PSP_CTRL_DOWN)
+                {
+                    if (select < MAX_SORT_COUNT - 1)
+                    {
+                        select++;
+                    }
+                }
+                if(s2ch.pad.Buttons & PSP_CTRL_CIRCLE)
+                {
+                    break;
+                }
+                if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
+                {
+                    return;
+                }
+            }
+            sceGuStart(GU_DIRECT, list);
+            sceGuClearColor(BLUE);
+            sceGuClearDepth(0);
+            sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
+            s2ch.pgCursorX = 240;
+            s2ch.pgCursorY =  77;
+            intraFontSetStyle(jpn0, 1.0f, YELLOW, BLUE, INTRAFONT_ALIGN_CENTER);
+            intraFontPrintUCS2(jpn0, s2ch.pgCursorX, s2ch.pgCursorY, title);
+            s2ch.pgCursorX = 240;
+            s2ch.pgCursorY += 25;
+            for (i = 0; i < MAX_SORT_COUNT; i++)
+            {
+                if (select == i)
+                {
+                    intraFontSetStyle(jpn0, 0.9f, WHITE, BLACK, INTRAFONT_ALIGN_CENTER);
+                    intraFontPrintUCS2(jpn0, s2ch.pgCursorX, s2ch.pgCursorY, text[i]);
+                }
+                else
+                {
+                    intraFontSetStyle(jpn0, 0.9f, GRAY, 0, INTRAFONT_ALIGN_CENTER);
+                    intraFontPrintUCS2(jpn0, s2ch.pgCursorX, s2ch.pgCursorY, text[i]);
+                }
+                s2ch.pgCursorX = 240;
+                s2ch.pgCursorY += 20;
+            }
+            sceGuFinish();
+            sceGuSync(0,0);
+            sceDisplayWaitVblankStart();
+            framebuffer = sceGuSwapBuffers();
+        }
+    }
+    return psp2chFavSort(select);
 }
 
 /**********************
@@ -770,32 +982,32 @@ void psp2chDrawFavorite(int scrollX)
         s2ch.pgCursorX = FONT_HEIGHT * 2;
         if (i == s2ch.fav.select)
         {
-            pgPrint(s2ch.favList[i].title, s2ch.threadColor.s_category, s2ch.threadColor.s_bg, scrW);
+            pgPrint(s2ch.favList[favSort[i]].title, s2ch.threadColor.s_category, s2ch.threadColor.s_bg, scrW);
             s2ch.pgCursorX += 8;
-            pgPrint(s2ch.favList[i].subject, s2ch.threadColor.s_text1, s2ch.threadColor.s_bg, scrW);
+            pgPrint(s2ch.favList[favSort[i]].subject, s2ch.threadColor.s_text1, s2ch.threadColor.s_bg, scrW);
             s2ch.pgCursorX = scrW - FONT_HEIGHT * 2;
-            if (s2ch.favList[i].update)
+            if (s2ch.favList[favSort[i]].update)
             {
-                pgPrintNumber(s2ch.favList[i].res, s2ch.threadColor.s_count2, s2ch.threadColor.s_bg);
+                pgPrintNumber(s2ch.favList[favSort[i]].res, s2ch.threadColor.s_count2, s2ch.threadColor.s_bg);
             }
             else
             {
-                pgPrintNumber(s2ch.favList[i].res, s2ch.threadColor.s_count1, s2ch.threadColor.s_bg);
+                pgPrintNumber(s2ch.favList[favSort[i]].res, s2ch.threadColor.s_count1, s2ch.threadColor.s_bg);
             }
         }
         else
         {
-            pgPrint(s2ch.favList[i].title, s2ch.threadColor.category, s2ch.threadColor.bg, scrW);
+            pgPrint(s2ch.favList[favSort[i]].title, s2ch.threadColor.category, s2ch.threadColor.bg, scrW);
             s2ch.pgCursorX += 8;
-            pgPrint(s2ch.favList[i].subject, s2ch.threadColor.text1, s2ch.threadColor.bg, scrW);
+            pgPrint(s2ch.favList[favSort[i]].subject, s2ch.threadColor.text1, s2ch.threadColor.bg, scrW);
             s2ch.pgCursorX = scrW - FONT_HEIGHT * 2;
-            if (s2ch.favList[i].update)
+            if (s2ch.favList[favSort[i]].update)
             {
-                pgPrintNumber(s2ch.favList[i].res, s2ch.threadColor.count2, s2ch.threadColor.bg);
+                pgPrintNumber(s2ch.favList[favSort[i]].res, s2ch.threadColor.count2, s2ch.threadColor.bg);
             }
             else
             {
-                pgPrintNumber(s2ch.favList[i].res, s2ch.threadColor.count1, s2ch.threadColor.bg);
+                pgPrintNumber(s2ch.favList[favSort[i]].res, s2ch.threadColor.count1, s2ch.threadColor.bg);
             }
         }
         s2ch.pgCursorY += LINE_PITCH;

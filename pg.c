@@ -347,7 +347,7 @@ void pgTitleBar(char* ita, char* title)
             s2ch.pgCursorX = 0;
             pgPrint(title, s2ch.formColor.title, s2ch.formColor.title_bg, SCR_HEIGHT);
         }
-        s2ch.pgCursorX = SCR_HEIGHT - FONT_HEIGHT * 4 + 2;
+        s2ch.pgCursorX = SCR_HEIGHT - FONT_HEIGHT * 4 - 2;
         pgPrint(date, s2ch.formColor.title, s2ch.formColor.title_bg, SCR_HEIGHT);
     }
     else
@@ -357,7 +357,7 @@ void pgTitleBar(char* ita, char* title)
         pgPrint(buf, s2ch.formColor.ita, s2ch.formColor.title_bg, SCR_WIDTH);
         s2ch.pgCursorX += 8;
         pgPrint(title, s2ch.formColor.title, s2ch.formColor.title_bg, SCR_WIDTH);
-        s2ch.pgCursorX = SCR_WIDTH - FONT_HEIGHT * 4 + 2;
+        s2ch.pgCursorX = SCR_WIDTH - FONT_HEIGHT * 4 - 2;
         pgPrint(date, s2ch.formColor.title, s2ch.formColor.title_bg, SCR_WIDTH);
     }
     if (s2ch.tateFlag)

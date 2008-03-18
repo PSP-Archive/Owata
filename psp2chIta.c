@@ -581,6 +581,8 @@ int psp2chGetMenu(void)
 start: 表示開始位置
 select: 選択位置
 **********************/
+#define CATEGORY_W (100)
+#define ITA_W (110)
 void psp2chDrawCategory(int start, int select, S_2CH_ITA_COLOR c)
 {
     int i;
@@ -602,7 +604,7 @@ void psp2chDrawCategory(int start, int select, S_2CH_ITA_COLOR c)
     {
         start = s2ch.category.count - lineEnd;
     }
-    pgFillvram(c.cate.bg, 0, 0, 90, scrH);
+    pgFillvram(c.cate.bg, 0, 0, CATEGORY_W, scrH);
     s2ch.pgCursorY = 0;
     for (i = start; i < start + lineEnd; i++)
     {
@@ -651,12 +653,12 @@ void psp2chDrawIta(int start, int select, S_2CH_ITA_COLOR c)
     {
         end = start + lineEnd;
     }
-    pgFillvram(c.ita.bg, 90, 0, 100, scrH);
-    pgFillvram(c.base, 190, 0, scrW-190, scrH);
+    pgFillvram(c.ita.bg, CATEGORY_W, 0, ITA_W, scrH);
+    pgFillvram(c.base, CATEGORY_W + ITA_W, 0, scrW - CATEGORY_W - ITA_W, scrH);
     s2ch.pgCursorY = 0;
     for (i = start; i < end; i++)
     {
-        s2ch.pgCursorX = 100;
+        s2ch.pgCursorX = CATEGORY_W + 10;
         if (i == select)
         {
             pgPrint(s2ch.itaList[i].title, c.ita.s_text, c.ita.s_bg, scrW);
