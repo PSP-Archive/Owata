@@ -224,17 +224,17 @@ int psp2chFavorite(void)
                 {
                     s2ch.fav.start = s2ch.fav.select - lineEnd + 1;
                 }
-                res = psp2chGetDat(s2ch.favList[update].host, s2ch.favList[update].dir, s2ch.favList[update].title, s2ch.favList[update].dat);
+                res = psp2chGetDat(s2ch.favList[favSort[update]].host, s2ch.favList[favSort[update]].dir, s2ch.favList[favSort[update]].title, s2ch.favList[favSort[update]].dat);
                 if (res == 0)
                 {
-                    psp2chResList(s2ch.favList[update].host, s2ch.favList[update].dir, s2ch.favList[update].title, s2ch.favList[update].dat);
-                    s2ch.favList[update].res = psp2chGetResCount(s2ch.favList[update].title, s2ch.favList[update].dat);
-                    s2ch.favList[update].update = 1;
+                    psp2chResList(s2ch.favList[favSort[update]].host, s2ch.favList[favSort[update]].dir, s2ch.favList[favSort[update]].title, s2ch.favList[favSort[update]].dat);
+                    s2ch.favList[favSort[update]].res = psp2chGetResCount(s2ch.favList[favSort[update]].title, s2ch.favList[favSort[update]].dat);
+                    s2ch.favList[favSort[update]].update = 1;
                     update++;
                 }
                 else if (res == 1)
                 {
-                    s2ch.favList[update].update = 0;
+                    s2ch.favList[favSort[update]].update = 0;
                     update++;
                 }
                 else
