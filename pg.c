@@ -12,6 +12,7 @@
 #include <time.h>
 #include "pg.h"
 #include "intraFont.h"
+#include "cp932.h"
 
 unsigned int __attribute__((aligned(16))) list[512*512];
 unsigned int __attribute__((aligned(16))) winPixels[BUF_WIDTH*BUF_HEIGHT];
@@ -116,7 +117,7 @@ struct Vertex
     unsigned short color;
     short x, y, z;
 };
-#define MAX_ENTITIES 11
+#define MAX_ENTITIES 10
 struct entityTag entity[MAX_ENTITIES];
 void pgEntitiesSet(void)
 {
@@ -130,7 +131,6 @@ void pgEntitiesSet(void)
     entity[7].str = "&sub;"; entity[7].len = 4;entity[7].byte = 2;entity[7].c1 = 0x81;entity[7].c2 = 0xBC;
     entity[8].str = "&and;"; entity[8].len = 4;entity[8].byte = 2;entity[8].c1 = 0x81;entity[8].c2 = 0xC8;
     entity[9].str = "&or;";  entity[9].len = 3;entity[9].byte = 2;entity[9].c1 = 0x81;entity[9].c2 = 0xC9;
-    entity[10].str = "&#160;";entity[10].len = 5;entity[10].byte = 1;entity[10].c1 = ' '; entity[10].c2 = 0;
 }
 
 int pgExtraFontInit(void)
@@ -896,16 +896,58 @@ int pgPutCharW(unsigned char hi,unsigned char lo,int color,int bgcolor, int widt
 *****************************/
 int pgSpecialChars(char** string,int color,int bgcolor, int width)
 {
-    int i;
+    int i, val;
+    char* str;
+    unsigned char hi, lo;
 
-    for (i = 0; i < MAX_ENTITIES; i++) {
-        if (strstr(*string, entity[i].str) == *string) {
-            (*string) += entity[i].len;
-            if (entity[i].byte == 1) {
-                return pgPutCharA(entity[i].c1, color, bgcolor, width);
+    str = *string + 1;
+    // Unicode•ÏŠ·
+    if (*str == '#') {
+        str++;
+        val = 0;
+        for (i = 0; i < 6; i++) {
+            if (*str == ';') {
+                break;
+            }
+            else if (*str < '0' || *str > '9') {
+                if (val) {
+                    str--;
+                }
+                break;
             }
             else {
-                return pgPutCharW(entity[i].c1, entity[i].c2, color, bgcolor, width);
+                val *= 10;
+                val += *str - '0';
+            }
+            str++;
+        }
+        if (val) {
+            *string = str;
+            val = conv_wchar_sjiswin(val);
+            lo = val >> 8;
+            hi = val & 0xFF;
+            if (lo) {
+                return pgPutCharW(hi, lo, color, bgcolor, width);
+            }
+            else if (hi) {
+                return pgPutCharA(hi, color, bgcolor, width);
+            }
+            // •ÏŠ·‚Å‚«‚È‚¢•¶Žš
+            else {
+                return pgPutCharA('?', color, bgcolor, width);
+            }
+        }
+    }
+    else {
+        for (i = 0; i < MAX_ENTITIES; i++) {
+            if (strstr(*string, entity[i].str) == *string) {
+                (*string) += entity[i].len;
+                if (entity[i].byte == 1) {
+                    return pgPutCharA(entity[i].c1, color, bgcolor, width);
+                }
+                else {
+                    return pgPutCharW(entity[i].c1, entity[i].c2, color, bgcolor, width);
+                }
             }
         }
     }
@@ -1265,16 +1307,56 @@ int pgCountCharW(unsigned char hi,unsigned char lo, int width)
 
 int pgCountSpecialChars(char** string, int width)
 {
-    int i;
+    int i, val;
+    char* str;
+    unsigned char hi, lo;
 
-    for (i = 0; i < MAX_ENTITIES; i++) {
-        if (strstr(*string, entity[i].str) == *string) {
-            (*string) += entity[i].len;
-            if (entity[i].byte == 1) {
-                return pgCountCharA(entity[i].c1, width);
+    str = *string + 1;
+    if (*str == '#') {
+        str++;
+        val = 0;
+        for (i = 0; i < 6; i++) {
+            if (*str == ';') {
+                break;
+            }
+            else if (*str < '0' || *str > '9') {
+                if (val) {
+                    str--;
+                }
+                break;
             }
             else {
-                return pgCountCharW(entity[i].c1, entity[i].c2, width);
+                val *= 10;
+                val += *str - '0';
+            }
+            str++;
+        }
+        if (val) {
+            *string = str;
+            val = conv_wchar_sjiswin(val);
+            lo = val >> 8;
+            hi = val & 0xFF;
+            if (lo) {
+                return pgCountCharW(hi, lo, width);
+            }
+            else if (hi) {
+                return pgCountCharA(hi, width);
+            }
+            else {
+                return pgCountCharA('?', width);
+            }
+        }
+    }
+    else {
+        for (i = 0; i < MAX_ENTITIES; i++) {
+            if (strstr(*string, entity[i].str) == *string) {
+                (*string) += entity[i].len;
+                if (entity[i].byte == 1) {
+                    return pgCountCharA(entity[i].c1, width);
+                }
+                else {
+                    return pgCountCharW(entity[i].c1, entity[i].c2, width);
+                }
             }
         }
     }
