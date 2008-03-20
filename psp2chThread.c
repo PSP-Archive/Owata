@@ -509,10 +509,10 @@ int psp2chGetSubject(int ita)
 threadSort配列にソートデータが入る
 sort:
 0=既読スレ順
-1=番号順
-2=作成日(降順)
-3=作成日(昇順)
-4=勢い
+1=勢い
+2=番号順
+3=作成日(降順)
+4=作成日(昇順)
 10=検索単語順
 *****************/
 void psp2chSort(int sort)
@@ -551,8 +551,26 @@ void psp2chSort(int sort)
         {
             threadSort[i] = i;
         }
+        for (i = 0; i < s2ch.thread.count-1; i++)
+        {
+            for (j = i; j < s2ch.thread.count; j++)
+            {
+                if (s2ch.threadList[threadSort[j]].ikioi > s2ch.threadList[threadSort[i]].ikioi)
+                {
+                    tmp = threadSort[j];
+                    threadSort[j] = threadSort[i];
+                    threadSort[i] = tmp;
+                }
+            }
+        }
         break;
     case 2:
+        for (i = 0; i < s2ch.thread.count; i++)
+        {
+            threadSort[i] = i;
+        }
+        break;
+    case 3:
         for (i = 0; i < s2ch.thread.count; i++)
         {
             threadSort[i] = i;
@@ -570,24 +588,6 @@ void psp2chSort(int sort)
             }
         }
         break;
-    case 3:
-        for (i = 0; i < s2ch.thread.count; i++)
-        {
-            threadSort[i] = i;
-        }
-        for (i = 0; i < s2ch.thread.count-1; i++)
-        {
-            for (j = i; j < s2ch.thread.count; j++)
-            {
-                if (s2ch.threadList[threadSort[j]].dat < s2ch.threadList[threadSort[i]].dat)
-                {
-                    tmp = threadSort[j];
-                    threadSort[j] = threadSort[i];
-                    threadSort[i] = tmp;
-                }
-            }
-        }
-        break;
     case 4:
         for (i = 0; i < s2ch.thread.count; i++)
         {
@@ -597,7 +597,7 @@ void psp2chSort(int sort)
         {
             for (j = i; j < s2ch.thread.count; j++)
             {
-                if (s2ch.threadList[threadSort[j]].ikioi > s2ch.threadList[threadSort[i]].ikioi)
+                if (s2ch.threadList[threadSort[j]].dat < s2ch.threadList[threadSort[i]].dat)
                 {
                     tmp = threadSort[j];
                     threadSort[j] = threadSort[i];
@@ -679,10 +679,10 @@ void psp2chThreadSort(void)
 {
     const unsigned short title[] = {0x3069,0x306E,0x9805,0x76EE,0x3067,0x30BD,0x30FC,0x30C8,0x3057,0x307E,0x3059,0x304B,0};
     const unsigned short text1[] = {0x65E2,0x8AAD,0x30B9,0x30EC,0}; // 既読スレ
-    const unsigned short text2[] = {0x756A,0x53F7,0x9806,0}; // 番号順
-    const unsigned short text3[] = {0x4F5C,0x6210,0x65E5,0x0028,0x964D,0x9806,0x0029,0}; // 作成日(降順)
-    const unsigned short text4[] = {0x4F5C,0x6210,0x65E5,0x0028,0x6607,0x9806,0x0029,0}; // 作成日(昇順)
-    const unsigned short text5[] = {0x52E2,0x3044,0}; // 勢い
+    const unsigned short text2[] = {0x52E2,0x3044,0}; // 勢い
+    const unsigned short text3[] = {0x756A,0x53F7,0x9806,0}; // 番号順
+    const unsigned short text4[] = {0x4F5C,0x6210,0x65E5,0x0028,0x964D,0x9806,0x0029,0}; // 作成日(降順)
+    const unsigned short text5[] = {0x4F5C,0x6210,0x65E5,0x0028,0x6607,0x9806,0x0029,0}; // 作成日(昇順)
     const unsigned short* text[MAX_SORT_COUNT] = {text1, text2, text3, text4, text5};
     int i, select = 0;
 

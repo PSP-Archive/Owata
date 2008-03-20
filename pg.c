@@ -145,7 +145,7 @@ int pgExtraFontInit(void)
     if (ret < 0)
     {
         memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "Getstate error font file\n%s", path);
+        sprintf(s2ch.mh.message, "Getstat error font file\n%s", path);
         pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return -1;
@@ -180,7 +180,7 @@ int pgExtraFontInit(void)
     if (ret < 0)
     {
         memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "Getstate error font file\n%s", path);
+        sprintf(s2ch.mh.message, "Getstat error font file\n%s", path);
         pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return -1;
@@ -246,6 +246,7 @@ void pgSetupGu(void)
     if (pgExtraFontInit() < 0)
     {
         s2ch.running = 0;
+        sceKernelExitGame();
     }
 }
 
@@ -996,6 +997,28 @@ char* pgPrint(char *str,int color,int bgcolor, int width)
     return NULL;
 }
 
+void resEnd(void)
+{
+    s2ch.resAnchor[s2ch.resAnchorCount].x2 = s2ch.pgCursorX + 6;
+    s2ch.resAnchorCount++;
+    if (s2ch.resAnchorCount >= 50)
+    {
+        s2ch.resAnchorCount = 0;
+    }
+    s2ch.resAnchor[s2ch.resAnchorCount].x1 = 0;
+}
+
+void urlEnd(void)
+{
+    s2ch.urlAnchor[s2ch.urlAnchorCount].x2 = s2ch.pgCursorX + 6;
+    s2ch.urlAnchorCount++;
+    if (s2ch.urlAnchorCount >= 50)
+    {
+        s2ch.urlAnchorCount = 0;
+    }
+    s2ch.urlAnchor[s2ch.urlAnchorCount].x1 = 0;
+}
+
 /*****************************
 文字列strを画面幅widthで1行分表示して改行部分のポインタを返す
 strを全部表示したらNULLを返す
@@ -1032,22 +1055,10 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
             if (((ch>=0x80) && (ch<0xa0)) || (ch>=0xe0)) {
                 bef = ch;
                 if (anchorOn == 2) {
-                    s2ch.resAnchor[s2ch.resAnchorCount].x2 = s2ch.pgCursorX + 6;
-                    s2ch.resAnchorCount++;
-                    if (s2ch.resAnchorCount >= 50)
-                    {
-                        s2ch.resAnchorCount = 0;
-                    }
-                    s2ch.resAnchor[s2ch.resAnchorCount].x1 = 0;
+                    resEnd();
                 }
                 else if (anchorOn == 1) {
-                    s2ch.urlAnchor[s2ch.urlAnchorCount].x2 = s2ch.pgCursorX + 6;
-                    s2ch.urlAnchorCount++;
-                    if (s2ch.urlAnchorCount >= 50)
-                    {
-                        s2ch.urlAnchorCount = 0;
-                    }
-                    s2ch.urlAnchor[s2ch.urlAnchorCount].x1 = 0;
+                    urlEnd();
                 }
                 anchorOn = 0;
                 tcolor = c.text;
@@ -1060,13 +1071,7 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
                     if ((ch < '0' || ch > '9') && ch != '-' && ch != ',' && ch !='<') {
                         anchorOn = 0;
                         tcolor = c.text;
-                        s2ch.resAnchor[s2ch.resAnchorCount].x2 = s2ch.pgCursorX + 6;
-                        s2ch.resAnchorCount++;
-                        if (s2ch.resAnchorCount >= 50)
-                        {
-                            s2ch.resAnchorCount = 0;
-                        }
-                        s2ch.resAnchor[s2ch.resAnchorCount].x1 = 0;
+                        resEnd();
                     }
                 }
                 else if (anchorOn == 1) {
@@ -1076,13 +1081,7 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
                     else {
                         anchorOn = 0;
                         tcolor = c.text;
-                        s2ch.urlAnchor[s2ch.urlAnchorCount].x2 = s2ch.pgCursorX + 6;
-                        s2ch.urlAnchorCount++;
-                        if (s2ch.urlAnchorCount >= 50)
-                        {
-                            s2ch.urlAnchorCount = 0;
-                        }
-                        s2ch.urlAnchor[s2ch.urlAnchorCount].x1 = 0;
+                        urlEnd();
                     }
                 }
 
@@ -1130,10 +1129,16 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
                 }
 
                 if (ch == '<') {
+                    if (anchorOn == 2) {
+                        resEnd();
+                    }
+                    else if (anchorOn == 1) {
+                        urlEnd();
+                    }
+                    anchorOn = 0;
+                    tcolor = c.text;
                     if (strstr(str, "<br>") == str) {
                         str +=4;
-                        anchorOn = 0;
-                        tcolor = c.text;
                         return str;
                     }
                     else {
@@ -1213,11 +1218,7 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
                 }
                 if (ret) {
                     if (anchorOn == 2) {
-                        s2ch.resAnchor[s2ch.resAnchorCount].x2 = s2ch.pgCursorX;
-                        s2ch.resAnchorCount++;
-                        if (s2ch.resAnchorCount >= 50) {
-                            s2ch.resAnchorCount = 0;
-                        }
+                        resEnd();
                         for (i = 0; i < s2ch.resAnchor[s2ch.resAnchorCount-1].resCount; i++) {
                             s2ch.resAnchor[s2ch.resAnchorCount].res[i] = s2ch.resAnchor[s2ch.resAnchorCount-1].res[i];
                         }
@@ -1226,11 +1227,7 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
                         s2ch.resAnchor[s2ch.resAnchorCount].x1 = startX;
                     }
                     else if (anchorOn == 1) {
-                        s2ch.urlAnchor[s2ch.urlAnchorCount].x2 = s2ch.pgCursorX;
-                        s2ch.urlAnchorCount++;
-                        if (s2ch.urlAnchorCount >= 50) {
-                            s2ch.urlAnchorCount = 0;
-                        }
+                        urlEnd();
                         s2ch.urlAnchor[s2ch.urlAnchorCount].line = drawLine+1;
                         s2ch.urlAnchor[s2ch.urlAnchorCount].x1 = startX;
                         strcpy(s2ch.urlAnchor[s2ch.urlAnchorCount].host, s2ch.urlAnchor[s2ch.urlAnchorCount-1].host);

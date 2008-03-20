@@ -8,6 +8,7 @@
 #include "psp2chRes.h"
 #include "psp2chResWindow.h"
 #include "psp2chImageView.h"
+#include "psp2chTinyBrowser.h"
 
 extern S_2CH s2ch; // psp2ch.c
 extern int preLine; // psp2chRes.c
@@ -396,7 +397,7 @@ int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
     int i, ret, mySocket, contentLength;
     HTTP_HEADERS resHeader;
     char path[256], buf[256];
-    char ext[16], tmp[4];
+    char ext[8], tmp[4];
     unsigned char digest[16];
     char *p;
 
@@ -422,10 +423,9 @@ int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
         *p = '\0';
     }
     p = strrchr(s2ch.urlAnchor[anchor].path, '.');
-    if (p)
+    if (p && strlen(p) < 8)
     {
-        memcpy(ext, p, 15);
-        ext[15] = '\0';
+        strcpy(ext, p);
     }
     else
     {
@@ -453,6 +453,10 @@ int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
         {
             psp2chImageViewPng(path);
             sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        }
+        else
+        {
+            psp2chTinyBrowser(path);
         }
         return 0;
     }
@@ -500,12 +504,19 @@ int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
     pgMenuBar(buf);
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
+    pgCopy(0, offset);
+    pgMenuBar(buf);
+    sceDisplayWaitVblankStart();
+    framebuffer = sceGuSwapBuffers();
     while((ret = recv(mySocket, buf, sizeof(buf), 0)) > 0)
     {
         sceIoWrite(fd, buf, ret);
     }
     psp2chCloseSocket(mySocket);
     sceIoClose(fd);
+    pgMenuBar("•\\Ž¦‚µ‚Ü‚·");
+    sceDisplayWaitVblankStart();
+    framebuffer = sceGuSwapBuffers();
     if ((ext[1] == 'j' || ext[1] == 'J') && (ext[2] == 'p' || ext[2] == 'P') && (ext[3] == 'g' || ext[3] == 'G'))
     {
         psp2chImageViewJpeg(path);
@@ -515,6 +526,10 @@ int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
     {
         psp2chImageViewPng(path);
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+    }
+    else
+    {
+        psp2chTinyBrowser(path);
     }
     return 0;
 }
