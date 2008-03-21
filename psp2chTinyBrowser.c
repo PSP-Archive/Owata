@@ -103,14 +103,14 @@ int psp2chTinyBrowser(char* path)
         bar.h = RES_A_HEIGHT;
     }
     psp2chRenderHtml(txt, bck, code);
-
+/*
     fd = sceIoOpen("log.txt", PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
     if (fd >= 0)
     {
         sceIoWrite(fd, txt, strlen(txt));
         sceIoClose(fd);
     }
-
+*/
     s2ch.pgCursorX = 0;
     p = txt;
     count = 0;

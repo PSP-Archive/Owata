@@ -378,7 +378,7 @@ int psp2chThreadList(int ita)
         }
         sceIoDclose(dfd);
     }
-    psp2chSort(1);
+    psp2chSort(2);
     return 0;
 }
 
