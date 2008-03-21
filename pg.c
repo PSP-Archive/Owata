@@ -117,7 +117,7 @@ struct Vertex
     unsigned short color;
     short x, y, z;
 };
-#define MAX_ENTITIES 10
+#define MAX_ENTITIES 12
 struct entityTag entity[MAX_ENTITIES];
 void pgEntitiesSet(void)
 {
@@ -131,6 +131,8 @@ void pgEntitiesSet(void)
     entity[7].str = "&sub;"; entity[7].len = 4;entity[7].byte = 2;entity[7].c1 = 0x81;entity[7].c2 = 0xBC;
     entity[8].str = "&and;"; entity[8].len = 4;entity[8].byte = 2;entity[8].c1 = 0x81;entity[8].c2 = 0xC8;
     entity[9].str = "&or;";  entity[9].len = 3;entity[9].byte = 2;entity[9].c1 = 0x81;entity[9].c2 = 0xC9;
+    entity[10].str = "&uarr;";entity[10].len = 5;entity[10].byte = 2;entity[10].c1 = 0x81;entity[10].c2 = 0xAA;
+    entity[11].str = "&darr;";entity[11].len = 5;entity[11].byte = 2;entity[11].c1 = 0x81;entity[11].c2 = 0xAB;
 }
 
 int pgExtraFontInit(void)
@@ -892,6 +894,51 @@ int pgPutCharW(unsigned char hi,unsigned char lo,int color,int bgcolor, int widt
     return pgPutChar(fontJ, index, color, bgcolor, width);
 }
 
+int pgPutCharW2(unsigned char hi,unsigned char lo,int color,int bgcolor, int width, int code)
+{
+    unsigned long index;
+
+    switch (code)
+    {
+    // sjis2jis
+    case 0:
+        hi -= (hi <= 0x9f) ? 0x71 : 0xb1;
+        hi <<= 1;
+        hi++;
+        if (lo > 0x7f)
+            lo--;
+        if (lo >= 0x9e) {
+            lo -= 0x7d;
+            hi++;
+        }
+        else {
+            lo -= 0x1f;
+        }
+        break;
+    // euc2jis
+    case 1:
+        if (hi == 0x8E)
+        {
+            return pgCountCharA(lo, width);
+        }
+        hi &= 0x7F;
+        lo &= 0x7F;
+        break;
+    // jis
+    case 2:
+        break;
+    }
+    // hi : 0x21-0x7e, lo : 0x21-0x7e
+    hi -= 0x21;
+    lo -= 0x21;
+    index = hi * (0x7e - 0x20);
+    index += lo;
+    if ((index << 5) >= size_fontJ) {
+        index = 8; // 'ÅH'
+    }
+    return pgPutChar(fontJ, index, color, bgcolor, width);
+}
+
 /*****************************
 é¿ëÃéQè∆Çïœä∑
 *****************************/
@@ -1285,6 +1332,57 @@ int pgCountCharW(unsigned char hi,unsigned char lo, int width)
     }
     else {
         lo -= 0x1f;
+    }
+    // hi : 0x21-0x7e, lo : 0x21-0x7e
+    hi -= 0x21;
+    lo -= 0x21;
+    index = hi * (0x7e - 0x20);
+    index += lo;
+    if ((index<<5) >= size_fontJ) {
+        index = 8; // 'ÅH'
+    }
+    font = (unsigned short*)(fontJ + (index<<5));
+    if ((s2ch.pgCursorX + *font) >= width) {
+        return 1;
+    }
+    s2ch.pgCursorX += *font;
+    return 0;
+}
+
+int pgCountCharW2(unsigned char hi,unsigned char lo, int width, int code)
+{
+    unsigned long index;
+    unsigned short *font;
+
+    switch (code)
+    {
+    // sjis2jis
+    case 0:
+        hi -= (hi <= 0x9f) ? 0x71 : 0xb1;
+        hi <<= 1;
+        hi++;
+        if (lo > 0x7f)
+            lo--;
+        if (lo >= 0x9e) {
+            lo -= 0x7d;
+            hi++;
+        }
+        else {
+            lo -= 0x1f;
+        }
+        break;
+    // euc2jis
+    case 1:
+        if (hi == 0x8E)
+        {
+            return pgCountCharA(lo, width);
+        }
+        hi &= 0x7F;
+        lo &= 0x7F;
+        break;
+    // utf82jis
+    case 2:
+        break;
     }
     // hi : 0x21-0x7e, lo : 0x21-0x7e
     hi -= 0x21;

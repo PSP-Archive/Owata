@@ -6,11 +6,10 @@
 #define __PSP2CH_TINYBROWSER_H__
 
 int psp2chTinyBrowser(char* path);
-int psp2chRenderHtml(char* txt);
-int psp2chParseTag(unsigned char** src, unsigned char** dst);
-void psp2chViewHtml(char* txt, char* path);
-void psp2chDrawHtml(char* txt, S_2CH_SCREEN html, int lineFlag);
-char* psp2chCountText(char *str, int width);
-char* psp2chPrintText(char *str, S_2CH_RES_COLOR c, int width);
+int psp2chRenderHtml(char* txt, char* bck, int code);
+int psp2chParseTag(unsigned char** src, unsigned char** dst, int code);
+void psp2chDrawHtml(char* txt, S_2CH_SCREEN html, int code);
+char* psp2chCountText(char *str, int width, int code);
+char* psp2chPrintText(char *str, S_2CH_RES_COLOR c, int width, int code);
 
 #endif
