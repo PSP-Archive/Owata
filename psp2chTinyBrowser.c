@@ -1,3 +1,6 @@
+/*
+* $Id$
+*/
 
 #include <stdio.h>
 #include <malloc.h>
@@ -114,11 +117,12 @@ int psp2chTinyBrowser(char* path)
     s2ch.pgCursorX = 0;
     p = txt;
     count = 0;
-    while ((p = psp2chCountText(p, scrX, code)))
+    while ((p = psp2chPrintText(p, s2ch.resAColor, scrX, code, 0)))
     {
         s2ch.pgCursorX = 0;
         count++;
     }
+    count++;
     line = (char**)malloc(sizeof(char*) * count);
     if (line == NULL)
     {
@@ -131,7 +135,7 @@ int psp2chTinyBrowser(char* path)
     p = txt;
     count = 0;
     line[count] = p;
-    while ((p = psp2chCountText(p, scrX, code)))
+    while ((p = psp2chPrintText(p, s2ch.resAColor, scrX, code, 0)))
     {
         s2ch.pgCursorX = 0;
         count++;
@@ -179,11 +183,12 @@ int psp2chTinyBrowser(char* path)
                     s2ch.pgCursorX = 0;
                     p = txt;
                     count = 0;
-                    while ((p = psp2chCountText(p, scrX, code)))
+                    while ((p = psp2chPrintText(p, s2ch.resAColor, scrX, code, 0)))
                     {
                         s2ch.pgCursorX = 0;
                         count++;
                     }
+                    count++;
                     free(line);
                     line = (char**)malloc(sizeof(char*) * count);
                     if (line == NULL)
@@ -201,7 +206,7 @@ int psp2chTinyBrowser(char* path)
                     p = txt;
                     count = 0;
                     line[count] = p;
-                    while ((p = psp2chCountText(p, scrX, code)))
+                    while ((p = psp2chPrintText(p, s2ch.resAColor, scrX, code, 0)))
                     {
                         s2ch.pgCursorX = 0;
                         count++;
@@ -524,127 +529,17 @@ void psp2chDrawHtml(char* txt, S_2CH_SCREEN html, int code)
     pgFillvram(s2ch.resAColor.bg, startX, s2ch.pgCursorY, scrW, LINE_PITCH * lineEnd);
     while (line++ <= lineEnd && txt)
     {
-        txt = psp2chPrintText(txt, s2ch.resAColor, scrW+startX, code);
+        txt = psp2chPrintText(txt, s2ch.resAColor, scrW+startX, code, 1);
         s2ch.pgCursorX = startX;
         s2ch.pgCursorY += LINE_PITCH;
     }
 }
 
 /*****************************
-strを画面幅widthで表示したときの行数を数えるのに使う関数
-表示は行わない
-*****************************/
-char* psp2chCountText(char *str, int width, int code)
-{
-    unsigned char ch = 0,bef = 0,u1,u2;
-    int ret = 0, sjis;
-
-    if (str == NULL)
-    {
-        return NULL;
-    }
-    while(*str) {
-        ch = (unsigned char)*str;
-        if (bef!=0)
-        {
-            ret = pgCountCharW2(bef, ch, width, code);
-            if (ret)
-            {
-                return --str;
-            }
-            bef=0;
-        }
-        else
-        {
-            if ((code == 0) && (((ch>=0x80) && (ch<0xa0)) || (ch>=0xe0)))
-            {
-                bef = ch;
-            }
-            else if ((code == 1) && (ch>=0x80))
-            {
-                bef = ch;
-            }
-            // utf-8
-            else if ((code == 2) && (ch>=0x80))
-            {
-                u1 = 0;
-                u2 = 0;
-                // UCS-2に
-                if ((ch & 0xE0) == 0xC0)
-                {
-                    ch &= 0x1F;
-                    u1 = ch >> 2;
-                    u2 = ch << 6;
-                    str++;
-                    ch = *str;
-                    u2 |= (ch & 0x3F);
-                    bef = 1;
-                }
-                else if ((ch & 0xF0) == 0xE0)
-                {
-                    ch &= 0x0F;
-                    u1 = ch << 4;
-                    str++;
-                    ch = *str;
-                    ch &= 0x3F;
-                    u1 |= ch >> 2;
-                    u2 = ch << 6;
-                    str++;
-                    ch = *str;
-                    u2 |= (ch & 0x3F);
-                    bef = 2;
-                }
-                // 半角カナ
-                if (u1 == 0xFF && (u2 > 0x60 && u2 < 0xA0))
-                {
-                    ret = pgCountCharA(u2 + 0x40, width);
-                }
-                // sjisに
-                else
-                {
-                    sjis = (u1 << 8) | u2;
-                    sjis = conv_wchar_sjiswin(sjis);
-                    u2 = sjis >> 8;
-                    u1 = sjis & 0xFF;
-                    ret = pgCountCharW(u1, u2, width);
-                }
-                if (ret)
-                {
-                    str -= bef;
-                    return str;
-                }
-                bef = 0;
-            }
-            else
-            {
-                if (ch == '&')
-                {
-                    ret = pgCountSpecialChars((char**)(&str), width);
-                }
-                else if (ch == '\n')
-                {
-                    str++;
-                    return str;
-                }
-                else
-                {
-                    ret = pgCountCharA(ch, width);
-                }
-                if (ret)
-                {
-                    return str;
-                }
-            }
-        }
-        str++;
-    }
-    return NULL;
-}
-
-/*****************************
 strを画面幅widthで表示
+view:0 表示なし
 *****************************/
-char* psp2chPrintText(char *str, S_2CH_RES_COLOR c, int width, int code)
+char* psp2chPrintText(char *str, S_2CH_RES_COLOR c, int width, int code, int view)
 {
     unsigned char ch = 0,bef = 0, u1, u2;
     int ret = 0, sjis;
@@ -660,7 +555,14 @@ char* psp2chPrintText(char *str, S_2CH_RES_COLOR c, int width, int code)
         ch = (unsigned char)*str;
         if (bef!=0)
         {
-            ret = pgPutCharW2(bef, ch, tcolor, c.bg, width, code);
+            if (view)
+            {
+                ret = pgPutCharW2(bef, ch, tcolor, c.bg, width, code);
+            }
+            else
+            {
+                ret = pgCountCharW2(bef, ch, width, code);
+            }
             if (ret)
             {
                 return --str;
@@ -688,7 +590,10 @@ char* psp2chPrintText(char *str, S_2CH_RES_COLOR c, int width, int code)
                     u1 = ch >> 2;
                     u2 = ch << 6;
                     str++;
-                    ch = *str;
+                    if ((ch = *str) == 0)
+                    {
+                        return NULL;
+                    }
                     u2 |= (ch & 0x3F);
                     bef = 1;
                 }
@@ -697,19 +602,32 @@ char* psp2chPrintText(char *str, S_2CH_RES_COLOR c, int width, int code)
                     ch &= 0x0F;
                     u1 = ch << 4;
                     str++;
-                    ch = *str;
+                    if ((ch = *str) == 0)
+                    {
+                        return NULL;
+                    }
                     ch &= 0x3F;
                     u1 |= ch >> 2;
                     u2 = ch << 6;
                     str++;
-                    ch = *str;
+                    if ((ch = *str) == 0)
+                    {
+                        return NULL;
+                    }
                     u2 |= (ch & 0x3F);
                     bef = 2;
                 }
                 // 半角カナ
                 if (u1 == 0xFF && (u2 > 0x60 && u2 < 0xA0))
                 {
-                    ret = pgPutCharA(u2 + 0x40, tcolor, c.bg, width);
+                    if (view)
+                    {
+                        ret = pgPutCharA(u2 + 0x40, tcolor, c.bg, width);
+                    }
+                    else
+                    {
+                        ret = pgCountCharA(u2 + 0x40, width);
+                    }
                 }
                 // sjisに
                 else
@@ -720,11 +638,25 @@ char* psp2chPrintText(char *str, S_2CH_RES_COLOR c, int width, int code)
                     {
                         u2 = sjis >> 8;
                         u1 = sjis & 0xFF;
-                        ret = pgPutCharW(u1, u2, tcolor, c.bg, width);
+                        if (view)
+                        {
+                            ret = pgPutCharW(u1, u2, tcolor, c.bg, width);
+                        }
+                        else
+                        {
+                            ret = pgCountCharW(u1, u2, width);
+                        }
                     }
                     else
                     {
-                        ret = pgPutCharA('?', tcolor, c.bg, width);
+                        if (view)
+                        {
+                            ret = pgPutCharA('?', tcolor, c.bg, width);
+                        }
+                        else
+                        {
+                            ret = pgCountCharA('?', width);
+                        }
                     }
                 }
                 if (ret)
@@ -738,7 +670,14 @@ char* psp2chPrintText(char *str, S_2CH_RES_COLOR c, int width, int code)
             {
                 if (ch == '&')
                 {
-                    ret = pgSpecialChars((char**)(&str), tcolor, c.bg, width);
+                    if(view)
+                    {
+                        ret = pgSpecialChars((char**)(&str), tcolor, c.bg, width);
+                    }
+                    else
+                    {
+                        ret = pgCountSpecialChars((char**)(&str), width);
+                    }
                 }
                 else if (ch == '\n') {
                     str++;
@@ -746,7 +685,14 @@ char* psp2chPrintText(char *str, S_2CH_RES_COLOR c, int width, int code)
                 }
                 else
                 {
-                    ret = pgPutCharA(ch, tcolor, c.bg, width);
+                    if (view)
+                    {
+                        ret = pgPutCharA(ch, tcolor, c.bg, width);
+                    }
+                    else
+                    {
+                        ret = pgCountCharA(ch, width);
+                    }
                 }
                 if (ret)
                 {

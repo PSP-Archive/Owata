@@ -919,7 +919,7 @@ int pgPutCharW2(unsigned char hi,unsigned char lo,int color,int bgcolor, int wid
     case 1:
         if (hi == 0x8E)
         {
-            return pgCountCharA(lo, width);
+            return pgPutCharA(lo, color, bgcolor, width);
         }
         hi &= 0x7F;
         lo &= 0x7F;
