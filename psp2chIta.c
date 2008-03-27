@@ -20,6 +20,7 @@ extern const char *sBtnH[]; // psp2chRes.c
 extern const char *sBtnV[]; // psp2chRes.c
 
 static const char* boardFile = "2channel.brd";
+static const char* boardFile2 = "my.brd";
 
 /*********************
 ƒƒjƒ…[•¶š—ñ‚Ìì¬
@@ -303,9 +304,10 @@ s2ch.category.count‚Æs2ch.ita.count‚É‘”
 int psp2chItaList(void)
 {
     SceUID fd;
-    SceIoStat st;
+    SceIoStat st, st2;
     char file[256];
-    char *buf, *p, *q;
+    char file2[256];
+    char *buf, *p, *q, *r;
     int i, cateOn;
 
     sprintf(file, "%s/%s/%s", s2ch.cwDir, s2ch.logDir, boardFile);
@@ -323,7 +325,13 @@ int psp2chItaList(void)
             return -1;
         }
     }
-    buf = (char*)malloc(st.st_size + 1);
+    sprintf(file2, "%s/%s/%s", s2ch.cwDir, s2ch.logDir, boardFile2);
+    i = sceIoGetstat(file2, &st2);
+    if (i < 0)
+    {
+        st2.st_size = 0;
+    }
+    buf = (char*)malloc(st.st_size + st2.st_size + 1);
     if (buf == NULL)
     {
         memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
@@ -344,7 +352,20 @@ int psp2chItaList(void)
     }
     sceIoRead(fd, buf, st.st_size);
     sceIoClose(fd);
-    buf[st.st_size] = '\0';
+    if (st2.st_size)
+    {
+        fd = sceIoOpen(file2, PSP_O_RDONLY, 0777);
+        if (fd < 0)
+        {
+            st2.st_size = 0;
+        }
+        else
+        {
+            sceIoRead(fd, buf + st.st_size, st2.st_size);
+            sceIoClose(fd);
+        }
+    }
+    buf[st.st_size + st2.st_size] = '\0';
     s2ch.category.count = 0;
     s2ch.ita.count = 0;
     p = buf;
@@ -406,6 +427,11 @@ int psp2chItaList(void)
             p = q;
             q = strchr(p, '\n');
             *q = '\0';
+            r = strchr(p, '\r');
+            if (r)
+            {
+                *r = '\0';
+            }
             strcpy(s2ch.itaList[s2ch.ita.count].title, p);
             if (cateOn)
             {
