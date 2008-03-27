@@ -400,7 +400,7 @@ int psp2chThreadList(int ita)
                     s2ch.threadList[s2ch.thread.count].id = -1;
                     s2ch.threadList[s2ch.thread.count].dat = dat;
                     s2ch.threadList[s2ch.thread.count].res = 0;
-                    s2ch.threadList[i].old = psp2chGetResCount(s2ch.itaList[ita].title, dat);
+                    s2ch.threadList[s2ch.thread.count].old = psp2chGetResCount(s2ch.itaList[ita].title, dat);
                     s2ch.threadList[s2ch.thread.count].ikioi = 0;
                     psp2chThreadGetTitle(s2ch.itaList[ita].title, dat, s2ch.threadList[s2ch.thread.count].title, 128);
                     s2ch.thread.count++;
@@ -867,7 +867,7 @@ void psp2chDrawThread(int scrollX)
                 pgPrintNumber(s2ch.threadList[threadSort[i]].id + 1, s2ch.threadColor.num, s2ch.threadColor.bg);
             }
         }
-        s2ch.pgCursorX = FONT_HEIGHT * 2;
+        s2ch.pgCursorX = FONT_HEIGHT * 2 + 2;
         if (i == s2ch.thread.select)
         {
             if (s2ch.threadList[threadSort[i]].old > 0)

@@ -777,6 +777,7 @@ void pgPrintNumber(int num, int color,int bgcolor)
     s2ch.pgCursorY &= 0x01FF;
     sprintf(buf, "%d", num);
     count = strlen(buf);
+    // '0'‚Ì•¶š•‚ğg‚¤
     font = (unsigned short*)(fontA + (('0' - 0x20) << 5));
     cx = *font;
     s2ch.pgCursorX += (4 - count) * cx;
