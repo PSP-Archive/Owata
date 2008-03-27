@@ -7,6 +7,7 @@
 
 void psp2chThreadSetMenuString(void);
 int psp2chThread(int retSel);
+void psp2chThreadGetTitle(char* dir, int dat, char* title, int len);
 int psp2chThreadList(int ita);
 int psp2chGetSubject(int ita);
 void psp2chSort(int sort);

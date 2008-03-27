@@ -375,6 +375,9 @@ int psp2chFavorite(void)
     return 0;
 }
 
+/**********************
+idxファイルからレス数を読み込む
+**********************/
 int psp2chGetResCount(char* title, int dat)
 {
     SceUID fd;
@@ -392,15 +395,15 @@ int psp2chGetResCount(char* title, int dat)
     {
         sceIoRead(fd, path, 128);
         sceIoClose(fd);
-        p = strchr(path, '\n');
+        p = strchr(path, '\n'); // Last-Modified
         p++;
-        p =  strchr(p, '\n');
+        p =  strchr(p, '\n'); // ETag
         p++;
-        p =  strchr(p, '\n');
+        p =  strchr(p, '\n'); // Range
         p++;
-        p =  strchr(p, '\n');
+        p =  strchr(p, '\n'); // res.start
         p++;
-        p =  strchr(p, '\n');
+        p =  strchr(p, '\n'); // res.select
         p++;
         sscanf(p, "%d", &res );
     }

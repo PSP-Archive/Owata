@@ -218,6 +218,40 @@ int psp2chThread(int retSel)
 }
 
 /****************
+DATからスレタイ取得
+*****************/
+void psp2chThreadGetTitle(char* dir, int dat, char* title, int len)
+{
+    SceUID fd;
+    char path[4096];
+    char *p, *q;
+
+    sprintf(path, "%s/%s/%s/%d.dat", s2ch.cwDir, s2ch.logDir, dir, dat);
+    fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
+    if (fd < 0)
+    {
+        title[0] = '\0';
+    }
+    else
+    {
+        sceIoRead(fd, path, 4096);
+        sceIoClose(fd);
+        p = strstr(path, "<>"); // name
+        p++;
+        p =  strstr(p, "<>"); // mail
+        p++;
+        p =  strstr(p, "<>"); // date
+        p++;
+        p =  strstr(p, "<>"); // text
+        p += 2;
+        q =  strchr(p, '\n'); // title
+        *q = '\0';
+        p[len] = '\0';
+        strcpy(title, p);
+    }
+}
+
+/****************
 メモステに保存されたsubject.txtを読み込んで
 threadList構造体を作成
 番号順にソート
@@ -230,7 +264,7 @@ int psp2chThreadList(int ita)
     char file[256];
     char line[256];
     char *buf, *p, *q;
-    int i, dat;
+    int i, dat, tmpCount, setFlag;;
     time_t tm;
 
     sprintf(file, "%s/%s/%s/subject.txt", s2ch.cwDir, s2ch.logDir, s2ch.itaList[ita].title);
@@ -283,22 +317,23 @@ int psp2chThreadList(int ita)
         }
     }
     s2ch.thread.count -= 2;
+    sprintf(file, "%s/%s/%s", s2ch.cwDir, s2ch.logDir, s2ch.itaList[ita].title);
+    dfd = sceIoDopen(file);
+    if (dfd >= 0)
+    {
+        memset(&dir, 0, sizeof(dir)); // 初期化しないとreadに失敗する
+        while (sceIoDread(dfd, &dir) > 0)
+        {
+            s2ch.thread.count++;
+        }
+        sceIoDclose(dfd);
+    }
     s2ch.threadList = (S_2CH_THREAD*)realloc(s2ch.threadList, sizeof(S_2CH_THREAD) * s2ch.thread.count);
     if (s2ch.threadList == NULL )
     {
         free(buf);
         memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
         strcpy(s2ch.mh.message, "memorry error\nThreadList");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
-        return -1;
-    }
-    threadSort = (int*)realloc(threadSort, sizeof(int) * s2ch.thread.count);
-    if (threadSort == NULL)
-    {
-        free(buf);
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "memorry error\nThreadSort");
         pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return -1;
@@ -336,47 +371,62 @@ int psp2chThreadList(int ita)
         p = q;
     }
     free(buf);
+    tmpCount = s2ch.thread.count;
     pgMenuBar("取得済みスレッドの検索中");
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
-    sprintf(file, "%s/%s/%s", s2ch.cwDir, s2ch.logDir, s2ch.itaList[ita].title);
     dfd = sceIoDopen(file);
     if (dfd >= 0)
     {
-        memset(&dir, 0, sizeof(dir)); // 初期化しないとreadに失敗する
+        memset(&dir, 0, sizeof(dir));
         while (sceIoDread(dfd, &dir) > 0)
         {
             if (strstr(dir.d_name, ".idx"))
             {
                 sscanf(dir.d_name, "%d", &dat);
-                for (i = 0; i < s2ch.thread.count; i++)
+                setFlag = 0;
+                for (i = 0; i < tmpCount; i++)
                 {
                     if (s2ch.threadList[i].dat == dat)
                     {
-                        sprintf(file, "%s/%s/%s/%s", s2ch.cwDir, s2ch.logDir, s2ch.itaList[ita].title, dir.d_name);
-                        fd = sceIoOpen(file, PSP_O_RDONLY, 0777);
-                        if (fd >= 0)
-                        {
-                            sceIoRead(fd, file, 128);
-                            sceIoClose(fd);
-                            p = strchr(file, '\n'); // Last-Modified
-                            p++;
-                            p =  strchr(p, '\n'); // ETag
-                            p++;
-                            p =  strchr(p, '\n'); // Range
-                            p++;
-                            p =  strchr(p, '\n'); // res.start
-                            p++;
-                            p =  strchr(p, '\n'); // res.select
-                            p++;
-                            sscanf(p, "%d", &s2ch.threadList[i].old);
-                        }
+                        s2ch.threadList[i].old = psp2chGetResCount(s2ch.itaList[ita].title, dat); // psp2chFavorite.c
+                        setFlag = 1;
                         break;
                     }
+                }
+                // DAT落ちスレの追加
+                if (setFlag == 0)
+                {
+                    s2ch.threadList[s2ch.thread.count].id = -1;
+                    s2ch.threadList[s2ch.thread.count].dat = dat;
+                    s2ch.threadList[s2ch.thread.count].res = 0;
+                    s2ch.threadList[i].old = psp2chGetResCount(s2ch.itaList[ita].title, dat);
+                    s2ch.threadList[s2ch.thread.count].ikioi = 0;
+                    psp2chThreadGetTitle(s2ch.itaList[ita].title, dat, s2ch.threadList[s2ch.thread.count].title, 128);
+                    s2ch.thread.count++;
                 }
             }
         }
         sceIoDclose(dfd);
+    }
+    // s2ch.thread.counがDAT落ちでない分少なくなるので縮める
+    s2ch.threadList = (S_2CH_THREAD*)realloc(s2ch.threadList, sizeof(S_2CH_THREAD) * s2ch.thread.count);
+    if (s2ch.threadList == NULL )
+    {
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        strcpy(s2ch.mh.message, "memorry error\nThreadList");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        return -1;
+    }
+    threadSort = (int*)realloc(threadSort, sizeof(int) * s2ch.thread.count);
+    if (threadSort == NULL)
+    {
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        strcpy(s2ch.mh.message, "memorry error\nThreadSort");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        return -1;
     }
     psp2chSort(2);
     return 0;
@@ -805,11 +855,17 @@ void psp2chDrawThread(int scrollX)
         if (i == s2ch.thread.select)
         {
             pgFillvram(s2ch.threadColor.s_bg, 0, s2ch.pgCursorY, BUF_WIDTH, LINE_PITCH);
-            pgPrintNumber(s2ch.threadList[threadSort[i]].id + 1, s2ch.threadColor.s_num, s2ch.threadColor.s_bg);
+            if (s2ch.threadList[threadSort[i]].id >= 0)
+            {
+                pgPrintNumber(s2ch.threadList[threadSort[i]].id + 1, s2ch.threadColor.s_num, s2ch.threadColor.s_bg);
+            }
         }
         else
         {
-            pgPrintNumber(s2ch.threadList[threadSort[i]].id + 1, s2ch.threadColor.num, s2ch.threadColor.bg);
+            if (s2ch.threadList[threadSort[i]].id >= 0)
+            {
+                pgPrintNumber(s2ch.threadList[threadSort[i]].id + 1, s2ch.threadColor.num, s2ch.threadColor.bg);
+            }
         }
         s2ch.pgCursorX = FONT_HEIGHT * 2;
         if (i == s2ch.thread.select)

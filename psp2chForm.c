@@ -211,6 +211,7 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
     int focus, sage, ret = 0;
     char buf[256];
     char  *str, *p;
+    int changeFlag = 0;
 
     focus = 0;
     if (mail[0] == '\0' && name[0] == '\0')
@@ -281,9 +282,11 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
                     {
                     case 0:
                         psp2chGets("–¼‘O", name, 32, 1);
+                        changeFlag = 1;
                         break;
                     case 1:
                         psp2chGets("mail", mail, 32, 1);
+                        changeFlag = 1;
                         break;
                     case 2:
                         psp2chGets(NULL, message, 1024, 32);
@@ -411,13 +414,16 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
     }
-    sprintf(buf, "%s/%s/form.ini", s2ch.cwDir, s2ch.logDir);
-    fd = sceIoOpen(buf, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
-    if (fd >= 0)
+    if (changeFlag)
     {
-        sprintf(buf, "%s\n%s\n", name, mail);
-        sceIoWrite(fd, buf, strlen(buf));
-        sceIoClose(fd);
+        sprintf(buf, "%s/%s/form.ini", s2ch.cwDir, s2ch.logDir);
+        fd = sceIoOpen(buf, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
+        if (fd >= 0)
+        {
+            sprintf(buf, "%s\n%s\n", name, mail);
+            sceIoWrite(fd, buf, strlen(buf));
+            sceIoClose(fd);
+        }
     }
     return ret;
 }
