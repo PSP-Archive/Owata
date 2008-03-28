@@ -2,13 +2,13 @@
 * $Id$
 */
 
+#include "psp2ch.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <malloc.h>
 #include <time.h>
 #include <arpa/inet.h>
 #include <pspwlan.h>
-#include "psp2ch.h"
 #include "psp2chNet.h"
 #include "pg.h"
 #include "utf8.h"
@@ -178,6 +178,87 @@ int psp2chGet(const char* host, const char* path, const char* header, S_NET* net
 }
 
 /*****************************
+HTTP で POST 送信します。
+ソケット作成
+アドレス解決してヘッダとボディを送信
+成功時にはソケット(>=0)を返す
+*****************************/
+int psp2chPost(char* host, char* dir, int dat, char* cook, S_NET* net)
+{
+    int ret, mySocket, size;
+    char requestText[512];
+    char buf[512];
+    char *path = "test/bbs.cgi";
+
+    mySocket = psp2chOpenSocket();
+    if (mySocket < 0) {
+        return -1;
+    }
+    sprintf(requestText,
+        "POST /%s HTTP/1.1\r\n"
+        "Host: %s\r\n"
+        "User-Agent: %s/%s\r\n"
+        "Referer: http://%s/test/read.cgi/%s/%d/l50\r\n"
+        "Cookie: %s\r\n"
+        "Content-Type: application/x-www-form-urlencoded\r\n"
+        "Content-Length: %d\r\n\r\n"
+        , path, host, userAgent, ver, host, dir, dat, cook, strlen(net->body)
+    );
+    mySocket = psp2chOpenSocket();
+    if (mySocket < 0)
+    {
+        return mySocket;
+    }
+    // リクエスト送信
+    psp2chRequest(mySocket, host, path, requestText, net);
+    // 本文送信
+    send(mySocket, net->body, strlen(net->body), 0 );
+    // Status code
+    net->status = psp2chGetStatusLine(mySocket);
+    // Header 受信
+    psp2chGetHttpHeaders(mySocket, net, cook);
+    // Data 受信
+    sprintf(buf, "http://%s/%s からデータを転送しています...", host, path);
+    pgMenuBar(buf);
+    sceDisplayWaitVblankStart();
+    framebuffer = sceGuSwapBuffers();
+    size = 0;
+    net->body = NULL;
+    while ((ret = recv(mySocket, buf, sizeof(buf), 0)) > 0)
+    {
+        net->body = (char*)realloc(net->body, size + ret);
+        if (net->body == NULL)
+        {
+            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+            sprintf(s2ch.mh.message, "memory error\nnet.body");
+            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            psp2chCloseSocket(mySocket);
+            return -1;
+        }
+        memcpy(net->body + size, buf, ret);
+        size += ret;
+    }
+    net->body = (char*)realloc(net->body, size + 1);
+    if (net->body == NULL)
+    {
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        sprintf(s2ch.mh.message, "memory error\nnet.body");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chCloseSocket(mySocket);
+        return -1;
+    }
+    net->body[size] = '\0';
+    psp2chCloseSocket(mySocket);
+    sprintf(buf, "完了");
+    pgMenuBar(buf);
+    sceDisplayWaitVblankStart();
+    framebuffer = sceGuSwapBuffers();
+    return 0;
+}
+
+/*****************************
 アドレス解決してリクエストヘッダを送信します
 成功時には0を返します
 *****************************/
@@ -219,67 +300,6 @@ int psp2chRequest(int mySocket, const char* host, const char* path, const char* 
     send(mySocket, requestText, strlen(requestText), 0 );
 
     return 0;
-}
-
-/*****************************
-HTTP で POST 送信します。
-ソケット作成
-アドレス解決してヘッダとボディを送信
-成功時にはソケット(>=0)を返す
-*****************************/
-int psp2chPost(char* host, char* dir, int dat, char* cook, S_NET* net)
-{
-    int mySocket;
-    int ret;
-    char requestText[512];
-    char buf[512];
-    struct sockaddr_in sain;
-    struct in_addr addr;
-
-    mySocket = psp2chOpenSocket();
-    if (mySocket < 0) {
-        return -1;
-    }
-    sprintf(requestText,
-        "POST /test/bbs.cgi HTTP/1.1\r\n"
-        "Host: %s\r\n"
-        "User-Agent: %s/%s\r\n"
-        "Referer: http://%s/test/read.cgi/%s/%d/l50\r\n"
-        "Cookie: %s\r\n"
-        "Content-Type: application/x-www-form-urlencoded\r\n"
-        "Content-Length: %d\r\n\r\n"
-        , host, userAgent, ver, host, dir, dat, cook, strlen(net->body));
-    ret = psp2chResolve(host, &addr);
-    if (ret < 0) {
-        return -1;
-    }
-    sprintf(buf, "  %s (%s)", host, inet_ntoa(addr));
-    pgMenuBar(buf);
-    sceDisplayWaitVblankStart();
-    framebuffer = sceGuSwapBuffers();
-    // Tell the socket to connect to the IP address we found, on port 80 (HTTP)
-    sain.sin_family = AF_INET;
-    sain.sin_port = htons(80);
-    sain.sin_addr.s_addr = addr.s_addr;
-    sprintf(buf, "  http://%s/test/bbs.cgi に接続しています", host);
-    pgCopy(0, 0);
-    pgMenuBar(buf);
-    sceDisplayWaitVblankStart();
-    framebuffer = sceGuSwapBuffers();
-    ret = connect( mySocket,(struct sockaddr *)&sain, sizeof(sain) );
-    if (ret < 0) {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "Can't connect bbs.cgi");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        return -1;
-    }
-#ifdef DEBUG
-    pspDebugScreenPrintf("send request\n%s\n", requestText);
-#endif
-    // send our request
-    send(mySocket, requestText, strlen(requestText), 0 );
-    send(mySocket, net->body, strlen(net->body), 0 );
-    return mySocket;
 }
 
 /*****************************

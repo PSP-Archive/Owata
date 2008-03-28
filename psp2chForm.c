@@ -49,8 +49,8 @@ void psp2chUrlEncode(char* dst, char* src)
 *********************/
 int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, char* message)
 {
-    HTTP_HEADERS resHeader;
-    int ret, mySocket;
+    S_NET net;
+    int ret;
     char *encode, *buffer, *str;
     char cookie[128] = {0};
 
@@ -77,6 +77,9 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
     pgCopy(0, 0);
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
+    pgCopy(0, 0);
+    sceDisplayWaitVblankStart();
+    framebuffer = sceGuSwapBuffers();
     // URLエンコードしてformデータ作成
     strcpy(encode, "submit=%8F%91%82%AB%8D%9E%82%DE&FROM=");
     psp2chUrlEncode(buffer, name);
@@ -91,18 +94,21 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
     strcat(encode, buffer);
     free(buffer);
     // 仮送信して2ちゃんからSet-CookieのPON HAP 取得
-    mySocket = psp2chPost(host, dir, dat, cookie, encode);
-    if (mySocket < 0)
+    memset(&net, 0, sizeof(S_NET));
+    net.body = encode;
+    ret = psp2chPost(host, dir, dat, cookie, &net);
+    if (ret < 0)
     {
         free(encode);
         memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
         sprintf(s2ch.mh.message, "POST error");
         pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
-        return mySocket;
+        return ret;
     }
-    ret = psp2chGetStatusLine(mySocket);
-    switch(ret)
+    free(net.body);
+    net.body = encode;
+    switch(net.status)
     {
         case 200: // OK
             break;
@@ -112,48 +118,39 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
             sprintf(s2ch.mh.message, "Status code %d", ret);
             pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
             sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
-            psp2chCloseSocket(mySocket);
             return -1;
     }
-    psp2chGetHttpHeaders(mySocket, &resHeader, cookie);
     // Cookieにhana=mogeraも追加(encodeに&hana=mogera追加でもいいけど)
     strcat(cookie, "; NAME=\"\"; MAIL=\"\"; hana=mogera");
-    psp2chCloseSocket(mySocket);
     // Cookieをセットして本送信
-    mySocket = psp2chPost(host, dir, dat, cookie, encode);
-    if (mySocket < 0)
+    ret = psp2chPost(host, dir, dat, cookie, &net);
+    free(encode);
+    if (ret < 0)
     {
-        free(encode);
         memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
         sprintf(s2ch.mh.message, "POST error");
         pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return -1;
     }
-    ret = psp2chGetStatusLine(mySocket);
-    switch(ret)
+    switch(net.status)
     {
         case 200: // OK
             break;
         default:
-            free(encode);
+            free(net.body);
             memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
             sprintf(s2ch.mh.message, "Status code %d", ret);
             pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
             sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
-            psp2chCloseSocket(mySocket);
             return -1;
     }
-    psp2chGetHttpHeaders(mySocket, &resHeader, NULL);
-    ret = recv(mySocket, encode, 2048*4, 0);
-    encode[ret] = '\0';
-    psp2chCloseSocket(mySocket);
 #ifdef DEBUG
     SceUID fd;
     fd = sceIoOpen("log.txt", PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
     if (fd >= 0)
     {
-        sceIoWrite(fd, encode, strlen(encode));
+        sceIoWrite(fd, net.body, strlen(net.body));
         sceIoClose(fd);
     }
 #endif
@@ -164,9 +161,9 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
     pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT);
     s2ch.pgCursorX = 0;
     s2ch.pgCursorY = 0;
-    str = strstr(encode, "</html");
+    str = strstr(net.body, "</html");
     if (str) *str = 0;
-    str = strstr(encode, "<html");
+    str = strstr(net.body, "<html");
     while ((str = pgPrintHtml(str, c, 0, SCR_WIDTH, 0)))
     {
         s2ch.pgCursorX = 0;
@@ -176,7 +173,7 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
             break;
         }
     }
-    free(encode);
+    free(net.body);
     while (s2ch.running)
     {
         pgCopy(0,0);

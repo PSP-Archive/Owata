@@ -3,6 +3,7 @@
 */
 
 #include <stdio.h>
+#include <malloc.h>
 #include "pg.h"
 #include "psp2ch.h"
 #include "psp2chNet.h"
