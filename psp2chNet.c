@@ -3,6 +3,7 @@
 */
 
 #include <stdio.h>
+#include <unistd.h>
 #include <malloc.h>
 #include <time.h>
 #include <arpa/inet.h>
