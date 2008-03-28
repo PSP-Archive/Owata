@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "pg.h"
 #include "psp2ch.h"
+#include "psp2chNet.h"
 #include "psp2chRes.h"
 #include "psp2chResWindow.h"
 #include "psp2chImageView.h"
@@ -394,8 +395,8 @@ void psp2chIdAnchor(int anc)
 int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
 {
     SceUID fd;
-    int i, ret, mySocket, contentLength;
-    HTTP_HEADERS resHeader;
+    int i, ret;
+    S_NET net;
     char path[256], buf[256];
     char ext[8], tmp[4];
     unsigned char digest[16];
@@ -460,13 +461,12 @@ int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
         }
         return 0;
     }
-    mySocket = psp2chRequest(s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path, "");
-    if (mySocket < 0)
+    ret = psp2chGet(s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path, "", &net);
+    if (ret < 0)
     {
-        return mySocket;
+        return ret;
     }
-    ret = psp2chGetStatusLine(mySocket);
-    switch(ret)
+    switch(net.status)
     {
         case 200: // OK
             break;
@@ -477,22 +477,15 @@ int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
             pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
             sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
             */
-            psp2chCloseSocket(mySocket);
+            free(net.body);
             pgWaitVn(60);
             return -1;
-    }
-    // Receive and Save dat
-    contentLength = psp2chGetHttpHeaders(mySocket, &resHeader, NULL);
-    if (contentLength < 0)
-    {
-        psp2chCloseSocket(mySocket);
-        return -1;
     }
     // save
     fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
     if (fd < 0)
     {
-        psp2chCloseSocket(mySocket);
+        free(net.body);
         memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
         sprintf(s2ch.mh.message, "File open error\n%s", path);
         pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
@@ -508,11 +501,8 @@ int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
     pgMenuBar(buf);
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
-    while((ret = recv(mySocket, buf, sizeof(buf), 0)) > 0)
-    {
-        sceIoWrite(fd, buf, ret);
-    }
-    psp2chCloseSocket(mySocket);
+    sceIoWrite(fd, net.body, strlen(net.body));
+    free(net.body);
     sceIoClose(fd);
     pgMenuBar("•\\Ž¦‚µ‚Ü‚·");
     sceDisplayWaitVblankStart();

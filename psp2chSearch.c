@@ -7,6 +7,7 @@
 #include <time.h>
 #include "pg.h"
 #include "psp2ch.h"
+#include "psp2chNet.h"
 #include "psp2chSearch.h"
 #include "psp2chIta.h"
 #include "psp2chThread.h"
@@ -278,10 +279,10 @@ int psp2chSearchList(void)
     char buf[128*3];
     char query[512];
     int count, offset;
-    int mySocket, ret, i;
-    HTTP_HEADERS resHeader;
+    int ret, i;
+    S_NET net;
     char in;
-    char *p, *q;
+    char *p, *q, *r;
 
     count = FIND_MAX_COUNT;
     offset = 0;
@@ -289,33 +290,31 @@ int psp2chSearchList(void)
     psp2chSjisToEuc(euc, keyWords);
     psp2chUrlEncode(buf, euc);
     sprintf(query, "?STR=%s&COUNT=%d&OFFSET=%d", buf, count, offset);
-    mySocket = psp2chRequest(findHost, query, "");
-    if (mySocket < 0)
+    ret = psp2chGet(findHost, query, "", &net);
+    if (ret < 0)
     {
-        return -1;
+        return ret;
     }
-    ret = psp2chGetStatusLine(mySocket);
-    switch(ret)
+    switch(net.status)
     {
         case 200: // OK
             break;
         default:
+            free(net.body);
             memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
             sprintf(s2ch.mh.message, "HTTP error\nhost %s\nStatus code %d", findHost, ret);
             pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
             sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
-            psp2chCloseSocket(mySocket);
             return -1;
     }
-    ret = psp2chGetHttpHeaders(mySocket, &resHeader, NULL);
     s2ch.findList = (S_2CH_FAVORITE*)realloc(s2ch.findList, sizeof(S_2CH_FAVORITE) * FIND_MAX_COUNT);
     if (s2ch.findList == NULL)
     {
+        free(net.body);
         memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
         strcpy(s2ch.mh.message, "memorry error");
         pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
-        psp2chCloseSocket(mySocket);
         return -1;
     }
     s2ch.find.count = 0;
@@ -323,23 +322,24 @@ int psp2chSearchList(void)
     pgMenuBar(buf);
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
-    while(recv(mySocket, &in, 1, 0) > 0)
+    r = net.body;
+    while((in = *r++))
     {
         if (in != '<') continue;
-        if (recv(mySocket, &in, 1, 0) <= 0) break;
+        if (!(in = *r++)) break;
         if (in != 'd') continue;
-        if (recv(mySocket, &in, 1, 0) <= 0) break;
+        if (!(in = *r++)) break;
         if (in != 't') continue;
-        if (recv(mySocket, &in, 1, 0) <= 0) break;
+        if (!(in = *r++)) break;
         if (in != '>') continue;
-        if (recv(mySocket, &in, 1, 0) <= 0) break;
+        if (!(in = *r++)) break;
         if (in != '<') continue;
-        if (recv(mySocket, &in, 1, 0) <= 0) break;
+        if (!(in = *r++)) break;
         if (in != 'a') continue;
         // parse html
         i = 0;
         memset(query, 0, sizeof(query));
-        while(recv(mySocket, &in, 1, 0) > 0)
+        while((in = *r++))
         {
             query[i] = in;
             i++;
@@ -395,7 +395,7 @@ int psp2chSearchList(void)
             break;
         }
     }
-    psp2chCloseSocket(mySocket);
+    free(net.body);
     return 0;
 }
 

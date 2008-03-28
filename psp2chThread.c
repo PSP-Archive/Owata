@@ -7,6 +7,7 @@
 #include <time.h>
 #include <pspdebug.h>
 #include "psp2ch.h"
+#include "psp2chNet.h"
 #include "psp2chIta.h"
 #include "psp2chThread.h"
 #include "psp2chFavorite.h"
@@ -441,8 +442,8 @@ subject.txtの取得日データをつけて2chにアクセス
 *****************/
 int psp2chGetSubject(int ita)
 {
-    int ret, mySocket, contentLength;
-    HTTP_HEADERS resHeader;
+    int ret;
+    S_NET net;
     SceUID fd;
     char path[256];
     char buf[256];
@@ -488,17 +489,17 @@ int psp2chGetSubject(int ita)
         sprintf(buf, "If-Modified-Since: %s\r\nIf-None-Match: %s\r\n", lastModified, eTag);
     }
     sprintf(path, "%s/subject.txt", s2ch.itaList[ita].dir);
-    mySocket = psp2chRequest(s2ch.itaList[ita].host, path, buf);
-    if (mySocket < 0)
+    ret = psp2chGet(s2ch.itaList[ita].host, path, buf, &net);
+    if (ret < 0)
     {
-        return mySocket;
+        return ret;
     }
-    ret = psp2chGetStatusLine(mySocket);
-    switch(ret)
+    switch(net.status)
     {
         case 200: // OK
             break;
         case 301: // Moved Permanently
+            free(net.body);
             memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
             s2ch.mh.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT | PSP_UTILITY_MSGDIALOG_OPTION_YESNO_BUTTONS;
             strcpy(s2ch.mh.message, TEXT_7);
@@ -510,14 +511,14 @@ int psp2chGetSubject(int ita)
             }
             return -1;
         case 304: // Not modified
-            psp2chCloseSocket(mySocket);
+            free(net.body);
             return 0;
         default:
+            free(net.body);
             memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
             sprintf(s2ch.mh.message, "HTTP error\nhost %s path %s\nStatus code %d", s2ch.itaList[ita].host, path, ret);
             pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
             sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
-            psp2chCloseSocket(mySocket);
             return -1;
     }
     // Receive and Save subject
@@ -525,32 +526,22 @@ int psp2chGetSubject(int ita)
     fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
     if (fd < 0)
     {
-        psp2chCloseSocket(mySocket);
+        free(net.body);
         memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
         sprintf(s2ch.mh.message, "File open error\n%s", path);
         pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return fd;
     }
-    contentLength = psp2chGetHttpHeaders(mySocket, &resHeader, NULL);
-    if (contentLength <= 0)
-    {
-        psp2chCloseSocket(mySocket);
-        sceIoClose(fd);
-        return -1;
-    }
-    sceIoWrite(fd, resHeader.Last_Modified, strlen(resHeader.Last_Modified));
-    sceIoWrite(fd, resHeader.ETag, strlen(resHeader.ETag));
+    sceIoWrite(fd, net.head.Last_Modified, strlen(net.head.Last_Modified));
+    sceIoWrite(fd, net.head.ETag, strlen(net.head.ETag));
     sprintf(buf, "http://%s/%s/subject.txt からデータを転送しています...", s2ch.itaList[ita].host, s2ch.itaList[ita].dir);
     pgMenuBar(buf);
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
-    while((ret = recv(mySocket, buf, sizeof(buf), 0)) > 0)
-    {
-        sceIoWrite(fd, buf, ret);
-    }
-    psp2chCloseSocket(mySocket);
+    sceIoWrite(fd, net.body, strlen(net.body));
     sceIoClose(fd);
+    free(net.body);
     return 0;
 }
 

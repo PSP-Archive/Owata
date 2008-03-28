@@ -6,6 +6,7 @@
 #include <malloc.h>
 #include "pg.h"
 #include "psp2ch.h"
+#include "psp2chNet.h"
 #include "utf8.h"
 
 extern S_2CH s2ch; // psp2ch.c

@@ -8,6 +8,7 @@
 #include <pspdebug.h>
 #include "pg.h"
 #include "psp2ch.h"
+#include "psp2chNet.h"
 #include "psp2chIta.h"
 #include "psp2chThread.h"
 #include "psp2chRes.h"
@@ -1464,8 +1465,8 @@ datファイルにアクセスして保存
 *****************************/
 int psp2chGetDat(char* host, char* dir, char* title, int dat)
 {
-    int ret, mySocket, contentLength, range;
-    HTTP_HEADERS resHeader;
+    int ret, range;
+    S_NET net;
     SceUID fd;
     char path[256];
     char buf[256];
@@ -1516,13 +1517,12 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
         sprintf(buf, "If-Modified-Since: %s\r\nIf-None-Match: %s\r\nRange: bytes=%d-\r\n", lastModified, eTag, range - 1);
     }
     sprintf(path, "%s/dat/%d.dat", dir, dat);
-    mySocket = psp2chRequest(host, path, buf);
-    if (mySocket < 0)
+    ret = psp2chGet(host, path, buf, &net);
+    if (ret < 0)
     {
-        return mySocket;
+        return ret;
     }
-    ret = psp2chGetStatusLine(mySocket);
-    switch(ret)
+    switch(net.status)
     {
         case 200: // OK
             break;
@@ -1535,7 +1535,7 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
             pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
             sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
             */
-            psp2chCloseSocket(mySocket);
+            free(net.body);
             pgWaitVn(40);
             pgMenuBar("このスレはDAT落ちしたようです");
             sceDisplayWaitVblankStart();
@@ -1544,31 +1544,24 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
             return 1;
             break;
         case 304: // Not modified
-            psp2chCloseSocket(mySocket);
+            free(net.body);
             return 1;
         default:
+            free(net.body);
             memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
             sprintf(s2ch.mh.message, "HTTP error\nhost %s path %s\nStatus code %d", host, path, ret);
             pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            psp2chCloseSocket(mySocket);
             sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
             return -1;
-    }
-    // Receive and Save dat
-    contentLength = psp2chGetHttpHeaders(mySocket, &resHeader, NULL);
-    if (contentLength <= 0)
-    {
-        psp2chCloseSocket(mySocket);
-        return -1;
     }
     // save dat.dat
     sprintf(buf, "http://%s/%s/dat/%d.dat からデータを転送しています...", host, dir, dat);
     pgMenuBar(buf);
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
-    if (range && (recv(mySocket, buf, 1, 0) <= 0 || buf[0] !='\n'))
+    if (range && (net.body[0] !='\n'))
     {
-        psp2chCloseSocket(mySocket);
+        free(net.body);
         memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
         strcpy(s2ch.mh.message, TEXT_4);
         pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
@@ -1579,34 +1572,30 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
     fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777);
     if (fd < 0)
     {
-        psp2chCloseSocket(mySocket);
+        free(net.body);
         memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
         sprintf(s2ch.mh.message, "File open error\n%s", path);
         pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return fd;
     }
-    while((ret = recv(mySocket, buf, sizeof(buf), 0)) > 0)
-    {
-        sceIoWrite(fd, buf, ret);
-        range += ret;
-    }
-    psp2chCloseSocket(mySocket);
+    sceIoWrite(fd, net.body + 1, strlen(net.body) - 1);
+    range += strlen(net.body) - 1;
+    free(net.body);
     sceIoClose(fd);
     // save dat.idx
     sprintf(path, "%s/%s/%s/%d.idx", s2ch.cwDir, s2ch.logDir, title, dat);
     fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
     if (fd < 0)
     {
-        psp2chCloseSocket(mySocket);
         memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
         sprintf(s2ch.mh.message, "File open error\n%s", path);
         pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return fd;
     }
-    sceIoWrite(fd, resHeader.Last_Modified, strlen(resHeader.Last_Modified));
-    sceIoWrite(fd, resHeader.ETag, strlen(resHeader.ETag));
+    sceIoWrite(fd, net.head.Last_Modified, strlen(net.head.Last_Modified));
+    sceIoWrite(fd, net.head.ETag, strlen(net.head.ETag));
     sprintf(buf, "%d\n%d\n%d\n", range,s2ch.res.start, s2ch.res.select);
     sceIoWrite(fd, buf, strlen(buf));
     sceIoClose(fd);

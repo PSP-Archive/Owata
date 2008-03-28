@@ -7,6 +7,7 @@
 #include <time.h>
 #include <pspdebug.h>
 #include "psp2ch.h"
+#include "psp2chNet.h"
 #include "psp2chIta.h"
 #include "psp2chThread.h"
 #include "psp2chFavorite.h"
@@ -474,22 +475,21 @@ int psp2chGetMenu(void)
     const char* titleend = "</A>";
     const char* ita2chnet = "2ch.net";
     const char* itabbspink = "bbspink.com";
-    HTTP_HEADERS resHeader;
+    S_NET net;
     SceUID fd;
-    int contentLength, ret, mySocket, len, menuOn;
+    int ret, menuOn;
     char buf[256];
     char menu[32];
     char itahost[32];
     char itadir[32];
-    char *p, *line;
+    char *p, *q, *line;
 
-    mySocket = psp2chRequest(menuHost, path, "");
-    if (mySocket < 0)
+    ret = psp2chGet(menuHost, path, "", &net);
+    if (ret < 0)
     {
-        return mySocket;
+        return ret;
     }
-    ret = psp2chGetStatusLine(mySocket);
-    switch(ret)
+    switch(net.status)
     {
         case 200:
             break;
@@ -498,24 +498,19 @@ int psp2chGetMenu(void)
             sprintf(s2ch.mh.message, "HTTP error\nStatus code %d", ret);
             pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
             sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
-            psp2chCloseSocket(mySocket);
             return -1;
-    }
-    contentLength = psp2chGetHttpHeaders(mySocket, &resHeader, NULL);
-    if (contentLength <= 0)
-    {
-        psp2chCloseSocket(mySocket);
-        return -1;
     }
     sprintf(buf, "%s/%s", s2ch.cwDir, s2ch.logDir);
     if ((fd = sceIoDopen(buf)) < 0)
     {
         if (sceIoMkdir(buf, 0777) < 0)
         {
+            free(net.body);
             memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
             sprintf(s2ch.mh.message, "Make dir error\n%s", buf);
             pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
             sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            return -1;
         }
     }
     else
@@ -527,7 +522,7 @@ int psp2chGetMenu(void)
     fd = sceIoOpen(buf, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
     if (fd < 0)
     {
-        psp2chCloseSocket(mySocket);
+        free(net.body);
         memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
         sprintf(s2ch.mh.message, "File open error\n%s", buf);
         pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
@@ -535,22 +530,17 @@ int psp2chGetMenu(void)
         return fd;
     }
     menuOn = 0;
-    sprintf(buf, "http://%s/%s ‚©‚çƒf[ƒ^‚ð“]‘—‚µ‚Ä‚¢‚Ü‚·...", menuHost, path);
-    pgMenuBar(buf);
-    sceDisplayWaitVblankStart();
-    framebuffer = sceGuSwapBuffers();
-    while((recv(mySocket, buf, 1, 0)) > 0)
+    q = net.body;
+    while(*q)
     {
-        len = 0;
-        while (buf[len] != '\n')
+        p = strchr(q, '\n');
+        if (p == NULL)
         {
-            len++;
-            if (recv(mySocket, &buf[len], 1, 0) == 0)
-            {
-                break;
-            }
+            break;
         }
-        buf[len] = '\0';
+        *p = '\0';
+        strcpy(buf, q);
+        q = p + 1;
         if (strstr(buf, menustart) == buf && (p = strstr(buf, menuend)) != NULL)
         {
             *p = '\0';
@@ -598,7 +588,7 @@ int psp2chGetMenu(void)
         }
     }
     sceIoClose(fd);
-    psp2chCloseSocket(mySocket);
+    free(net.body);
     return 0;
 }
 

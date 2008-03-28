@@ -78,13 +78,6 @@ typedef struct {
 } S_2CH_RES;
 
 typedef struct {
-    int Content_Length;
-    char Content_Type[32];
-    char Last_Modified[32];
-    char ETag[32];
-} HTTP_HEADERS;
-
-typedef struct {
     int count;
     int start;
     int select;
@@ -364,12 +357,6 @@ int psp2chCursorSet(S_2CH_SCREEN* line,  int lineEnd, int shift);
 int psp2chPadSet(int scrollX);
 int psp2chInit(void);
 int psp2chTerm(void);
-int psp2chCloseSocket(int mySocket);
-int psp2chRequest(const char* host, const char* path, const char* header);
-int psp2chPost(char* host, char* dir, int dat, char* cook, char* body);
-int psp2chGetStatusLine(int mySocket);
-int psp2chGetHttpHeaders(int mySocket, HTTP_HEADERS* header, char* cookie);
-int psp2chApConnect(void);
 void psp2chGets(char* title, char* text, int num, int lines);
 int psp2chInputDialog(const unsigned short* text1, char* text2);
 
