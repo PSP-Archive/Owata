@@ -22,6 +22,7 @@ int psp2chCloseSocket(int mySocket);
 int psp2chGet(const char* host, const char* path, const char* header, S_NET* net);
 int psp2chPost(char* host, char* dir, int dat, char* cook, S_NET* net);
 int psp2chRequest(int mySocket, const char* host, const char* path, const char* requestText, S_NET* net);
+int psp2chResponse(int mySocket, const char* host, const char* path, S_NET* net);
 int psp2chGetStatusLine(int mySocket);
 int psp2chGetHttpHeaders(int mySocket, S_NET* net, char* cookie);
 int psp2chApConnect(void);

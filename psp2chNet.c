@@ -101,17 +101,22 @@ int psp2chResolve(const char* host, struct in_addr* addr)
 /*****************************
 HTTP で GETリクエスト
 ソケットを作成
-psp2chRequest();
+psp2chRequest();でリクエストヘッダ送信
 本文受信
 ソケットを閉じる
+成功時には0を返す
 *****************************/
 int psp2chGet(const char* host, const char* path, const char* header, S_NET* net)
 {
-    int ret, mySocket, size;
+    int mySocket;
     char requestText[512];
-    char buf[256];
     char *p;
 
+    mySocket = psp2chOpenSocket();
+    if (mySocket < 0)
+    {
+        return mySocket;
+    }
     p = strrchr(path, '#');
     if (p)
     {
@@ -125,74 +130,47 @@ int psp2chGet(const char* host, const char* path, const char* header, S_NET* net
         "Connection: close\r\n\r\n"
         , path, host, userAgent, ver, header
     );
-    mySocket = psp2chOpenSocket();
-    if (mySocket < 0)
-    {
-        return mySocket;
-    }
     memset(net, 0, sizeof(S_NET));
     // リクエスト送信
-    psp2chRequest(mySocket, host, path, requestText, net);
-    // Status code
-    net->status = psp2chGetStatusLine(mySocket);
-    // Header 受信
-    psp2chGetHttpHeaders(mySocket, net, NULL);
-    // Data 受信
-    sprintf(buf, "http://%s/%s からデータを転送しています...", host, path);
-    pgMenuBar(buf);
-    sceDisplayWaitVblankStart();
-    framebuffer = sceGuSwapBuffers();
-    size = 0;
-    while ((ret = recv(mySocket, buf, sizeof(buf), 0)) > 0)
+    if (psp2chRequest(mySocket, host, path, requestText, net) < 0)
     {
-        net->body = (char*)realloc(net->body, size + ret);
-        if (net->body == NULL)
-        {
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "memory error\nnet.body");
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
-            psp2chCloseSocket(mySocket);
-            return -1;
-        }
-        memcpy(net->body + size, buf, ret);
-        size += ret;
-    }
-    net->body = (char*)realloc(net->body, size + 1);
-    if (net->body == NULL)
-    {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "memory error\nnet.body");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
-        psp2chCloseSocket(mySocket);
         return -1;
     }
-    net->body[size] = '\0';
+    // Status code 受信
+    if ((net->status = psp2chGetStatusLine(mySocket)) <= 0)
+    {
+        return -1;
+    }
+    // Response Header 受信
+    psp2chGetHttpHeaders(mySocket, net, NULL);
+    // Response Body 受信
+    if (psp2chResponse(mySocket, host, path, net) < 0)
+    {
+        return -1;
+    }
+    // Close
     psp2chCloseSocket(mySocket);
-    sprintf(buf, "完了");
-    pgMenuBar(buf);
-    sceDisplayWaitVblankStart();
-    framebuffer = sceGuSwapBuffers();
     return 0;
 }
 
 /*****************************
 HTTP で POST 送信します。
 ソケット作成
-アドレス解決してヘッダとボディを送信
-成功時にはソケット(>=0)を返す
+psp2chRequest();でリクエストヘッダ送信
+ボディを送信
+ソケットを閉じる
+成功時には0を返す
 *****************************/
 int psp2chPost(char* host, char* dir, int dat, char* cook, S_NET* net)
 {
-    int ret, mySocket, size;
+    int mySocket;
     char requestText[512];
-    char buf[512];
     char *path = "test/bbs.cgi";
 
     mySocket = psp2chOpenSocket();
-    if (mySocket < 0) {
-        return -1;
+    if (mySocket < 0)
+    {
+        return mySocket;
     }
     sprintf(requestText,
         "POST /%s HTTP/1.1\r\n"
@@ -204,57 +182,27 @@ int psp2chPost(char* host, char* dir, int dat, char* cook, S_NET* net)
         "Content-Length: %d\r\n\r\n"
         , path, host, userAgent, ver, host, dir, dat, cook, strlen(net->body)
     );
-    mySocket = psp2chOpenSocket();
-    if (mySocket < 0)
-    {
-        return mySocket;
-    }
     // リクエスト送信
-    psp2chRequest(mySocket, host, path, requestText, net);
-    // 本文送信
-    send(mySocket, net->body, strlen(net->body), 0 );
-    // Status code
-    net->status = psp2chGetStatusLine(mySocket);
-    // Header 受信
-    psp2chGetHttpHeaders(mySocket, net, cook);
-    // Data 受信
-    sprintf(buf, "http://%s/%s からデータを転送しています...", host, path);
-    pgMenuBar(buf);
-    sceDisplayWaitVblankStart();
-    framebuffer = sceGuSwapBuffers();
-    size = 0;
-    net->body = NULL;
-    while ((ret = recv(mySocket, buf, sizeof(buf), 0)) > 0)
+    if (psp2chRequest(mySocket, host, path, requestText, net) < 0)
     {
-        net->body = (char*)realloc(net->body, size + ret);
-        if (net->body == NULL)
-        {
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "memory error\nnet.body");
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
-            psp2chCloseSocket(mySocket);
-            return -1;
-        }
-        memcpy(net->body + size, buf, ret);
-        size += ret;
-    }
-    net->body = (char*)realloc(net->body, size + 1);
-    if (net->body == NULL)
-    {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "memory error\nnet.body");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
-        psp2chCloseSocket(mySocket);
         return -1;
     }
-    net->body[size] = '\0';
+    // 本文送信
+    send(mySocket, net->body, strlen(net->body), 0 );
+    // Status code 受信
+    if ((net->status = psp2chGetStatusLine(mySocket)) <= 0)
+    {
+        return -1;
+    }
+    // Response Header 受信
+    psp2chGetHttpHeaders(mySocket, net, cook);
+    // Response Body 受信
+    if (psp2chResponse(mySocket, host, path, net) < 0)
+    {
+        return -1;
+    }
+    // Close
     psp2chCloseSocket(mySocket);
-    sprintf(buf, "完了");
-    pgMenuBar(buf);
-    sceDisplayWaitVblankStart();
-    framebuffer = sceGuSwapBuffers();
     return 0;
 }
 
@@ -298,7 +246,53 @@ int psp2chRequest(int mySocket, const char* host, const char* path, const char* 
     framebuffer = sceGuSwapBuffers();
     // send our request
     send(mySocket, requestText, strlen(requestText), 0 );
+    return 0;
+}
 
+/*****************************
+Response body を受信
+*****************************/
+int psp2chResponse(int mySocket, const char* host, const char* path, S_NET* net)
+{
+    char buf[512];
+    int ret, size;
+
+    sprintf(buf, "http://%s/%s からデータを転送しています...", host, path);
+    pgMenuBar(buf);
+    sceDisplayWaitVblankStart();
+    framebuffer = sceGuSwapBuffers();
+    size = 0;
+    net->body = NULL;
+    while ((ret = recv(mySocket, buf, sizeof(buf), 0)) > 0)
+    {
+        net->body = (char*)realloc(net->body, size + ret);
+        if (net->body == NULL)
+        {
+            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+            sprintf(s2ch.mh.message, "memory error\nnet.body");
+            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            psp2chCloseSocket(mySocket);
+            return -1;
+        }
+        memcpy(net->body + size, buf, ret);
+        size += ret;
+    }
+    net->body = (char*)realloc(net->body, size + 1);
+    if (net->body == NULL)
+    {
+        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+        sprintf(s2ch.mh.message, "memory error\nnet.body");
+        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chCloseSocket(mySocket);
+        return -1;
+    }
+    net->body[size] = '\0';
+    sprintf(buf, "完了");
+    pgMenuBar(buf);
+    sceDisplayWaitVblankStart();
+    framebuffer = sceGuSwapBuffers();
     return 0;
 }
 
