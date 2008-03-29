@@ -36,28 +36,19 @@ int psp2chTinyBrowser(char* path)
     ret = sceIoGetstat(path, &st);
     if (ret < 0)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "Getstat error\n%s", path);
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("Getstat error\n%s", path);
         return -1;
     }
     txt = (char*)malloc(st.st_size + 1);
     if (txt == NULL)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "memorry error\txt");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("memorry error\txt");
         return -1;
     }
     bck = (char*)malloc(st.st_size + 1);
     if (bck == NULL)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "memorry error\bck");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("memorry error\bck");
         return -1;
     }
     fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
@@ -65,10 +56,7 @@ int psp2chTinyBrowser(char* path)
     {
         free(bck);
         free(txt);
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "Open error\n%s", path);
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("Open error\n%s", path);
         return -1;
     }
     else
@@ -126,10 +114,7 @@ int psp2chTinyBrowser(char* path)
     line = (char**)malloc(sizeof(char*) * count);
     if (line == NULL)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "memorry error\nline");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("memorry error\nline");
         return -1;
     }
     p = txt;
@@ -193,10 +178,7 @@ int psp2chTinyBrowser(char* path)
                     line = (char**)malloc(sizeof(char*) * count);
                     if (line == NULL)
                     {
-                        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-                        strcpy(s2ch.mh.message, "memorry error\nline");
-                        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-                        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+                        psp2chErrorDialog("memorry error\nline");
                         free(bck);
                         free(txt);
                         printBuf = pixels;

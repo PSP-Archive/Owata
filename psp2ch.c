@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <time.h>
+#include <stdarg.h>
 #include "psp2ch.h"
 #include "psp2chIta.h"
 #include "psp2chThread.h"
@@ -353,25 +354,19 @@ int psp2chInit(void)
     ret = sceUtilityLoadNetModule(PSP_NET_MODULE_COMMON);
     if (ret < 0)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "Load module common errror");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        psp2chErrorDialog("Load module common errror");
         return ret;
     }
     ret = sceUtilityLoadNetModule(PSP_NET_MODULE_INET);
     if (ret < 0)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "Load module inet errror");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        psp2chErrorDialog("Load module inet errror");
         return ret;
     }
     ret = Cat_NetworkInit();
     if (ret < 0)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "Cat_NetworkInit errror");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        psp2chErrorDialog("Cat_NetworkInit errror");
         return ret;
     }
     psp2chIniSetColor();
@@ -597,4 +592,19 @@ int psp2chInputDialog(const unsigned short* text1, char* text2)
     }
     s2ch.tateFlag = temp;
     return 0;
+}
+
+/****************
+エラーダイアログ表示
+*****************/
+void psp2chErrorDialog(const char* fmt, ...)
+{
+    va_list list;
+
+    va_start(list, fmt);
+    memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+    vsprintf(s2ch.mh.message, fmt, list);
+    pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+    sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+    va_end(list);
 }

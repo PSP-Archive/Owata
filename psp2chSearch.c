@@ -301,27 +301,17 @@ int psp2chSearchList(void)
             break;
         default:
             free(net.body);
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "HTTP error\nhost %s\nStatus code %d", findHost, ret);
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            psp2chErrorDialog("HTTP error\nhost %s\nStatus code %d", findHost, ret);
             return -1;
     }
     s2ch.findList = (S_2CH_FAVORITE*)realloc(s2ch.findList, sizeof(S_2CH_FAVORITE) * FIND_MAX_COUNT);
     if (s2ch.findList == NULL)
     {
         free(net.body);
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "memorry error");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("memorry error");
         return -1;
     }
     s2ch.find.count = 0;
-    sprintf(buf, "http://%s/ Ç©ÇÁÉfÅ[É^Çì]ëóÇµÇƒÇ¢Ç‹Ç∑...", findHost);
-    pgMenuBar(buf);
-    sceDisplayWaitVblankStart();
-    framebuffer = sceGuSwapBuffers();
     r = net.body;
     while((in = *r++))
     {

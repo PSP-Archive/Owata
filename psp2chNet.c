@@ -235,10 +235,7 @@ int psp2chRequest(int mySocket, const char* host, const char* path, const char* 
     framebuffer = sceGuSwapBuffers();
     ret = connect(mySocket,(struct sockaddr *)&sain, sizeof(sain) );
     if (ret < 0) {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "Connect errror");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("Connect errror");
         return ret;
     }
     pgMenuBar("Ú‘±‚µ‚Ü‚µ‚½");
@@ -268,11 +265,8 @@ int psp2chResponse(int mySocket, const char* host, const char* path, S_NET* net)
         net->body = (char*)realloc(net->body, size + ret);
         if (net->body == NULL)
         {
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "memory error\nnet.body");
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
             psp2chCloseSocket(mySocket);
+            psp2chErrorDialog("memory error\nnet.body");
             return -1;
         }
         memcpy(net->body + size, buf, ret);
@@ -281,13 +275,11 @@ int psp2chResponse(int mySocket, const char* host, const char* path, S_NET* net)
     net->body = (char*)realloc(net->body, size + 1);
     if (net->body == NULL)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "memory error\nnet.body");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         psp2chCloseSocket(mySocket);
+        psp2chErrorDialog("memory error\nnet.body");
         return -1;
     }
+    net->length = size;
     net->body[size] = '\0';
     sprintf(buf, "Š®—¹");
     pgMenuBar(buf);
@@ -433,9 +425,7 @@ int connect_to_apctl(int config)
     err = sceNetApctlConnect(config);
     if (err != 0)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "sceNetApctlConnect error");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        psp2chErrorDialog("sceNetApctlConnect error");
         return 0;
     }
 
@@ -448,9 +438,7 @@ int connect_to_apctl(int config)
         err = sceNetApctlGetState(&state);
         if (err != 0)
         {
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "sceNetApctlGetState error\n0x%X", err);
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+            psp2chErrorDialog("sceNetApctlGetState error\n0x%X", err);
             break;
         }
         if (state == 2)
@@ -510,14 +498,12 @@ int psp2chApConnect(void)
     s2ch.mh.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT;
     if (sceWlanGetSwitchState() == 0)
     {
-        strcpy(s2ch.mh.message, TEXT_1);
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        psp2chErrorDialog(TEXT_1);
         return -1;
     }
     else if (sceWlanDevIsPowerOn() == 0)
     {
-        strcpy(s2ch.mh.message, TEXT_2);
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        psp2chErrorDialog(TEXT_2);
         return -1;
     }
     if (sceNetApctlGetInfo(8, buf) == 0)

@@ -146,10 +146,7 @@ int pgExtraFontInit(void)
     ret = sceIoGetstat(path, &st);
     if (ret < 0)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "Getstat error font file\n%s", path);
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("Getstat error font file\n%s", path);
         return -1;
     }
     size_fontA = st.st_size;
@@ -157,19 +154,13 @@ int pgExtraFontInit(void)
     fontA = (unsigned char*)malloc(st.st_size);
     if (fontA == NULL)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "memorry error\nfontA");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("memorry error\nfontA");
         return -1;
     }
     fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
     if (fd < 0)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "Open error font file\n%s", path);
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("Open error font file\n%s", path);
         return -1;
     }
     else
@@ -181,10 +172,7 @@ int pgExtraFontInit(void)
     ret = sceIoGetstat(path, &st);
     if (ret < 0)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "Getstat error font file\n%s", path);
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("Getstat error font file\n%s", path);
         return -1;
     }
     size_fontJ = st.st_size;
@@ -192,19 +180,13 @@ int pgExtraFontInit(void)
     fontJ = (unsigned char*)malloc(st.st_size);
     if (fontJ == NULL)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "memorry error\nfontJ");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("memorry error\nfontJ");
         return -1;
     }
     fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
     if (fd < 0)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "Open error font file\n%s", path);
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("Open error font file\n%s", path);
         return -1;
     }
     else

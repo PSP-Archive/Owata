@@ -284,20 +284,14 @@ char* psp2chGetNGBuf(const char* file, char* buf)
     buf = (char*)malloc(st.st_size + 1);
     if (buf == NULL)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "memorry error\npsp2chNGDel() buf");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("memorry error\npsp2chNGDel() buf");
         return NULL;
     }
     fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
     if (fd < 0)
     {
         free(buf);
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "NG File open error\n%s", path);
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("NG File open error\n%s", path);
         return NULL;
     }
     sceIoRead(fd, buf, st.st_size);
@@ -359,10 +353,7 @@ int psp2chNGDel(const char* file, int pixelsX, int pixelsY)
     if (list == NULL)
     {
         free(buf);
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "memorry error\npsp2chNGDel() list");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("memorry error\npsp2chNGDel() list");
         return -1;
     }
     p = buf;
@@ -393,10 +384,8 @@ int psp2chNGDel(const char* file, int pixelsX, int pixelsY)
                     {
                         free(list);
                         free(buf);
-                        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-                        sprintf(s2ch.mh.message, "NG File open error\n%s", path);
-                        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
                         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+                        psp2chErrorDialog("NG File open error\n%s", path);
                         return -1;
                     }
                     for (i = 0; i < menu.count; i++)
@@ -450,10 +439,7 @@ int psp2chNGAdd(const char* file, char* val)
     fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777);
     if (fd < 0)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "NG File open error\n%s", path);
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("NG File open error\n%s", path);
         return -1;
     }
     sceIoWrite(fd, val, strlen(val));

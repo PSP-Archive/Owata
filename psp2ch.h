@@ -359,5 +359,6 @@ int psp2chInit(void);
 int psp2chTerm(void);
 void psp2chGets(char* title, char* text, int num, int lines);
 int psp2chInputDialog(const unsigned short* text1, char* text2);
+void psp2chErrorDialog(const char* fmt, ...);
 
 #endif

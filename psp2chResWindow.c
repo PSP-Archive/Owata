@@ -408,10 +408,7 @@ int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
     {
         if (sceIoMkdir(path, 0777) < 0)
         {
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "Make dir error\n%s", path);
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            psp2chErrorDialog("Make dir error\n%s", path);
             return -1;
         }
     }
@@ -473,10 +470,7 @@ int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
             break;
         default:
             /*
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "HTTP error\nhost %s path %s\nStatus code %d", s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path, ret);
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            psp2chErrorDialog("HTTP error\nhost %s path %s\nStatus code %d", s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path, ret);
             */
             free(net.body);
             pgWaitVn(60);
@@ -487,13 +481,10 @@ int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
     if (fd < 0)
     {
         free(net.body);
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "File open error\n%s", path);
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("File open error\n%s", path);
         return fd;
     }
-    sprintf(buf, "http://%s/%s からデータを転送しています...", s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path);
+    strcpy(buf, "表\示します");
     pgCopy(0, offset);
     pgMenuBar(buf);
     sceDisplayWaitVblankStart();
@@ -502,12 +493,9 @@ int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
     pgMenuBar(buf);
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
-    sceIoWrite(fd, net.body, strlen(net.body));
+    sceIoWrite(fd, net.body, net.length);
     free(net.body);
     sceIoClose(fd);
-    pgMenuBar("表\示します");
-    sceDisplayWaitVblankStart();
-    framebuffer = sceGuSwapBuffers();
     if ((ext[1] == 'j' || ext[1] == 'J') && (ext[2] == 'p' || ext[2] == 'P') && (ext[3] == 'g' || ext[3] == 'G'))
     {
         psp2chImageViewJpeg(path);

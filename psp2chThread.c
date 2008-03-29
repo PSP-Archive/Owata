@@ -279,30 +279,21 @@ int psp2chThreadList(int ita)
         i = sceIoGetstat(file, &st);
         if (i< 0)
         {
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "File stat error\n%s", file);
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            psp2chErrorDialog("File stat error\n%s", file);
             return -1;
         }
     }
     buf = (char*)malloc(st.st_size + 1);
     if (buf == NULL)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "memorry error\npsp2chThreadList() buf");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("memorry error\npsp2chThreadList() buf");
         return -1;
     }
     fd = sceIoOpen(file, PSP_O_RDONLY, 0777);
     if (fd < 0)
     {
         free(buf);
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "File open error\n%s", file);
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("File open error\n%s", file);
         return -1;
     }
     sceIoRead(fd, buf, st.st_size);
@@ -333,10 +324,7 @@ int psp2chThreadList(int ita)
     if (s2ch.threadList == NULL )
     {
         free(buf);
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "memorry error\nThreadList");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("memorry error\nThreadList");
         return -1;
     }
     s2ch.thread.count = 0;
@@ -414,19 +402,13 @@ int psp2chThreadList(int ita)
     s2ch.threadList = (S_2CH_THREAD*)realloc(s2ch.threadList, sizeof(S_2CH_THREAD) * s2ch.thread.count);
     if (s2ch.threadList == NULL )
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "memorry error\nThreadList");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("memorry error\nThreadList");
         return -1;
     }
     threadSort = (int*)realloc(threadSort, sizeof(int) * s2ch.thread.count);
     if (threadSort == NULL)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "memorry error\nThreadSort");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("memorry error\nThreadSort");
         return -1;
     }
     psp2chSort(2);
@@ -457,10 +439,7 @@ int psp2chGetSubject(int ita)
     {
         if (sceIoMkdir(path, 0777) < 0)
         {
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "Make dir error\n%s", path);
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            psp2chErrorDialog("Make dir error\n%s", path);
             return -1;
         }
     }
@@ -515,10 +494,7 @@ int psp2chGetSubject(int ita)
             return 0;
         default:
             free(net.body);
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "HTTP error\nhost %s path %s\nStatus code %d", s2ch.itaList[ita].host, path, ret);
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            psp2chErrorDialog("HTTP error\nhost %s path %s\nStatus code %d", s2ch.itaList[ita].host, path, ret);
             return -1;
     }
     // Receive and Save subject
@@ -527,19 +503,12 @@ int psp2chGetSubject(int ita)
     if (fd < 0)
     {
         free(net.body);
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "File open error\n%s", path);
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("File open error\n%s", path);
         return fd;
     }
     sceIoWrite(fd, net.head.Last_Modified, strlen(net.head.Last_Modified));
     sceIoWrite(fd, net.head.ETag, strlen(net.head.ETag));
-    sprintf(buf, "http://%s/%s/subject.txt ‚©‚çƒf[ƒ^‚ð“]‘—‚µ‚Ä‚¢‚Ü‚·...", s2ch.itaList[ita].host, s2ch.itaList[ita].dir);
-    pgMenuBar(buf);
-    sceDisplayWaitVblankStart();
-    framebuffer = sceGuSwapBuffers();
-    sceIoWrite(fd, net.body, strlen(net.body));
+    sceIoWrite(fd, net.body, net.length);
     sceIoClose(fd);
     free(net.body);
     return 0;

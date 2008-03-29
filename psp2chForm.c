@@ -57,20 +57,14 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
     encode = (char*)malloc(2048*4);
     if (encode == NULL)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "memorry error\n");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("memorry error\n");
         return -1;
     }
     buffer = (char*)malloc(2048*2);
     if (buffer == NULL)
     {
         free(encode);
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "memorry error\n");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("memorry error\n");
         return -1;
     }
     // 送信しますかダイアログで画面消えてるので再描画
@@ -100,10 +94,7 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
     if (ret < 0)
     {
         free(encode);
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "POST error");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("POST error");
         return ret;
     }
     free(net.body);
@@ -114,10 +105,7 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
             break;
         default:
             free(encode);
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "Status code %d", ret);
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            psp2chErrorDialog("Status code %d", ret);
             return -1;
     }
     // Cookieにhana=mogeraも追加(encodeに&hana=mogera追加でもいいけど)
@@ -127,10 +115,7 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
     free(encode);
     if (ret < 0)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "POST error");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("POST error");
         return -1;
     }
     switch(net.status)
@@ -139,10 +124,7 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
             break;
         default:
             free(net.body);
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "Status code %d", ret);
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            psp2chErrorDialog("Status code %d", ret);
             return -1;
     }
 #ifdef DEBUG
@@ -150,7 +132,7 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
     fd = sceIoOpen("log.txt", PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
     if (fd >= 0)
     {
-        sceIoWrite(fd, net.body, strlen(net.body));
+        sceIoWrite(fd, net.body, net.length);
         sceIoClose(fd);
     }
 #endif

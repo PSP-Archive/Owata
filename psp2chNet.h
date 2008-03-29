@@ -16,6 +16,7 @@ typedef struct {
     int status;
     HTTP_HEADERS head;
     char* body;
+    int length;
 } S_NET;
 
 int psp2chCloseSocket(int mySocket);

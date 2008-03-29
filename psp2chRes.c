@@ -423,10 +423,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                     }
                     if (message == NULL)
                     {
-                        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-                        sprintf(s2ch.mh.message, "memorry error\nForm message");
-                        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-                        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+                        psp2chErrorDialog("memorry error\nForm message");
                         return 0;
                     }
                     sprintf(path, ">>%d\n", s2ch.numAnchor[numMenu].num + 1);
@@ -494,10 +491,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                         }
                         if (message == NULL)
                         {
-                            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-                            sprintf(s2ch.mh.message, "memorry error\nForm message");
-                            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-                            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+                            psp2chErrorDialog("memorry error\nForm message");
                             return 0;
                         }
                         // 書き込みがあったときのみ更新
@@ -1283,10 +1277,7 @@ int psp2chResList(char* host, char* dir, char* title, int dat)
         ret = sceIoGetstat(path, &st);
         if (ret < 0)
         {
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "File stat error\n%s", path);
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            psp2chErrorDialog("File stat error\n%s", path);
             return -1;
         }
     }
@@ -1294,19 +1285,13 @@ int psp2chResList(char* host, char* dir, char* title, int dat)
     resBuffer = (char*)malloc(st.st_size + 1);
     if (resBuffer == NULL)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "memorry error\nresBuffer");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("memorry error\nresBuffer");
         return -1;
     }
     fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
     if (fd < 0)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "File open error\n%s", path);
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("File open error\n%s", path);
         return -1;
     }
     ret = sceIoRead(fd, resBuffer, st.st_size);
@@ -1335,10 +1320,7 @@ int psp2chResList(char* host, char* dir, char* title, int dat)
     {
         free(resBuffer);
         resBuffer = NULL;
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "memorry error\nresList");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("memorry error\nresList");
         return -1;
     }
     p = resBuffer;
@@ -1352,10 +1334,7 @@ int psp2chResList(char* host, char* dir, char* title, int dat)
             s2ch.resList = NULL;
             free(resBuffer);
             resBuffer = NULL;
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "DAT log error1\n%d/%d", ret, s2ch.res.count);
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            psp2chErrorDialog("DAT log error1\n%d/%d", ret, s2ch.res.count);
             return -1;
         }
         *p = '\0';
@@ -1369,10 +1348,7 @@ int psp2chResList(char* host, char* dir, char* title, int dat)
             s2ch.resList = NULL;
             free(resBuffer);
             resBuffer = NULL;
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "DAT log error2\n%d", ret);
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            psp2chErrorDialog("DAT log error2\n%d", ret);
             return -1;
         }
         *p = '\0';
@@ -1386,10 +1362,7 @@ int psp2chResList(char* host, char* dir, char* title, int dat)
             s2ch.resList = NULL;
             free(resBuffer);
             resBuffer = NULL;
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "DAT log error3\n%d", ret);
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            psp2chErrorDialog("DAT log error3\n%d", ret);
             return -1;
         }
         *p = '\0';
@@ -1425,10 +1398,7 @@ int psp2chResList(char* host, char* dir, char* title, int dat)
             s2ch.resList = NULL;
             free(resBuffer);
             resBuffer = NULL;
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "DAT log error4\n%d", ret);
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            psp2chErrorDialog("DAT log error4\n%d", ret);
             return -1;
         }
         *p = '\0';
@@ -1442,10 +1412,7 @@ int psp2chResList(char* host, char* dir, char* title, int dat)
             s2ch.resList = NULL;
             free(resBuffer);
             resBuffer = NULL;
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "DAT log error5\n%d", ret);
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            psp2chErrorDialog("DAT log error5\n%d", ret);
             return -1;
         }
         *p = '\0';
@@ -1465,7 +1432,7 @@ datファイルにアクセスして保存
 *****************************/
 int psp2chGetDat(char* host, char* dir, char* title, int dat)
 {
-    int ret, range;
+    int ret, range, len;
     S_NET net;
     SceUID fd;
     char path[256];
@@ -1480,10 +1447,7 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
     {
         if (sceIoMkdir(path, 0777) < 0)
         {
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "Make dir error\n%s", path);
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            psp2chErrorDialog("Make dir error\n%s", path);
             return -1;
         }
     }
@@ -1525,15 +1489,16 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
     switch(net.status)
     {
         case 200: // OK
+            p = net.body;
+            len = net.length;
             break;
         case 206: // Partial content
+            p = net.body + 1;
+            len = net.length - 1;
             break;
         case 302: // Found
             /*
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            strcpy(s2ch.mh.message, TEXT_10);
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            psp2chErrorDialog(TEXT_10);
             */
             free(net.body);
             pgWaitVn(40);
@@ -1548,39 +1513,27 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
             return 1;
         default:
             free(net.body);
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            sprintf(s2ch.mh.message, "HTTP error\nhost %s path %s\nStatus code %d", host, path, ret);
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            psp2chErrorDialog("HTTP error\nhost %s path %s\nStatus code %d", host, path, ret);
             return -1;
     }
-    // save dat.dat
-    sprintf(buf, "http://%s/%s/dat/%d.dat からデータを転送しています...", host, dir, dat);
-    pgMenuBar(buf);
-    sceDisplayWaitVblankStart();
-    framebuffer = sceGuSwapBuffers();
+    // abone check
     if (range && (net.body[0] !='\n'))
     {
         free(net.body);
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, TEXT_4);
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog(TEXT_4);
         return -1;
     }
+    // save dat.dat
     sprintf(path, "%s/%s/%s/%d.dat", s2ch.cwDir, s2ch.logDir, title, dat);
     fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777);
     if (fd < 0)
     {
         free(net.body);
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "File open error\n%s", path);
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("File open error\n%s", path);
         return fd;
     }
-    sceIoWrite(fd, net.body + 1, strlen(net.body) - 1);
-    range += strlen(net.body) - 1;
+    sceIoWrite(fd, p, len);
+    range += len;
     free(net.body);
     sceIoClose(fd);
     // save dat.idx
@@ -1588,10 +1541,7 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
     fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
     if (fd < 0)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        sprintf(s2ch.mh.message, "File open error\n%s", path);
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        psp2chErrorDialog("File open error\n%s", path);
         return fd;
     }
     sceIoWrite(fd, net.head.Last_Modified, strlen(net.head.Last_Modified));

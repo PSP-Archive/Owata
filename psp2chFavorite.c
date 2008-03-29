@@ -431,9 +431,7 @@ int psp2chLoadFavorite(void)
     buf = (char*)malloc(st.st_size + 1);
     if (buf == NULL)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "memorry error");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        psp2chErrorDialog("memorry error");
         return -1;
     }
     fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
@@ -462,17 +460,13 @@ int psp2chLoadFavorite(void)
     s2ch.favList = (S_2CH_FAVORITE*)realloc(s2ch.favList, sizeof(S_2CH_FAVORITE) * s2ch.fav.count);
     if (s2ch.favList == NULL)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "memorry error\nfavList");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        psp2chErrorDialog("memorry error\nfavList");
         return -1;
     }
     favSort = (int*)realloc(favSort, sizeof(int) * s2ch.fav.count);
     if (favSort == NULL)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "memorry error\nfavSort");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        psp2chErrorDialog("memorry error\nfavSort");
         return -1;
     }
     r = buf;
@@ -529,9 +523,7 @@ int psp2chLoadFavoriteIta(void)
     buf = (char*)malloc(st.st_size + 1);
     if (buf == NULL)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "memorry error");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        psp2chErrorDialog("memorry error");
         return -1;
     }
     fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
@@ -560,9 +552,7 @@ int psp2chLoadFavoriteIta(void)
     s2ch.favItaList = (S_2CH_FAV_ITA*)realloc(s2ch.favItaList, sizeof(S_2CH_FAV_ITA) * s2ch.favIta.count);
     if (s2ch.favItaList == NULL)
     {
-        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-        strcpy(s2ch.mh.message, "memorry error");
-        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+        psp2chErrorDialog("memorry error");
         return -1;
     }
     r = buf;
@@ -601,9 +591,7 @@ int psp2chAddFavorite(char* host, char* dir, char* title, int dat)
     {
         if (s2ch.favList[i].dat == dat && strcmp(s2ch.favList[i].title, title) == 0)
         {
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            strcpy(s2ch.mh.message, TEXT_8);
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+            psp2chErrorDialog(TEXT_8);
             return -1;
         }
     }
@@ -637,9 +625,7 @@ int psp2chAddFavoriteIta(char* cate, char* title)
     {
         if (strcmp(s2ch.favItaList[i].cate, cate) == 0 && strcmp(s2ch.favItaList[i].title, title) == 0)
         {
-            memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-            strcpy(s2ch.mh.message, TEXT_8);
-            pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+            psp2chErrorDialog(TEXT_8);
             return -1;
         }
     }
