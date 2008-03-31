@@ -190,6 +190,8 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         {
             s2ch.res.start = 0;
         }
+        s2ch.viewX = 0;
+        s2ch.viewY = 0;
     }
     if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
     {
@@ -240,7 +242,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
             // STARTƒ{ƒ^ƒ“
             else if(s2ch.pad.Buttons & PSP_CTRL_START)
             {
-                psp2chMenu(0, s2ch.res.start*LINE_PITCH);
+                psp2chMenu();
                 totalLine = psp2chResSetLine(&bar);
                 if (s2ch.res.start > totalLine - lineEnd)
                 {
@@ -704,9 +706,10 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                 menuStr = s2ch.menuResH.main;
             }
         }
+        s2ch.viewY = s2ch.res.start * LINE_PITCH;
         psp2chDrawRes(s2ch.res.start);
-        pgCopy(0, s2ch.res.start*LINE_PITCH);
-        bar.start = s2ch.res.start * LINE_PITCH;
+        pgCopy(s2ch.viewX, s2ch.viewY);
+        bar.start = s2ch.viewY;
         pgScrollbar(bar, s2ch.resBarColor);
         pgMenuBar(menuStr);
         if (rMenu)

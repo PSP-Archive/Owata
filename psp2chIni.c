@@ -9,6 +9,7 @@
 #include "pg.h"
 
 extern S_2CH s2ch; // psp2ch.c
+extern const char* colorFile; // psp2chMenu.c
 
 #define setHex(A, B, C) \
     p = strstr(buf, (A));\
@@ -136,25 +137,29 @@ void psp2chIniLoadConfig(void)
 
 /***********************************
 外部カラーセット
-color.iniを読み込んで各カラーをセット
+設定ファイルを読み込んで各カラーをセット
 ************************************/
-void psp2chIniSetColor(void)
+void psp2chIniSetColor(const char* file)
 {
     SceUID fd;
     SceIoStat st;
-    char file[256];
+    char path[256];
     char *buf;
     char *p;
     int ret;
 
-    sprintf(file, "%s/color.ini", s2ch.cwDir);
-    ret = sceIoGetstat(file, &st);
+    if (file == NULL)
+    {
+        file = colorFile;
+    }
+    sprintf(path, "%s/%s/%s", s2ch.cwDir, s2ch.colorDir, file);
+    ret = sceIoGetstat(path, &st);
     if (ret >= 0)
     {
         buf = (char*)malloc(st.st_size + 1);
         if (buf)
         {
-            fd = sceIoOpen(file, PSP_O_RDONLY, 0777);
+            fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
             if (fd >= 0)
             {
                 sceIoRead(fd, buf, st.st_size);

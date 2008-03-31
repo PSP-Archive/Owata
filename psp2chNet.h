@@ -19,7 +19,9 @@ typedef struct {
     int length;
 } S_NET;
 
+int psp2chOpenSocket(void);
 int psp2chCloseSocket(int mySocket);
+int psp2chResolve(const char* host, struct in_addr* addr);
 int psp2chGet(const char* host, const char* path, const char* header, S_NET* net);
 int psp2chPost(char* host, char* dir, int dat, char* cook, S_NET* net);
 int psp2chRequest(int mySocket, const char* host, const char* path, const char* requestText, S_NET* net);

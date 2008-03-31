@@ -344,7 +344,9 @@ typedef struct {
     char cwDir[256];
     char* logDir;
     char* fontDir;
+    char* colorDir;
     int pgCursorX, pgCursorY;
+    int viewX, viewY;
     SceCtrlData pad;
     SceCtrlData oldPad;
     MESSAGE_HELPER mh;

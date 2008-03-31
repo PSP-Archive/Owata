@@ -16,7 +16,7 @@ int psp2chDelFavorite(char* title, int dat);
 int psp2chDelFavoriteIta(int index);
 void psp2chFavSort(int sort);
 void psp2chFavSortDialog(void);
-void psp2chDrawFavorite(int scrollX);
+void psp2chDrawFavorite(void);
 void psp2chDrawFavoriteIta(void);
 
 #endif

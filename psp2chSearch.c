@@ -73,7 +73,6 @@ void psp2chSearchSetMenuString(void)
 
 int psp2chSearch(int retSel)
 {
-    static int scrollX = 0;
     static char* menuStr = "";
     static int ret = 0;
     int lineEnd, rMenu;
@@ -176,9 +175,9 @@ int psp2chSearch(int retSel)
                 }
             }
         }
-        scrollX = psp2chPadSet(scrollX);
-        psp2chDrawSearch(scrollX);
-        pgCopy(scrollX, 0);
+        s2ch.viewX = psp2chPadSet(s2ch.viewX);
+        psp2chDrawSearch();
+        pgCopy(s2ch.viewX, 0);
         pgMenuBar(menuStr);
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
@@ -391,7 +390,7 @@ int psp2chSearchList(void)
 
 /**********************
 **********************/
-void psp2chDrawSearch(int scrollX)
+void psp2chDrawSearch(void)
 {
     int start;
     int i;
@@ -401,13 +400,13 @@ void psp2chDrawSearch(int scrollX)
     if (s2ch.tateFlag)
     {
         lineEnd = DRAW_LINE_V;
-        scrW = SCR_HEIGHT + scrollX;
+        scrW = SCR_HEIGHT + s2ch.viewX;
         scrH = SCR_WIDTH;
     }
     else
     {
         lineEnd = DRAW_LINE_H;
-        scrW = SCR_WIDTH + scrollX;
+        scrW = SCR_WIDTH + s2ch.viewX;
         scrH = SCR_HEIGHT;
     }
     start = s2ch.find.start;

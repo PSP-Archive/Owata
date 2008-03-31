@@ -70,9 +70,9 @@ int main(int argc, char *argv[])
     ch = strrchr(s2ch.cwDir, '/');
     *ch = '\0';
     SetupCallbacks();
-    psp2chInit();
     pgSetupGu();
     pspDebugScreenInit();
+    psp2chInit();
     pgFontLoad();
     psp2ch(); // main loop
     pgTermGu();

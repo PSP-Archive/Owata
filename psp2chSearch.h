@@ -8,6 +8,6 @@
 void psp2chSearchSetMenuString(void);
 int psp2chSearch(int retSel);
 int psp2chSearchList(void);
-void psp2chDrawSearch(int scrollX);
+void psp2chDrawSearch(void);
 
 #endif

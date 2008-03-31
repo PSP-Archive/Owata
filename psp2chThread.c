@@ -86,7 +86,6 @@ void psp2chThreadSetMenuString(void)
 *****************/
 int psp2chThread(int retSel)
 {
-    static int scrollX = 0;
     static char* menuStr = "";
     static int ret = 0;
     int lineEnd, rMenu;
@@ -145,7 +144,7 @@ int psp2chThread(int retSel)
             // STARTボタン
             else if(s2ch.pad.Buttons & PSP_CTRL_START)
             {
-                psp2chMenu(scrollX, 0);
+                psp2chMenu();
             }
             else if (rMenu)
             {
@@ -208,9 +207,9 @@ int psp2chThread(int retSel)
                 }
             }
         }
-        scrollX = psp2chPadSet(scrollX);
-        psp2chDrawThread(scrollX);
-        pgCopy(scrollX, 0);
+        s2ch.viewX = psp2chPadSet(s2ch.viewX);
+        psp2chDrawThread();
+        pgCopy(s2ch.viewX, 0);
         pgMenuBar(menuStr);
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
@@ -774,7 +773,7 @@ int psp2chThreadSearch(void)
 /****************
 スレ一覧の描画ルーチン
 *****************/
-void psp2chDrawThread(int scrollX)
+void psp2chDrawThread(void)
 {
     int start;
     int i;
@@ -785,14 +784,14 @@ void psp2chDrawThread(int scrollX)
         lineEnd = DRAW_LINE_V;
         scrW = SCR_HEIGHT;
         scrH = SCR_WIDTH;
-        resCount = scrW - FONT_HEIGHT * 4 + scrollX;
+        resCount = scrW - FONT_HEIGHT * 4 + s2ch.viewX;
     }
     else
     {
         lineEnd = DRAW_LINE_H;
         scrW = SCR_WIDTH;
         scrH = SCR_HEIGHT;
-        resCount = scrW - FONT_HEIGHT * 4 + scrollX;
+        resCount = scrW - FONT_HEIGHT * 4 + s2ch.viewX;
     }
     start = s2ch.thread.start;
     if (start + lineEnd > s2ch.thread.count)

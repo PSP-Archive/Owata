@@ -93,7 +93,6 @@ void psp2chFavSetMenuString(void)
 **********************/
 int psp2chFavorite(void)
 {
-    static int scrollX = 0;
     static char* menuStr = "";
     static int focus = -1, update = -1;
     int lineEnd, rMenu;
@@ -214,8 +213,8 @@ int psp2chFavorite(void)
         {
             if (update < s2ch.fav.count)
             {
-                psp2chDrawFavorite(scrollX);
-                pgCopy(scrollX, 0);
+                psp2chDrawFavorite();
+                pgCopy(s2ch.viewX, 0);
                 pgMenuBar(menuStr);
                 sceDisplayWaitVblankStart();
                 framebuffer = sceGuSwapBuffers();
@@ -258,7 +257,7 @@ int psp2chFavorite(void)
             // STARTボタン
             else if(s2ch.pad.Buttons & PSP_CTRL_START)
             {
-                psp2chMenu(scrollX, 0);
+                psp2chMenu();
             }
             else if (rMenu)
             {
@@ -358,16 +357,16 @@ int psp2chFavorite(void)
                 }
             }
         }
-        scrollX = psp2chPadSet(scrollX);
+        s2ch.viewX = psp2chPadSet(s2ch.viewX);
         if (focus)
         {
             psp2chDrawFavoriteIta();
         }
         else
         {
-            psp2chDrawFavorite(scrollX);
+            psp2chDrawFavorite();
         }
-        pgCopy(scrollX, 0);
+        pgCopy(s2ch.viewX, 0);
         pgMenuBar(menuStr);
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
@@ -923,7 +922,7 @@ void psp2chFavSortDialog(void)
 /**********************
 お気に入りスレの描画
 **********************/
-void psp2chDrawFavorite(int scrollX)
+void psp2chDrawFavorite(void)
 {
     int start;
     int i;
@@ -932,13 +931,13 @@ void psp2chDrawFavorite(int scrollX)
     if (s2ch.tateFlag)
     {
         lineEnd = DRAW_LINE_V;
-        scrW = SCR_HEIGHT + scrollX;
+        scrW = SCR_HEIGHT + s2ch.viewX;
         scrH = SCR_WIDTH;
     }
     else
     {
         lineEnd = DRAW_LINE_H;
-        scrW = SCR_WIDTH + scrollX;
+        scrW = SCR_WIDTH + s2ch.viewX;
         scrH = SCR_HEIGHT;
     }
     start = s2ch.fav.start;

@@ -7,6 +7,7 @@
 #include <pspdebug.h>
 #include "pg.h"
 #include "psp2ch.h"
+#include "psp2chIni.h"
 #include "psp2chMenu.h"
 #include "psp2chRes.h"
 
@@ -22,6 +23,7 @@ const char* ngNameFile = "ngname.txt";
 const char* ngIDFile = "ngid.txt";
 const char* ngWordFile = "ngword.txt";
 const char* ngMailFile = "ngmail.txt";
+const char* colorFile = "color.ini";
 
 /*********************
 メニュー文字列の作成
@@ -71,9 +73,9 @@ void psp2chMenuSetMenuString(void)
 #define MENU_WIDTH (80)
 #define MENU_ITEM (4)
 #define MENU_HEIGHT (MENU_ITEM * LINE_PITCH)
-int psp2chMenu(int pixelsX, int pixelsY)
+int psp2chMenu(void)
 {
-    const char* menuList[] = {"NG 設定", "LAN 切断", "フォント変更"};
+    const char* menuList[] = {"NG 設定", "LAN 切断", "フォント変更", "カラー"};
     static char* menuStr = "";
     int lineEnd;
     static S_2CH_SCREEN menu;
@@ -91,7 +93,7 @@ int psp2chMenu(int pixelsX, int pixelsY)
     scrX = MENU_WIDTH;
     scrY = MENU_HEIGHT;
     lineEnd = MENU_ITEM;
-    menu.count = 3;
+    menu.count = MENU_ITEM;
     printBuf = winPixels;
     while (s2ch.running)
     {
@@ -106,20 +108,23 @@ int psp2chMenu(int pixelsX, int pixelsY)
                     switch (menu.select)
                     {
                     case 0:
-                        psp2chMenuNG(pixelsX, pixelsY);
+                        psp2chMenuNG();
                         break;
                     case 1:
                         sceNetApctlDisconnect();
                         break;
                     case 2:
-                        psp2chMenuFont(pixelsX, pixelsY);
+                        psp2chMenuFont();
                         scrY = MENU_HEIGHT;
+                        break;
+                    case 3:
+                        psp2chMenuColor();
                         break;
                     }
                     printBuf = pixels;
-                    pgCopy(pixelsX, pixelsY);
+                    pgCopy(s2ch.viewX, s2ch.viewY);
                     framebuffer = sceGuSwapBuffers();
-                    pgCopy(pixelsX, pixelsY);
+                    pgCopy(s2ch.viewX, s2ch.viewY);
                     printBuf = winPixels;
                 }
                 else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinH.esc) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinV.esc))
@@ -153,7 +158,7 @@ NG設定ウィンドウ
 #define MENU_NG_WIDTH (80)
 #define MENU_NG_ITEM (7)
 #define MENU_NG_HEIGHT (MENU_NG_ITEM * LINE_PITCH)
-void psp2chMenuNG(int pixelsX, int pixelsY)
+void psp2chMenuNG(void)
 {
     const unsigned short title1[] = {0x004E,0x0047,0x767B,0x9332,0x3059,0x308B,0x540D,0x524D,0x3092,0x5165,0x529B,0x3057,0x3066,0x304F,0x3060,0x3055,0x3044,0};
     const unsigned short title2[] = {0x004E,0x0047,0x767B,0x9332,0x3059,0x308B,0x5358,0x8A9E,0x3092,0x5165,0x529B,0x3057,0x3066,0x304F,0x3060,0x3055,0x3044,0};
@@ -179,9 +184,9 @@ void psp2chMenuNG(int pixelsX, int pixelsY)
     lineEnd = MENU_NG_ITEM;
     menu.count = MENU_NG_ITEM;
     printBuf = pixels;
-    pgCopy(pixelsX, pixelsY);
+    pgCopy(s2ch.viewX, s2ch.viewY);
     framebuffer = sceGuSwapBuffers();
-    pgCopy(pixelsX, pixelsY);
+    pgCopy(s2ch.viewX, s2ch.viewY);
     printBuf = winPixels;
     while (s2ch.running)
     {
@@ -205,10 +210,10 @@ void psp2chMenuNG(int pixelsX, int pixelsY)
                         }
                         break;
                     case 1: // NG name del
-                        psp2chNGDel(ngNameFile, pixelsX, pixelsY);
+                        psp2chNGDel(ngNameFile);
                         break;
                     case 2: // NG ID del
-                        psp2chNGDel(ngIDFile, pixelsX, pixelsY);
+                        psp2chNGDel(ngIDFile);
                         break;
                     case 3: // NG word add
                         pgFillvram(s2ch.menuWinColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
@@ -220,7 +225,7 @@ void psp2chMenuNG(int pixelsX, int pixelsY)
                         }
                         break;
                     case 4: // NG word del
-                        psp2chNGDel(ngWordFile, pixelsX, pixelsY);
+                        psp2chNGDel(ngWordFile);
                         break;
                     case 5: // NG mail add
                         pgFillvram(s2ch.menuWinColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
@@ -232,13 +237,13 @@ void psp2chMenuNG(int pixelsX, int pixelsY)
                         }
                         break;
                     case 6: // NG mail del
-                        psp2chNGDel(ngMailFile, pixelsX, pixelsY);
+                        psp2chNGDel(ngMailFile);
                         break;
                     }
                     printBuf = pixels;
-                    pgCopy(pixelsX, pixelsY);
+                    pgCopy(s2ch.viewX, s2ch.viewY);
                     framebuffer = sceGuSwapBuffers();
-                    pgCopy(pixelsX, pixelsY);
+                    pgCopy(s2ch.viewX, s2ch.viewY);
                     printBuf = winPixels;
                 }
                 else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinH.esc) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinV.esc))
@@ -304,7 +309,7 @@ char* psp2chGetNGBuf(const char* file, char* buf)
 NG削除
 ****************/
 #define MENU_NGLIST_WIDTH (200)
-int psp2chNGDel(const char* file, int pixelsX, int pixelsY)
+int psp2chNGDel(const char* file)
 {
     SceUID fd;
     char path[256];
@@ -330,9 +335,9 @@ int psp2chNGDel(const char* file, int pixelsX, int pixelsY)
     }
     scrX = MENU_NGLIST_WIDTH;
     printBuf = pixels;
-    pgCopy(pixelsX, pixelsY);
+    pgCopy(s2ch.viewX, s2ch.viewY);
     framebuffer = sceGuSwapBuffers();
-    pgCopy(pixelsX, pixelsY);
+    pgCopy(s2ch.viewX, s2ch.viewY);
     printBuf = winPixels;
     buf = NULL;
     buf = psp2chGetNGBuf(file, buf);
@@ -478,7 +483,7 @@ void psp2chMenuFontSet(int select)
 ****************/
 #define MENU_FONT_WIDTH (160)
 #define MENU_FONT_ITEM (5)
-void psp2chMenuFont(int pixelsX, int pixelsY)
+void psp2chMenuFont(void)
 {
     char** menuList;
     char* menuStr;
@@ -509,9 +514,9 @@ void psp2chMenuFont(int pixelsX, int pixelsY)
     scrX = MENU_FONT_WIDTH;
     scrY = LINE_PITCH * lineEnd;
     printBuf = pixels;
-    pgCopy(pixelsX, pixelsY);
+    pgCopy(s2ch.viewX, s2ch.viewY);
     framebuffer = sceGuSwapBuffers();
-    pgCopy(pixelsX, pixelsY);
+    pgCopy(s2ch.viewX, s2ch.viewY);
     printBuf = winPixels;
     menu.start = 0;
     menu.count = s2ch.font.count;
@@ -565,9 +570,9 @@ void psp2chMenuFont(int pixelsX, int pixelsY)
                     }
                     scrY = LINE_PITCH * lineEnd;
                     printBuf = pixels;
-                    pgCopy(pixelsX, pixelsY);
+                    pgCopy(s2ch.viewX, s2ch.viewY);
                     framebuffer = sceGuSwapBuffers();
-                    pgCopy(pixelsX, pixelsY);
+                    pgCopy(s2ch.viewX, s2ch.viewY);
                     printBuf = winPixels;
                 }
                 else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinH.esc) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinV.esc))
@@ -596,6 +601,140 @@ void psp2chMenuFont(int pixelsX, int pixelsY)
         free(menuList[i]);
     }
     free(menuList);
+}
+
+/****************
+カラー設定ウィンドウ
+****************/
+#define MENU_COLOR_WIDTH (160)
+#define MENU_COLOR_ITEM (5)
+int psp2chMenuColor(void)
+{
+    SceUID fd;
+    SceIoDirent dir;
+    char path[256];
+    char** menuList;
+    char* menuStr;
+    int lineEnd = MENU_COLOR_ITEM;
+    static S_2CH_SCREEN menu;
+    int i, startX, startY, scrX, scrY;
+
+    sprintf(path, "%s/%s", s2ch.cwDir, s2ch.colorDir);
+    if ((fd = sceIoDopen(path)) < 0)
+    {
+        psp2chErrorDialog("Dopen error\n%s", path);
+        return -1;
+    }
+    menu.count = 0;
+    memset(&dir, 0, sizeof(dir)); // 初期化しないとreadに失敗する
+    while (sceIoDread(fd, &dir) > 0)
+    {
+        if (dir.d_stat.st_attr & FIO_SO_IFDIR)
+        {
+            continue;
+        }
+        menu.count++;
+    }
+    sceIoDclose(fd);
+    menuList = (char**)malloc(sizeof(char*) * menu.count);
+    if (menuList == NULL )
+    {
+        psp2chErrorDialog("memorry error\nmenuColorList");
+        return -1;
+    }
+    if ((fd = sceIoDopen(path)) < 0)
+    {
+        free(menuList);
+        psp2chErrorDialog("Dopen error2\n%s", path);
+        return -1;
+    }
+    menuList[0] = "デフォルト";
+    i = 1;
+    memset(&dir, 0, sizeof(dir));
+    while (sceIoDread(fd, &dir) > 0)
+    {
+        if ((dir.d_stat.st_attr & FIO_SO_IFDIR) || stricmp(dir.d_name, colorFile) == 0)
+        {
+            continue;
+        }
+        menuList[i] = (char*)malloc(strlen(dir.d_name) + 1);
+        strcpy(menuList[i], dir.d_name);
+        i++;
+        if (i >= menu.count)
+        {
+            break;
+        }
+    }
+    sceIoDclose(fd);
+    if (s2ch.tateFlag)
+    {
+        startX = (SCR_HEIGHT - MENU_COLOR_WIDTH) / 2;
+        startY = (SCR_WIDTH - LINE_PITCH * lineEnd) / 2;
+    }
+    else
+    {
+        startX = (SCR_WIDTH - MENU_COLOR_WIDTH) / 2;
+        startY = (SCR_HEIGHT - LINE_PITCH * lineEnd) / 2;
+    }
+    scrX = MENU_COLOR_WIDTH;
+    scrY = LINE_PITCH * lineEnd;
+    printBuf = pixels;
+    pgCopy(s2ch.viewX, s2ch.viewY);
+    framebuffer = sceGuSwapBuffers();
+    pgCopy(s2ch.viewX, s2ch.viewY);
+    printBuf = winPixels;
+    menu.start = 0;
+    menu.select = 0;
+    if (menu.select >= MENU_COLOR_ITEM)
+    {
+        menu.start = menu.select - MENU_COLOR_ITEM + 1;
+    }
+    while (s2ch.running)
+    {
+        if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
+        {
+            psp2chCursorSet(&menu, lineEnd, 0);
+            if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
+            {
+                s2ch.oldPad = s2ch.pad;
+                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinH.ok) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinV.ok))
+                {
+                    if (menu.select == 0)
+                    {
+                        psp2chIniSetColor(NULL);
+                    }
+                    else
+                    {
+                        psp2chIniSetColor(menuList[menu.select]);
+                    }
+                }
+                else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinH.esc) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinV.esc))
+                {
+                    break;
+                }
+            }
+            if (s2ch.tateFlag)
+            {
+                menuStr = s2ch.menuWinV.main;
+            }
+            else
+            {
+                menuStr = s2ch.menuWinH.main;
+            }
+            psp2chDrawMenu((char**)menuList, menu, startX, startY, scrX, scrY);
+            pgCopyWindow(0, startX, startY, scrX, scrY);
+            pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
+            pgMenuBar(menuStr);
+            sceDisplayWaitVblankStart();
+            framebuffer = sceGuSwapBuffers();
+        }
+    }
+    for (i = 1; i < menu.count; i++)
+    {
+        free(menuList[i]);
+    }
+    free(menuList);
+    return 0;
 }
 
 /****************

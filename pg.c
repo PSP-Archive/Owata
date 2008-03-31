@@ -227,11 +227,6 @@ void pgSetupGu(void)
 
     sceDisplayWaitVblankStart();
     sceGuDisplay(GU_TRUE);
-    if (pgExtraFontInit() < 0)
-    {
-        s2ch.running = 0;
-        sceKernelExitGame();
-    }
 }
 
 /*****************************
@@ -239,6 +234,11 @@ void pgSetupGu(void)
 *****************************/
 void pgFontLoad(void)
 {
+    if (pgExtraFontInit() < 0)
+    {
+        s2ch.running = 0;
+        sceKernelExitGame();
+    }
     pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT);
     pgPrintMonaWait();
     pgCopy(0, 0);

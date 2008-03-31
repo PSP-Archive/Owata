@@ -369,7 +369,10 @@ int psp2chInit(void)
         psp2chErrorDialog("Cat_NetworkInit errror");
         return ret;
     }
-    psp2chIniSetColor();
+    s2ch.logDir = "log";
+    s2ch.fontDir = "font";
+    s2ch.colorDir = "color";
+    psp2chIniSetColor(NULL);
     psp2chIniSetButtons();
     psp2chItaSetMenuString();
     psp2chFavSetMenuString();
@@ -382,8 +385,6 @@ int psp2chInit(void)
     s2ch.running = 1;
     s2ch.sel = 0;
     s2ch.tateFlag = 0;
-    s2ch.logDir = "log";
-    s2ch.fontDir = "font";
     s2ch.urlAnchorCount = 0;
     s2ch.resAnchorCount = 0;
     s2ch.idAnchorCount = 0;
