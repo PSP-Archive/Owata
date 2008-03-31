@@ -376,19 +376,48 @@ int psp2chFavorite(void)
 
 /**********************
 idxファイルからレス数を読み込む
+idxファイルがないときはdatの改行を数えidxファイルを作成
 **********************/
 int psp2chGetResCount(char* title, int dat)
 {
     SceUID fd;
     char path[256];
+    char buf[1024];
     char *p;
-    int res;
+    int res, ret, i, range;
 
     sprintf(path, "%s/%s/%s/%d.idx", s2ch.cwDir, s2ch.logDir, title, dat);
     fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
     if (fd < 0)
     {
         res = 0;
+        sprintf(path, "%s/%s/%s/%d.dat", s2ch.cwDir, s2ch.logDir, title, dat);
+        fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
+        if (fd >= 0)
+        {
+            range = 0;
+            while((ret = sceIoRead(fd, buf, sizeof(buf))))
+            {
+                for (i = 0; i < ret; i++)
+                {
+                    if (buf[i] == '\n')
+                    {
+                        res++;
+                    }
+                }
+                range += ret;
+            }
+            sceIoClose(fd);
+            // idxファイル作成
+            sprintf(path, "%s/%s/%s/%d.idx", s2ch.cwDir, s2ch.logDir, title, dat);
+            fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
+            if (fd >= 0)
+            {
+                sprintf(buf, "Thu, 1 Jan 1970 00:00:00 GMT\n\"\"\n%d\n0\n0\n%d\n", range, res);
+                sceIoWrite(fd, buf, strlen(buf));
+                sceIoClose(fd);
+            }
+        }
     }
     else
     {

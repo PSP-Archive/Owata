@@ -369,7 +369,7 @@ int psp2chThreadList(int ita)
         memset(&dir, 0, sizeof(dir));
         while (sceIoDread(dfd, &dir) > 0)
         {
-            if (strstr(dir.d_name, ".idx"))
+            if (strstr(dir.d_name, ".dat"))
             {
                 sscanf(dir.d_name, "%d", &dat);
                 setFlag = 0;

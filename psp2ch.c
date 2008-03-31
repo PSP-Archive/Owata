@@ -23,7 +23,7 @@
 extern unsigned int list[512*512]; // pg.c
 extern intraFont* jpn0; // pg.c
 
-char* ver = "0.6.3";
+char* ver = "0.7.0";
 S_2CH s2ch;
 char keyWords[128];
 
