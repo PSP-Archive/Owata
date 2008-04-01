@@ -191,6 +191,13 @@ typedef struct {
 } S_2CH_NUM_ANCHOR;
 
 typedef struct {
+    int line;
+    int x1;
+    int type;
+    int id;
+} S_2CH_ANCHOR_LIST;
+
+typedef struct {
     int up, pUp, down, pDown, top, end;
 } S_2CH_SCROLL_BUTTONS;
 
@@ -290,6 +297,7 @@ typedef struct {
     S_2CH_RES_ANCHOR resAnchor[50];
     S_2CH_ID_ANCHOR idAnchor[40];
     S_2CH_NUM_ANCHOR numAnchor[40];
+    S_2CH_ANCHOR_LIST anchorList[180];
     int urlAnchorCount;
     int resAnchorCount;
     int idAnchorCount;

@@ -31,6 +31,7 @@ int preLine = -2;
 static char* resBuffer = NULL;
 static char jmpHost[32], jmpDir[32], jmpTitle[32];
 static int jmpDat;
+static int cursorMode = 1;
 const char *sBtnH[] = {"Sel", "", "", "St", "↑", "→", "↓", "←", "L", "R", "", "", "△", "○", "×", "□", ""};
 const char *sBtnV[] = {"Sel", "", "", "St", "←", "↑", "→", "↓", "L", "R", "", "", "△", "○", "×", "□", ""};
 
@@ -195,7 +196,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
     }
     if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
     {
-        rMenu = psp2chResCursorMove(&totalLine, &lineEnd, &cursorY, bar.view);
+        rMenu = psp2chResCursorMove(totalLine, lineEnd, &cursorX, &cursorY, bar.view);
         if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
             s2ch.oldPad = s2ch.pad;
@@ -708,6 +709,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         }
         s2ch.viewY = s2ch.res.start * LINE_PITCH;
         psp2chDrawRes(s2ch.res.start);
+        psp2chResSetAnchorList(lineEnd);
         pgCopy(s2ch.viewX, s2ch.viewY);
         bar.start = s2ch.viewY;
         pgScrollbar(bar, s2ch.resBarColor);
@@ -750,32 +752,61 @@ void psp2chResResetAnchors(void)
 上下左右キーでの移動
 アナログパッドの移動も追加
 *****************************/
-int psp2chResCursorMove(int* totalLine, int* lineEnd, int* cursorY, int limitY)
+int psp2chResCursorMove(int totalLine, int lineEnd, int* cursorX, int* cursorY, int limitY)
 {
     static int keyStart = 0, keyRepeat = 0, rMenu = 0;
     static clock_t keyTime = 0;
     int padUp = 0, padDown = 0;
+    int i, line;
 
-    if (s2ch.tateFlag)
+    if (cursorMode)
     {
-        if (*cursorY == 0 && s2ch.pad.Lx == 255)
+        if (s2ch.tateFlag)
         {
-            padUp = 1;
+            if ((*cursorY == 0 && (s2ch.pad.Buttons & s2ch.btnResV.s.up)) || s2ch.pad.Lx == 255)
+            {
+                padUp = 1;
+            }
+            else if ((*cursorY == limitY && (s2ch.pad.Buttons & s2ch.btnResV.s.down)) || s2ch.pad.Lx == 0)
+            {
+                padDown = 1;
+            }
         }
-        else if (*cursorY == limitY && s2ch.pad.Lx == 0)
+        else
         {
-            padDown = 1;
+            if ((*cursorY == 0 && (s2ch.pad.Buttons & s2ch.btnResH.s.up)) || s2ch.pad.Ly == 0)
+            {
+                padUp = 1;
+            }
+            else if ((*cursorY == limitY && (s2ch.pad.Buttons & s2ch.btnResH.s.down)) || s2ch.pad.Ly == 255)
+            {
+                padDown = 1;
+            }
         }
     }
     else
     {
-        if (*cursorY == 0 && s2ch.pad.Ly == 0)
+        if (s2ch.tateFlag)
         {
-            padUp = 1;
+            if ((*cursorY == 0 && s2ch.pad.Lx == 255) || (s2ch.pad.Buttons & s2ch.btnResV.s.up))
+            {
+                padUp = 1;
+            }
+            else if ((*cursorY == limitY && s2ch.pad.Lx == 0) || (s2ch.pad.Buttons & s2ch.btnResV.s.down))
+            {
+                padDown = 1;
+            }
         }
-        else if (*cursorY == limitY && s2ch.pad.Ly == 255)
+        else
         {
-            padDown = 1;
+            if ((*cursorY == 0 && s2ch.pad.Ly == 0) || (s2ch.pad.Buttons & s2ch.btnResH.s.up))
+            {
+                padUp = 1;
+            }
+            else if ((*cursorY == limitY && s2ch.pad.Ly == 255) || (s2ch.pad.Buttons & s2ch.btnResH.s.down))
+            {
+                padDown = 1;
+            }
         }
     }
     if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.change) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.change))
@@ -798,7 +829,7 @@ int psp2chResCursorMove(int* totalLine, int* lineEnd, int* cursorY, int limitY)
         }
         keyTime = clock();
         keyRepeat = 0;
-        if((s2ch.pad.Buttons & s2ch.btnResH.s.up && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.s.up && s2ch.tateFlag) || padUp)
+        if(padUp)
         {
             s2ch.res.start--;
             if (s2ch.res.start < 0)
@@ -806,32 +837,32 @@ int psp2chResCursorMove(int* totalLine, int* lineEnd, int* cursorY, int limitY)
                 s2ch.res.start = 0;
             }
         }
-        if((s2ch.pad.Buttons & s2ch.btnResH.s.down && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.s.down && s2ch.tateFlag) || padDown)
+        else if(padDown)
         {
             s2ch.res.start++;
-            if (s2ch.res.start > *totalLine - *lineEnd)
+            if (s2ch.res.start > totalLine - lineEnd)
             {
-                s2ch.res.start = *totalLine - *lineEnd;
+                s2ch.res.start = totalLine - lineEnd;
             }
             if (s2ch.res.start < 0)
             {
                 s2ch.res.start = 0;
             }
         }
-        if((s2ch.pad.Buttons & s2ch.btnResH.s.pUp && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.s.pUp && s2ch.tateFlag))
+        else if((s2ch.pad.Buttons & s2ch.btnResH.s.pUp && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.s.pUp && s2ch.tateFlag))
         {
-            s2ch.res.start -= (*lineEnd - 2);
+            s2ch.res.start -= (lineEnd - 2);
             if (s2ch.res.start < 0)
             {
                 s2ch.res.start = 0;
             }
         }
-        if((s2ch.pad.Buttons & s2ch.btnResH.s.pDown && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.s.pDown && s2ch.tateFlag))
+        else if((s2ch.pad.Buttons & s2ch.btnResH.s.pDown && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.s.pDown && s2ch.tateFlag))
         {
-            s2ch.res.start += (*lineEnd - 2);
-            if (s2ch.res.start > *totalLine - *lineEnd)
+            s2ch.res.start += (lineEnd - 2);
+            if (s2ch.res.start > totalLine - lineEnd)
             {
-                s2ch.res.start = *totalLine - *lineEnd;
+                s2ch.res.start = totalLine - lineEnd;
             }
             if (s2ch.res.start < 0)
             {
@@ -845,11 +876,65 @@ int psp2chResCursorMove(int* totalLine, int* lineEnd, int* cursorY, int limitY)
                 s2ch.res.start = 0;
             }
         }
-        if((s2ch.pad.Buttons & s2ch.btnResH.s.end && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.s.end && s2ch.tateFlag))
+        else if((s2ch.pad.Buttons & s2ch.btnResH.s.end && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.s.end && s2ch.tateFlag))
         {
             if (rMenu && !padDown)
             {
-                s2ch.res.start = *totalLine - *lineEnd;
+                s2ch.res.start = totalLine - lineEnd;
+            }
+        }
+        if (cursorMode)
+        {
+            line = *cursorY / LINE_PITCH + s2ch.res.start;
+            if((s2ch.pad.Buttons & s2ch.btnResH.s.up && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.s.up && s2ch.tateFlag))
+            {
+                i = 0;
+                while (s2ch.anchorList[i].line >= 0)
+                {
+                    if (s2ch.anchorList[i].line == line && s2ch.anchorList[i].x1 >= *cursorX)
+                    {
+                        break;
+                    }
+                    else if (s2ch.anchorList[i].line > line)
+                    {
+                        break;
+                    }
+                    i++;
+                }
+                if (i == 0 || s2ch.anchorList[i].line < 0)
+                {
+                    *cursorY = 0;
+                }
+                else
+                {
+                    i--;
+                    *cursorX = s2ch.anchorList[i].x1 + 5;
+                    *cursorY = (s2ch.anchorList[i].line - s2ch.res.start) * LINE_PITCH + 5;
+                }
+            }
+            else if((s2ch.pad.Buttons & s2ch.btnResH.s.down && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.s.down && s2ch.tateFlag))
+            {
+                i = 0;
+                while (s2ch.anchorList[i].line >= 0)
+                {
+                    if (s2ch.anchorList[i].line == line && s2ch.anchorList[i].x1 > *cursorX)
+                    {
+                        *cursorX = s2ch.anchorList[i].x1 + 5;
+                        *cursorY = (line - s2ch.res.start) * LINE_PITCH + 5;
+                        break;
+                    }
+                    else if (s2ch.anchorList[i].line > line)
+                    {
+                        *cursorX = s2ch.anchorList[i].x1 + 5;
+                        *cursorY = (s2ch.anchorList[i].line - s2ch.res.start) * LINE_PITCH + 5;
+                        break;
+                    }
+                    i++;
+                }
+                if (s2ch.anchorList[i].line < 0)
+                {
+                    *cursorY = limitY;
+                }
             }
         }
     }
@@ -930,169 +1015,172 @@ void psp2chResPadMove(int* cursorX, int* cursorY, int limitX, int limitY)
 
     padX = s2ch.pad.Lx - 127;
     padY = s2ch.pad.Ly - 127;
-    if (s2ch.cfg.padAccel)
+    if (cursorMode == 0)
     {
-        if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.change) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.change))
+        if (s2ch.cfg.padAccel)
         {
-            dL = 5;
-        }
-        else
-        {
-            dL = 3;
-        }
-        if (s2ch.tateFlag)
-        {
-            if (padX < -s2ch.cfg.padCutoff)
+            if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.change) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.change))
             {
-                padX = (1 - padX - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
-                *cursorY += padX >> dL;
+                dL = 5;
             }
-            else if (padX > s2ch.cfg.padCutoff)
+            else
             {
-                padX = (padX - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
-                *cursorY -= padX >> dL;
+                dL = 3;
             }
-            if (padY < -s2ch.cfg.padCutoff)
+            if (s2ch.tateFlag)
             {
-                padY = (1 - padY - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
-                *cursorX -= padY >> dL;
-            }
-            else if (padY > s2ch.cfg.padCutoff)
-            {
-                padY = (padY - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
-                *cursorX += padY >> dL;
-            }
-        }
-        else
-        {
-            dL++;
-            if (padX < -s2ch.cfg.padCutoff)
-            {
-                padX = (1 - padX - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
-                *cursorX -= padX >> dL;
-            }
-            else if (padX > s2ch.cfg.padCutoff)
-            {
-                padX = (padX - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
-                *cursorX += padX >> dL;
-            }
-            if (padY < -s2ch.cfg.padCutoff)
-            {
-                padY = (1 - padY - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
-                *cursorY -= padY >> dL;
-            }
-            else if (padY > s2ch.cfg.padCutoff)
-            {
-                padY = (padY - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
-                *cursorY += padY >> dL;
-            }
-        }
-    }
-    else
-    {
-        if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.change) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.change))
-        {
-            dL = 4;
-            dS = 2;
-        }
-        else
-        {
-            dL = 16;
-            dS = 2;
-        }
-        if (s2ch.tateFlag)
-        {
-            if (padX < -s2ch.cfg.padCutoff)
-            {
-                if (padX == -127)
+                if (padX < -s2ch.cfg.padCutoff)
                 {
-                    *cursorY += dL;
+                    padX = (1 - padX - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
+                    *cursorY += padX >> dL;
                 }
-                else
+                else if (padX > s2ch.cfg.padCutoff)
                 {
-                    *cursorY += dS;
+                    padX = (padX - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
+                    *cursorY -= padX >> dL;
+                }
+                if (padY < -s2ch.cfg.padCutoff)
+                {
+                    padY = (1 - padY - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
+                    *cursorX -= padY >> dL;
+                }
+                else if (padY > s2ch.cfg.padCutoff)
+                {
+                    padY = (padY - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
+                    *cursorX += padY >> dL;
                 }
             }
-            else if (padX > s2ch.cfg.padCutoff)
+            else
             {
-                if (padX == 128)
+                dL++;
+                if (padX < -s2ch.cfg.padCutoff)
                 {
-                    *cursorY -= dL;
+                    padX = (1 - padX - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
+                    *cursorX -= padX >> dL;
                 }
-                else
+                else if (padX > s2ch.cfg.padCutoff)
                 {
-                    *cursorY -= dS;
+                    padX = (padX - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
+                    *cursorX += padX >> dL;
                 }
-            }
-            if (padY < -s2ch.cfg.padCutoff)
-            {
-                if (padY == -127)
+                if (padY < -s2ch.cfg.padCutoff)
                 {
-                    *cursorX -= dL;
+                    padY = (1 - padY - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
+                    *cursorY -= padY >> dL;
                 }
-                else
+                else if (padY > s2ch.cfg.padCutoff)
                 {
-                    *cursorX -= dS;
-                }
-            }
-            else if (padY > s2ch.cfg.padCutoff)
-            {
-                if (padY == 128)
-                {
-                    *cursorX += dL;
-                }
-                else
-                {
-                    *cursorX += dS;
+                    padY = (padY - s2ch.cfg.padCutoff) * 128 / (128 - s2ch.cfg.padCutoff);
+                    *cursorY += padY >> dL;
                 }
             }
         }
         else
         {
-            dL >>= 1;
-            dS >>= 1;
-            if (padX < -s2ch.cfg.padCutoff)
+            if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.change) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.change))
             {
-                if (padX == -127)
+                dL = 4;
+                dS = 2;
+            }
+            else
+            {
+                dL = 16;
+                dS = 2;
+            }
+            if (s2ch.tateFlag)
+            {
+                if (padX < -s2ch.cfg.padCutoff)
                 {
-                    *cursorX -= dL;
+                    if (padX == -127)
+                    {
+                        *cursorY += dL;
+                    }
+                    else
+                    {
+                        *cursorY += dS;
+                    }
                 }
-                else
+                else if (padX > s2ch.cfg.padCutoff)
                 {
-                    *cursorX -= dS;
+                    if (padX == 128)
+                    {
+                        *cursorY -= dL;
+                    }
+                    else
+                    {
+                        *cursorY -= dS;
+                    }
+                }
+                if (padY < -s2ch.cfg.padCutoff)
+                {
+                    if (padY == -127)
+                    {
+                        *cursorX -= dL;
+                    }
+                    else
+                    {
+                        *cursorX -= dS;
+                    }
+                }
+                else if (padY > s2ch.cfg.padCutoff)
+                {
+                    if (padY == 128)
+                    {
+                        *cursorX += dL;
+                    }
+                    else
+                    {
+                        *cursorX += dS;
+                    }
                 }
             }
-            else if (padX > s2ch.cfg.padCutoff)
+            else
             {
-                if (padX == 128)
+                dL >>= 1;
+                dS >>= 1;
+                if (padX < -s2ch.cfg.padCutoff)
                 {
-                    *cursorX += dL;
+                    if (padX == -127)
+                    {
+                        *cursorX -= dL;
+                    }
+                    else
+                    {
+                        *cursorX -= dS;
+                    }
                 }
-                else
+                else if (padX > s2ch.cfg.padCutoff)
                 {
-                    *cursorX += dS;
+                    if (padX == 128)
+                    {
+                        *cursorX += dL;
+                    }
+                    else
+                    {
+                        *cursorX += dS;
+                    }
                 }
-            }
-            if (padY < -s2ch.cfg.padCutoff)
-            {
-                if (padY == -127)
+                if (padY < -s2ch.cfg.padCutoff)
                 {
-                    *cursorY -= dL;
+                    if (padY == -127)
+                    {
+                        *cursorY -= dL;
+                    }
+                    else
+                    {
+                        *cursorY -= dS;
+                    }
                 }
-                else
+                else if (padY > s2ch.cfg.padCutoff)
                 {
-                    *cursorY -= dS;
-                }
-            }
-            else if (padY > s2ch.cfg.padCutoff)
-            {
-                if (padY == 128)
-                {
-                    *cursorY += dL;
-                }
-                else
-                {
-                    *cursorY += dS;
+                    if (padY == 128)
+                    {
+                        *cursorY += dL;
+                    }
+                    else
+                    {
+                        *cursorY += dS;
+                    }
                 }
             }
         }
@@ -1113,6 +1201,96 @@ void psp2chResPadMove(int* cursorX, int* cursorY, int limitX, int limitY)
     {
         *cursorY = limitY;
     }
+}
+
+/*****************************
+アンカーリスト作成
+*****************************/
+void psp2chResSetAnchorList(int lineEnd)
+{
+    int i, j, k, end;
+    S_2CH_ANCHOR_LIST list[150], tmp;
+
+    end = s2ch.res.start + lineEnd;
+    k = 0;
+    for (i = s2ch.res.start; i < end; i++)
+    {
+        for (j = 0; j < 40; j++)
+        {
+            if (s2ch.numAnchor[j].line == i)
+            {
+                list[k].line = i;
+                list[k].x1 = s2ch.numAnchor[j].x1;
+                list[k].type = 0;
+                list[k].id = j;
+                k++;
+            }
+        }
+        for (j = 0; j < 40; j++)
+        {
+            if (s2ch.idAnchor[j].line == i)
+            {
+                list[k].line = i;
+                list[k].x1 = s2ch.idAnchor[j].x1;
+                list[k].type = 1;
+                list[k].id = j;
+                k++;
+            }
+        }
+        for (j = 0; j < 50; j++)
+        {
+            if (s2ch.resAnchor[j].line == i)
+            {
+                list[k].line = i;
+                list[k].x1 = s2ch.resAnchor[j].x1;
+                list[k].type = 2;
+                list[k].id = j;
+                k++;
+            }
+        }
+        for (j = 0; j < 50; j++)
+        {
+            if (s2ch.urlAnchor[j].line == i)
+            {
+                list[k].line = i;
+                list[k].x1 = s2ch.urlAnchor[j].x1;
+                list[k].type = 3;
+                list[k].id = j;
+                k++;
+            }
+        }
+        if (k >= 149)
+        {
+            break;
+        }
+    }
+    list[k].line = -1;
+    k++;
+    // sort
+    for (i = 0; i < k - 1; i++)
+    {
+        for (j = i; j < k; j++)
+        {
+            if ((list[i].line == list[j].line) && (list[i].x1 > list[j].x1))
+            {
+                tmp = list[i];
+                list[i] = list[j];
+                list[j] = tmp;
+            }
+        }
+    }
+    // 重複削除
+    j = 0;
+    for (i = 0; i < k - 1; i++)
+    {
+        if ((list[i].line == list[i + 1].line) && (list[i].x1 == list[i + 1].x1))
+        {
+            continue;
+        }
+        s2ch.anchorList[j] = list[i];
+        j++;
+    }
+    s2ch.anchorList[j].line = -1;
 }
 
 /*****************************
