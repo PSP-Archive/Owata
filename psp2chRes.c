@@ -69,9 +69,9 @@ void psp2chResSetMenuString(void)
     getIndex(s2ch.btnResH.addFav, index3);
     getIndex(s2ch.btnResH.delFav, index4);
     getIndex(s2ch.btnResH.cursor, index5);
-    sprintf(s2ch.menuResH.sub1, "　%s : 先頭　　%s : 最後　　%s : お気に入りに登録　　%s : カーソ\ルモード切替",
+    sprintf(s2ch.menuResH.sub1, "　%s : 先頭　　%s : 最後　　%s : お気に入りに登録　　%s : カーソ\ル切替",
             sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index5]);
-    sprintf(s2ch.menuResH.sub2, "　%s : 先頭　　%s : 最後　　%s : お気に入りから削除　　%s : カーソ\ルモード切替",
+    sprintf(s2ch.menuResH.sub2, "　%s : 先頭　　%s : 最後　　%s : お気に入りから削除　　%s : カーソ\ル切替",
             sBtnH[index1], sBtnH[index2], sBtnH[index4], sBtnH[index5]);
 
     getIndex(s2ch.btnResH.resForm, index1);
@@ -109,10 +109,10 @@ void psp2chResSetMenuString(void)
     getIndex(s2ch.btnResV.addFav, index3);
     getIndex(s2ch.btnResV.delFav, index4);
     getIndex(s2ch.btnResV.cursor, index5);
-    sprintf(s2ch.menuResV.sub1, "　%s : 先頭　　　%s : 最後　　%s : お気に入りに登録\n　%s : カーソ\ルモード切替",
-            sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index5]);
-    sprintf(s2ch.menuResV.sub2, "　%s : 先頭　　　%s : 最後　　%s : お気に入りから削除\n　%s : カーソ\ルモード切替",
-            sBtnV[index1], sBtnV[index2], sBtnV[index4], sBtnV[index5]);
+    sprintf(s2ch.menuResV.sub1, "　%s : 先頭　　%s : お気に入りに登録\n　%s : 最後　　%s : カーソ\ル切替",
+            sBtnV[index1], sBtnV[index3], sBtnV[index2], sBtnV[index5]);
+    sprintf(s2ch.menuResV.sub2, "　%s : 先頭　　%s : お気に入りから削除\n　%s : 最後　　%s : カーソ\ル切替",
+            sBtnV[index1], sBtnV[index4], sBtnV[index2], sBtnV[index5]);
 
     getIndex(s2ch.btnResV.resForm, index1);
     getIndex(s2ch.btnResV.resFBack, index2);
@@ -761,7 +761,7 @@ int psp2chResCursorMove(int totalLine, int lineEnd, int* cursorX, int* cursorY, 
             }
         }
     }
-    else if (!cursorMode)
+    else if (!cursorMode && !rMenu)
     {
         if (s2ch.tateFlag)
         {
