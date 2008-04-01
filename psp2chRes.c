@@ -708,8 +708,6 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
             }
         }
         s2ch.viewY = s2ch.res.start * LINE_PITCH;
-        psp2chDrawRes(s2ch.res.start);
-        psp2chResSetAnchorList(lineEnd);
         pgCopy(s2ch.viewX, s2ch.viewY);
         bar.start = s2ch.viewY;
         pgScrollbar(bar, s2ch.resBarColor);
@@ -734,18 +732,23 @@ void psp2chResResetAnchors(void)
 
     for (i = 0; i < 50; i++)
     {
+        s2ch.resAnchor[i].line = -1;
         s2ch.resAnchor[i].x1 = 0;
         s2ch.resAnchor[i].x2 = 0;
+        s2ch.urlAnchor[i].line = -1;
         s2ch.urlAnchor[i].x1 = 0;
         s2ch.urlAnchor[i].x2 = 0;
     }
     for (i = 0; i < 40; i++)
     {
+        s2ch.idAnchor[i].line = -1;
         s2ch.idAnchor[i].x1 = 0;
         s2ch.idAnchor[i].x2 = 0;
+        s2ch.numAnchor[i].line = -1;
         s2ch.numAnchor[i].x1 = 0;
         s2ch.numAnchor[i].x2 = 0;
     }
+    s2ch.anchorList[0].line = -1;
 }
 
 /*****************************
@@ -759,7 +762,15 @@ int psp2chResCursorMove(int totalLine, int lineEnd, int* cursorX, int* cursorY, 
     int padUp = 0, padDown = 0;
     int i, line;
 
-    if (cursorMode)
+    if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.change) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.change))
+    {
+        rMenu = 1;
+    }
+    else
+    {
+        rMenu = 0;
+    }
+    if (cursorMode && !rMenu)
     {
         if (s2ch.tateFlag)
         {
@@ -784,7 +795,7 @@ int psp2chResCursorMove(int totalLine, int lineEnd, int* cursorX, int* cursorY, 
             }
         }
     }
-    else
+    else if (!cursorMode)
     {
         if (s2ch.tateFlag)
         {
@@ -808,14 +819,6 @@ int psp2chResCursorMove(int totalLine, int lineEnd, int* cursorX, int* cursorY, 
                 padDown = 1;
             }
         }
-    }
-    if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.change) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.change))
-    {
-        rMenu = 1;
-    }
-    else
-    {
-        rMenu = 0;
     }
     if (s2ch.pad.Buttons != s2ch.oldPad.Buttons || keyRepeat)
     {
@@ -883,7 +886,9 @@ int psp2chResCursorMove(int totalLine, int lineEnd, int* cursorX, int* cursorY, 
                 s2ch.res.start = totalLine - lineEnd;
             }
         }
-        if (cursorMode)
+        psp2chDrawRes(s2ch.res.start);
+        psp2chResSetAnchorList(lineEnd);
+        if (cursorMode && !rMenu)
         {
             line = *cursorY / LINE_PITCH + s2ch.res.start;
             if((s2ch.pad.Buttons & s2ch.btnResH.s.up && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.s.up && s2ch.tateFlag))
@@ -891,7 +896,7 @@ int psp2chResCursorMove(int totalLine, int lineEnd, int* cursorX, int* cursorY, 
                 i = 0;
                 while (s2ch.anchorList[i].line >= 0)
                 {
-                    if (s2ch.anchorList[i].line == line && s2ch.anchorList[i].x1 >= *cursorX)
+                    if (s2ch.anchorList[i].line == line && s2ch.anchorList[i].x1 + 5 >= *cursorX)
                     {
                         break;
                     }
@@ -901,7 +906,7 @@ int psp2chResCursorMove(int totalLine, int lineEnd, int* cursorX, int* cursorY, 
                     }
                     i++;
                 }
-                if (i == 0 || s2ch.anchorList[i].line < 0)
+                if (i == 0)
                 {
                     *cursorY = 0;
                 }
