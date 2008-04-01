@@ -372,10 +372,12 @@ void psp2chIniSetButtons(void)
                 setInt("RES_END_H", s2ch.btnResH.s.end, 64);
                 setInt("RES_ADDFAV_H", s2ch.btnResH.addFav, 8192);
                 setInt("RES_DELFAV_H", s2ch.btnResH.delFav, 32768);
+                setInt("RES_CURSOR_H", s2ch.btnResH.cursor, 4096);
                 setInt("RES_TOP_V", s2ch.btnResV.s.top, 32);
                 setInt("RES_END_V", s2ch.btnResV.s.end, 128);
                 setInt("RES_ADDFAV_V", s2ch.btnResV.addFav, 8192);
                 setInt("RES_DELFAV_V", s2ch.btnResV.delFav, 32768);
+                setInt("RES_CURSOR_V", s2ch.btnResV.cursor, 4096);
 
                 setInt("RES_NUMRES_H", s2ch.btnResH.resForm, 8192);
                 setInt("RES_NUMBACK_H", s2ch.btnResH.resFBack, 16384);
@@ -518,6 +520,7 @@ void psp2chIniSetButtons(void)
     s2ch.btnResH.s.end      = PSP_CTRL_DOWN;
     s2ch.btnResH.addFav   = PSP_CTRL_CIRCLE;
     s2ch.btnResH.delFav   = PSP_CTRL_SQUARE;
+    s2ch.btnResH.cursor   = PSP_CTRL_TRIANGLE;
 
     s2ch.btnResH.resForm  = PSP_CTRL_CIRCLE;
     s2ch.btnResH.resFBack  = PSP_CTRL_CROSS;
@@ -548,6 +551,7 @@ void psp2chIniSetButtons(void)
     s2ch.btnResV.s.end      = PSP_CTRL_LEFT;
     s2ch.btnResV.addFav   = PSP_CTRL_CIRCLE;
     s2ch.btnResV.delFav   = PSP_CTRL_SQUARE;
+    s2ch.btnResV.cursor   = PSP_CTRL_TRIANGLE;
 
     s2ch.btnResV.resForm  = PSP_CTRL_CIRCLE;
     s2ch.btnResV.resFBack  = PSP_CTRL_CROSS;
