@@ -191,8 +191,9 @@ typedef struct {
 } S_2CH_NUM_ANCHOR;
 
 typedef struct {
-    int line;
     int x1;
+    int x2;
+    int line;
     int type;
     int id;
 } S_2CH_ANCHOR_LIST;

@@ -200,61 +200,34 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
     {
         rMenu = psp2chResCursorMove(totalLine, lineEnd, &cursorX, &cursorY, bar.view);
         psp2chResPadMove(&cursorX, &cursorY, bar.x, bar.view);
-        // 矢印カーソルにレスアンカーリンクがあるか
-        for (i = 0; i < 50; i++)
+        i = 0;
+        numMenu = -1;
+        idMenu  = -1;
+        resMenu = -1;
+        urlMenu = -1;
+        while (s2ch.anchorList[i].line >= 0)
         {
-            if (cursorY/LINE_PITCH+s2ch.res.start == s2ch.resAnchor[i].line &&
-                cursorX > s2ch.resAnchor[i].x1 && cursorX < s2ch.resAnchor[i].x2)
+            if (cursorY / LINE_PITCH + s2ch.res.start == s2ch.anchorList[i].line &&
+                cursorX > s2ch.anchorList[i].x1 && cursorX < s2ch.anchorList[i].x2)
             {
-                resMenu = i;
+                switch(s2ch.anchorList[i].type)
+                {
+                case 0:
+                    numMenu = s2ch.anchorList[i].id;
+                    break;
+                case 1:
+                    idMenu = s2ch.anchorList[i].id;
+                    break;
+                case 2:
+                    resMenu = s2ch.anchorList[i].id;
+                    break;
+                case 3:
+                    urlMenu = s2ch.anchorList[i].id;
+                    break;
+                }
                 break;
             }
-            else
-            {
-                resMenu = -1;
-            }
-        }
-        // URLリンクがあるか
-        for (i = 0; i < 50; i++)
-        {
-            if (cursorY/LINE_PITCH+s2ch.res.start == s2ch.urlAnchor[i].line &&
-                cursorX > s2ch.urlAnchor[i].x1 && cursorX < s2ch.urlAnchor[i].x2)
-            {
-                urlMenu = i;
-                break;
-            }
-            else
-            {
-                urlMenu = -1;
-            }
-        }
-        // IDの場所か
-        for (i = 0; i < 40; i++)
-        {
-            if (cursorY/LINE_PITCH+s2ch.res.start == s2ch.idAnchor[i].line &&
-                cursorX > s2ch.idAnchor[i].x1 && cursorX < s2ch.idAnchor[i].x2)
-            {
-                idMenu = i;
-                break;
-            }
-            else
-            {
-                idMenu = -1;
-            }
-        }
-        // 番号の場所か
-        for (i = 0; i < 40; i++)
-        {
-            if (cursorY/LINE_PITCH+s2ch.res.start == s2ch.numAnchor[i].line &&
-                cursorX > s2ch.numAnchor[i].x1 && cursorX < s2ch.numAnchor[i].x2)
-            {
-                numMenu = i;
-                break;
-            }
-            else
-            {
-                numMenu = -1;
-            }
+            i++;
         }
         if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
@@ -742,7 +715,6 @@ void psp2chResResetAnchors(void)
         s2ch.numAnchor[i].x1 = 0;
         s2ch.numAnchor[i].x2 = 0;
     }
-    s2ch.anchorList[0].line = -1;
 }
 
 /*****************************
@@ -1208,7 +1180,7 @@ void psp2chResPadMove(int* cursorX, int* cursorY, int limitX, int limitY)
 void psp2chResSetAnchorList(int lineEnd)
 {
     int i, j, k, end;
-    S_2CH_ANCHOR_LIST list[150], tmp;
+    S_2CH_ANCHOR_LIST list[180], tmp;
 
     end = s2ch.res.start + lineEnd;
     k = 0;
@@ -1220,6 +1192,7 @@ void psp2chResSetAnchorList(int lineEnd)
             {
                 list[k].line = i;
                 list[k].x1 = s2ch.numAnchor[j].x1;
+                list[k].x2 = s2ch.numAnchor[j].x2;
                 list[k].type = 0;
                 list[k].id = j;
                 k++;
@@ -1231,6 +1204,7 @@ void psp2chResSetAnchorList(int lineEnd)
             {
                 list[k].line = i;
                 list[k].x1 = s2ch.idAnchor[j].x1;
+                list[k].x2 = s2ch.idAnchor[j].x2;
                 list[k].type = 1;
                 list[k].id = j;
                 k++;
@@ -1242,6 +1216,7 @@ void psp2chResSetAnchorList(int lineEnd)
             {
                 list[k].line = i;
                 list[k].x1 = s2ch.resAnchor[j].x1;
+                list[k].x2 = s2ch.resAnchor[j].x2;
                 list[k].type = 2;
                 list[k].id = j;
                 k++;
@@ -1253,12 +1228,13 @@ void psp2chResSetAnchorList(int lineEnd)
             {
                 list[k].line = i;
                 list[k].x1 = s2ch.urlAnchor[j].x1;
+                list[k].x2 = s2ch.urlAnchor[j].x2;
                 list[k].type = 3;
                 list[k].id = j;
                 k++;
             }
         }
-        if (k >= 149)
+        if (k >= 179)
         {
             break;
         }
