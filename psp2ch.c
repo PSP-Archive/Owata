@@ -23,7 +23,7 @@
 extern unsigned int list[512*512]; // pg.c
 extern intraFont* jpn0; // pg.c
 
-char* ver = "0.7.0";
+char* ver = "0.7.1";
 S_2CH s2ch;
 char keyWords[128];
 
@@ -316,9 +316,9 @@ int psp2chPadSet(int scrollX)
         {
             scrollX -= 8 * s2ch.cfg.padReverse;
         }
-        if (scrollX > BUF_HEIGHT - SCR_HEIGHT)
+        if (scrollX > BUF_HEIGHT * 2 - SCR_HEIGHT)
         {
-            scrollX = BUF_HEIGHT - SCR_HEIGHT;
+            scrollX = BUF_HEIGHT * 2 - SCR_HEIGHT;
         }
     }
     else
@@ -331,9 +331,9 @@ int psp2chPadSet(int scrollX)
         {
             scrollX -= 4 * s2ch.cfg.padReverse;
         }
-        if (scrollX > BUF_WIDTH - SCR_WIDTH)
+        if (scrollX > BUF_WIDTH * 2 - SCR_WIDTH)
         {
-            scrollX = BUF_WIDTH - SCR_WIDTH;
+            scrollX = BUF_WIDTH * 2 - SCR_WIDTH;
         }
     }
     if (scrollX < 0)
@@ -574,7 +574,7 @@ int psp2chInputDialog(const unsigned short* text1, char* text2)
             sceGuStart(GU_DIRECT, list);
             sceGuClearDepth(0);
             sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
-            pgFillvram(BLUE, 70, 60, 340, 45);
+            pgFillvram(BLUE, 70, 60, 340, 45, 2);
             pgEditBox(WHITE, 140, 85, 340, 100);
             s2ch.pgCursorX = 142;
             s2ch.pgCursorY =  87;

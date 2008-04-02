@@ -508,7 +508,7 @@ void psp2chDrawHtml(char* txt, S_2CH_SCREEN html, int code)
     s2ch.pgCursorY = (LINE_PITCH * html.start + startY) & 0x01FF;
     line = 0;
     s2ch.pgCursorX = startX;
-    pgFillvram(s2ch.resAColor.bg, startX, s2ch.pgCursorY, scrW, LINE_PITCH * lineEnd);
+    pgFillvram(s2ch.resAColor.bg, startX, s2ch.pgCursorY, scrW, LINE_PITCH * lineEnd, 2);
     while (line++ <= lineEnd && txt)
     {
         txt = psp2chPrintText(txt, s2ch.resAColor, scrW+startX, code, 1);

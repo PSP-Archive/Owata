@@ -249,7 +249,7 @@ int psp2chIta(void)
                         }
                         s2ch.thread.start = 0;
                         s2ch.thread.select = 0;
-                        pgFillvram(WHITE, 0, 0, SCR_WIDTH, BUF_HEIGHT);
+                        pgFillvram(WHITE, 0, 0, SCR_WIDTH, BUF_HEIGHT, 2);
                         s2ch.sel = 3;
                         return 0;
                     }
@@ -598,7 +598,7 @@ void psp2chDrawCategory(int start, int select, S_2CH_ITA_COLOR c)
     {
         start = s2ch.category.count - lineEnd;
     }
-    pgFillvram(c.cate.bg, 0, 0, CATEGORY_W, scrH);
+    pgFillvram(c.cate.bg, 0, 0, CATEGORY_W, scrH, 2);
     s2ch.pgCursorY = 0;
     for (i = start; i < start + lineEnd; i++)
     {
@@ -647,8 +647,8 @@ void psp2chDrawIta(int start, int select, S_2CH_ITA_COLOR c)
     {
         end = start + lineEnd;
     }
-    pgFillvram(c.ita.bg, CATEGORY_W, 0, ITA_W, scrH);
-    pgFillvram(c.base, CATEGORY_W + ITA_W, 0, scrW - CATEGORY_W - ITA_W, scrH);
+    pgFillvram(c.ita.bg, CATEGORY_W, 0, ITA_W, scrH, 2);
+    pgFillvram(c.base, CATEGORY_W + ITA_W, 0, scrW - CATEGORY_W - ITA_W, scrH, 2);
     s2ch.pgCursorY = 0;
     for (i = start; i < end; i++)
     {

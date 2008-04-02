@@ -201,7 +201,7 @@ void psp2chMenuNG(void)
                     switch (menu.select)
                     {
                     case 0: // NG name add
-                        pgFillvram(s2ch.menuWinColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
+                        pgFillvram(s2ch.menuWinColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT, 2);
                         pgCopy(0,0);
                         framebuffer = sceGuSwapBuffers();
                         if (psp2chInputDialog(title1, text) == 0 && keyWords[0])
@@ -216,7 +216,7 @@ void psp2chMenuNG(void)
                         psp2chNGDel(ngIDFile);
                         break;
                     case 3: // NG word add
-                        pgFillvram(s2ch.menuWinColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
+                        pgFillvram(s2ch.menuWinColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT, 2);
                         pgCopy(0,0);
                         framebuffer = sceGuSwapBuffers();
                         if (psp2chInputDialog(title2, text) == 0 && keyWords[0])
@@ -228,7 +228,7 @@ void psp2chMenuNG(void)
                         psp2chNGDel(ngWordFile);
                         break;
                     case 5: // NG mail add
-                        pgFillvram(s2ch.menuWinColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
+                        pgFillvram(s2ch.menuWinColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT, 2);
                         pgCopy(0,0);
                         framebuffer = sceGuSwapBuffers();
                         if (psp2chInputDialog(title3, text) == 0 && keyWords[0])
@@ -756,7 +756,7 @@ void psp2chDrawMenu(char** menuList, S_2CH_SCREEN menu, int x, int y, int width,
     {
         start = 0;
     }
-    pgFillvram(s2ch.menuWinColor.bg, x, y, width, height);
+    pgFillvram(s2ch.menuWinColor.bg, x, y, width, height, 2);
     for (i = start; i < start + lineEnd; i++)
     {
         if (i >= menu.count)
@@ -765,7 +765,7 @@ void psp2chDrawMenu(char** menuList, S_2CH_SCREEN menu, int x, int y, int width,
         }
         if (i == menu.select)
         {
-            pgFillvram(s2ch.menuWinColor.s_bg, x, s2ch.pgCursorY, width, LINE_PITCH);
+            pgFillvram(s2ch.menuWinColor.s_bg, x, s2ch.pgCursorY, width, LINE_PITCH, 2);
             pgPrint(menuList[i], s2ch.menuWinColor.s_text, s2ch.menuWinColor.s_bg, x + width);
         }
         else

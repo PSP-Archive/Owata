@@ -157,7 +157,7 @@ int psp2chSearch(int retSel)
                     free(s2ch.resList);
                     s2ch.resList = NULL;
                     preLine = -2;
-                    pgFillvram(WHITE, 0, 0, SCR_WIDTH, BUF_HEIGHT);
+                    pgFillvram(WHITE, 0, 0, SCR_WIDTH, BUF_HEIGHT, 2);
                     s2ch.sel = 8;
                     return 0;
                 }
@@ -418,7 +418,7 @@ void psp2chDrawSearch(void)
     {
         start = 0;
     }
-    pgFillvram(s2ch.threadColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
+    pgFillvram(s2ch.threadColor.bg, s2ch.viewX, 0, scrW, BUF_HEIGHT, 2);
     s2ch.pgCursorY = 0;
     for (i = start; i < start + lineEnd; i++)
     {
@@ -430,7 +430,7 @@ void psp2chDrawSearch(void)
         sprintf(buf, "%4d", i + 1);
         if (i == s2ch.find.select)
         {
-            pgFillvram(s2ch.threadColor.s_bg, 0, s2ch.pgCursorY, BUF_WIDTH, LINE_PITCH);
+            pgFillvram(s2ch.threadColor.s_bg, s2ch.viewX, s2ch.pgCursorY, scrW, LINE_PITCH, 2);
             pgPrintNumber(i + 1, s2ch.threadColor.s_num, s2ch.threadColor.s_bg);
         }
         else

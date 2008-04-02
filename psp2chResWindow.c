@@ -140,7 +140,7 @@ void psp2chDrawResAnchor(S_2CH_RES_ANCHOR a, S_2CH_SCREEN anchor, int lineFlag)
         line = 0;
         if (s2ch.resList[a.res[re]].ng)
         {
-            pgFillvram(s2ch.resAColor.bg, startX-2, s2ch.pgCursorY, scrW+2, (lineEnd - line + 1)*LINE_PITCH);
+            pgFillvram(s2ch.resAColor.bg, startX-2, s2ch.pgCursorY, scrW+2, (lineEnd - line + 1)*LINE_PITCH, 2);
             return;
         }
         while (line <= lineEnd)
@@ -156,7 +156,7 @@ void psp2chDrawResAnchor(S_2CH_RES_ANCHOR a, S_2CH_SCREEN anchor, int lineFlag)
             }
             if (re >= a.resCount || a.res[re] >= s2ch.res.count)
             {
-                pgFillvram(s2ch.resAColor.bg, startX-2, s2ch.pgCursorY, scrW+2, (lineEnd - line + 1)*LINE_PITCH);
+                pgFillvram(s2ch.resAColor.bg, startX-2, s2ch.pgCursorY, scrW+2, (lineEnd - line + 1)*LINE_PITCH, 2);
                 break;
             }
         }

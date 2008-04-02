@@ -140,7 +140,7 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
     c.text = BLACK;
     c.bg = WHITE;
     c.link = BLUE;
-    pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT);
+    pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
     s2ch.pgCursorX = 0;
     s2ch.pgCursorY = 0;
     str = strstr(net.body, "</html");
@@ -302,8 +302,8 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
             {
                 strcpy(mail, "sage");
             }
-            pgFillvram(RGB(0xCC, 0xFF, 0xCC), 0, 0, SCR_WIDTH, SCR_HEIGHT);
-            pgFillvram(s2ch.formColor.title_bg, 0, 0, SCR_WIDTH, 15);
+            pgFillvram(RGB(0xCC, 0xFF, 0xCC), 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
+            pgFillvram(s2ch.formColor.title_bg, 0, 0, SCR_WIDTH, 15, 2);
             s2ch.pgCursorX = 10;
             s2ch.pgCursorY = 1;
             pgPrint(subject, s2ch.formColor.title, s2ch.formColor.title_bg, SCR_WIDTH);

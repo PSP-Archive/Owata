@@ -802,7 +802,7 @@ void psp2chDrawThread(void)
     {
         start = 0;
     }
-    pgFillvram(s2ch.threadColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
+    pgFillvram(s2ch.threadColor.bg, s2ch.viewX, 0, s2ch.viewX + scrW, BUF_HEIGHT, 2);
     s2ch.pgCursorY = 0;
     for (i = start; i < start + lineEnd; i++)
     {
@@ -813,7 +813,7 @@ void psp2chDrawThread(void)
         s2ch.pgCursorX = 0;
         if (i == s2ch.thread.select)
         {
-            pgFillvram(s2ch.threadColor.s_bg, 0, s2ch.pgCursorY, BUF_WIDTH, LINE_PITCH);
+            pgFillvram(s2ch.threadColor.s_bg, s2ch.viewX, s2ch.pgCursorY, s2ch.viewX + scrW, LINE_PITCH, 2);
             if (s2ch.threadList[threadSort[i]].id >= 0)
             {
                 pgPrintNumber(s2ch.threadList[threadSort[i]].id + 1, s2ch.threadColor.s_num, s2ch.threadColor.s_bg);

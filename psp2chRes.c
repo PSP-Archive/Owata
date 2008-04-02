@@ -32,6 +32,7 @@ static char* resBuffer = NULL;
 static char jmpHost[32], jmpDir[32], jmpTitle[32];
 static int jmpDat;
 static int cursorMode = 1;
+static int wide = 0;
 const char *sBtnH[] = {"Sel", "", "", "St", "↑", "→", "↓", "←", "L", "R", "", "", "△", "○", "×", "□", ""};
 const char *sBtnV[] = {"Sel", "", "", "St", "←", "↑", "→", "↓", "L", "R", "", "", "△", "○", "×", "□", ""};
 
@@ -53,7 +54,7 @@ const char *sBtnV[] = {"Sel", "", "", "St", "←", "↑", "→", "↓", "L", "R", ""
 
 void psp2chResSetMenuString(void)
 {
-    int index1, index2, index3, index4, index5;
+    int index1, index2, index3, index4, index5, index6;
     int i, tmp;
 
     getIndex(s2ch.btnResH.form, index1);
@@ -69,10 +70,11 @@ void psp2chResSetMenuString(void)
     getIndex(s2ch.btnResH.addFav, index3);
     getIndex(s2ch.btnResH.delFav, index4);
     getIndex(s2ch.btnResH.cursor, index5);
-    sprintf(s2ch.menuResH.sub1, "　%s : 先頭　　%s : 最後　　%s : お気に入りに登録　　%s : カーソ\ル切替",
-            sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index5]);
-    sprintf(s2ch.menuResH.sub2, "　%s : 先頭　　%s : 最後　　%s : お気に入りから削除　　%s : カーソ\ル切替",
-            sBtnH[index1], sBtnH[index2], sBtnH[index4], sBtnH[index5]);
+    getIndex(s2ch.btnResH.wide, index6);
+    sprintf(s2ch.menuResH.sub1, " %s : 先頭　%s : 最後　%s : お気に入り登録　%s : カーソ\ル(%%d)　%s : ワイド(%%d)",
+            sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index5], sBtnH[index6]);
+    sprintf(s2ch.menuResH.sub2, " %s : 先頭　%s : 最後　%s : お気に入り削除　%s : カーソ\ル(%%d)　%s : ワイド(%%d)",
+            sBtnH[index1], sBtnH[index2], sBtnH[index4], sBtnH[index5], sBtnH[index6]);
 
     getIndex(s2ch.btnResH.resForm, index1);
     getIndex(s2ch.btnResH.resFBack, index2);
@@ -109,10 +111,11 @@ void psp2chResSetMenuString(void)
     getIndex(s2ch.btnResV.addFav, index3);
     getIndex(s2ch.btnResV.delFav, index4);
     getIndex(s2ch.btnResV.cursor, index5);
-    sprintf(s2ch.menuResV.sub1, "　%s : 先頭　　%s : お気に入りに登録\n　%s : 最後　　%s : カーソ\ル切替",
-            sBtnV[index1], sBtnV[index3], sBtnV[index2], sBtnV[index5]);
-    sprintf(s2ch.menuResV.sub2, "　%s : 先頭　　%s : お気に入りから削除\n　%s : 最後　　%s : カーソ\ル切替",
-            sBtnV[index1], sBtnV[index4], sBtnV[index2], sBtnV[index5]);
+    getIndex(s2ch.btnResV.wide, index6);
+    sprintf(s2ch.menuResV.sub1, " %s : 先頭　%s : 最後　%s : お気に入り登録\n %s : カーソ\ル(%%d)　%s : ワイド(%%d)",
+            sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index5], sBtnV[index6]);
+    sprintf(s2ch.menuResV.sub2, " %s : 先頭　%s : 最後　%s : お気に入り削除\n %s : カーソ\ル(%%d)　%s : ワイド(%%d)",
+            sBtnV[index1], sBtnV[index2], sBtnV[index4], sBtnV[index5], sBtnV[index6]);
 
     getIndex(s2ch.btnResV.resForm, index1);
     getIndex(s2ch.btnResV.resFBack, index2);
@@ -486,6 +489,17 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                     {
                         cursorMode = (cursorMode) ? 0 : 1;
                     }
+                    // 画面モード切替
+                    else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.wide) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.wide))
+                    {
+                        wide = (wide) ? 0 : 1;
+                        totalLine = psp2chResSetLine(&bar);
+                        if (s2ch.res.start > totalLine - lineEnd)
+                        {
+                            s2ch.res.start = totalLine - lineEnd;
+                        }
+                        preLine = -2;
+                    }
                 }
                 else
                 {
@@ -641,11 +655,11 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
             {
                 if (s2ch.tateFlag)
                 {
-                    sprintf(path, "%s(%d)", s2ch.menuResV.sub2, cursorMode);
+                    sprintf(path, s2ch.menuResV.sub2, cursorMode, wide);
                 }
                 else
                 {
-                    sprintf(path, "%s(%d)", s2ch.menuResH.sub2, cursorMode);
+                    sprintf(path, s2ch.menuResH.sub2, cursorMode, wide);
                 }
             }
             // お気に入りにない
@@ -653,11 +667,11 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
             {
                 if (s2ch.tateFlag)
                 {
-                    sprintf(path, "%s(%d)", s2ch.menuResV.sub1, cursorMode);
+                    sprintf(path, s2ch.menuResV.sub1, cursorMode, wide);
                 }
                 else
                 {
-                    sprintf(path, "%s(%d)", s2ch.menuResH.sub1, cursorMode);
+                    sprintf(path, s2ch.menuResH.sub1, cursorMode, wide);
                 }
             }
             menuStr = path;
@@ -673,6 +687,10 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
             {
                 menuStr = s2ch.menuResH.main;
             }
+        }
+        if (wide)
+        {
+            s2ch.viewX = psp2chPadSet(s2ch.viewX);
         }
         s2ch.viewY = s2ch.res.start * LINE_PITCH;
         pgCopy(s2ch.viewX, s2ch.viewY);
@@ -936,10 +954,18 @@ int psp2chResCursorMove(int totalLine, int lineEnd, int* cursorX, int* cursorY, 
 *****************************/
 int psp2chResSetLine(S_SCROLLBAR* bar)
 {
-    int i, j;
+    int i, j, scrWidth;;
 
     if (s2ch.tateFlag)
     {
+        if (wide)
+        {
+            scrWidth = 1024;
+        }
+        else
+        {
+            scrWidth = RES_SCR_WIDTH_V;
+        }
         bar->view = SCR_WIDTH - s2ch.font.height - s2ch.font.pitch;
         bar->x = RES_SCR_WIDTH_V;
         bar->y = 0;
@@ -947,7 +973,7 @@ int psp2chResSetLine(S_SCROLLBAR* bar)
         bar->h = bar->view;
         for (i = 0, j = 0; i < s2ch.res.count; i++)
         {
-            s2ch.resList[i].line = psp2chCountRes(i, RES_SCR_WIDTH_V);
+            s2ch.resList[i].line = psp2chCountRes(i, scrWidth);
             if (s2ch.resList[i].ng == 0)
             {
                 j += s2ch.resList[i].line;
@@ -957,6 +983,14 @@ int psp2chResSetLine(S_SCROLLBAR* bar)
     }
     else
     {
+        if (wide)
+        {
+            scrWidth = 1024;
+        }
+        else
+        {
+            scrWidth = RES_SCR_WIDTH;
+        }
         bar->view = SCR_HEIGHT - s2ch.font.height;
         bar->x = RES_SCR_WIDTH;
         bar->y = 0;
@@ -964,7 +998,7 @@ int psp2chResSetLine(S_SCROLLBAR* bar)
         bar->h = bar->view;
         for (i = 0, j = 0; i < s2ch.res.count; i++)
         {
-            s2ch.resList[i].line = psp2chCountRes(i, RES_SCR_WIDTH);
+            s2ch.resList[i].line = psp2chCountRes(i, scrWidth);
             if (s2ch.resList[i].ng == 0)
             {
                 j += s2ch.resList[i].line;
@@ -1776,7 +1810,7 @@ int psp2chDrawResStr(char* str, S_2CH_RES_COLOR c, int line, int lineEnd, int st
         {
             break;
         }
-        pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
+        pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH, 2);
     }
     return line;
 }
@@ -1805,7 +1839,7 @@ int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, in
                 s2ch.numAnchor[s2ch.numAnchorCount].x1 = s2ch.pgCursorX;
                 s2ch.numAnchor[s2ch.numAnchorCount].line = *drawLine;
                 s2ch.numAnchor[s2ch.numAnchorCount].num = s2ch.resList[re].num;
-                pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
+                pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH, 2);
                 line = psp2chDrawResStr(str, c, line, lineEnd, startX, endX, drawLine);
                 break;
             }
@@ -1816,7 +1850,7 @@ int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, in
         s2ch.numAnchor[s2ch.numAnchorCount].x1 = s2ch.pgCursorX;
         s2ch.numAnchor[s2ch.numAnchorCount].line = *drawLine;
         s2ch.numAnchor[s2ch.numAnchorCount].num = s2ch.resList[re].num;
-        pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
+        pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH, 2);
         line = psp2chDrawResStr(str, c, line, lineEnd, startX, endX, drawLine);
     }
     s2ch.numAnchor[s2ch.numAnchorCount].x2 = s2ch.pgCursorX;
@@ -1835,7 +1869,7 @@ int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, in
             s2ch.pgCursorX = startX;
             if (--(*skip) == 0)
             {
-                pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
+                pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH, 2);
                 line = psp2chDrawResStr(str, c, line, lineEnd, startX, endX, drawLine);
                 break;
             }
@@ -1858,7 +1892,7 @@ int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, in
             s2ch.pgCursorX = startX;
             if (--(*skip) == 0)
             {
-                pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
+                pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH, 2);
                 line = psp2chDrawResStr(str, c, line, lineEnd, startX, endX, drawLine);
                 break;
             }
@@ -1882,7 +1916,7 @@ int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, in
             s2ch.pgCursorX = startX;
             if (--(*skip) == 0)
             {
-                pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
+                pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH, 2);
                 line = psp2chDrawResStr(str, c, line, lineEnd, startX, endX, drawLine);
                 break;
             }
@@ -1905,7 +1939,7 @@ int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, in
             s2ch.pgCursorX = startX;
             if (--(*skip) == 0)
             {
-                pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
+                pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH, 2);
                 line = psp2chDrawResStr(str, c, line, lineEnd, startX, endX, drawLine);
                 break;
             }
@@ -1945,7 +1979,7 @@ int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, in
                     s2ch.idAnchor[s2ch.idAnchorCount].x1 = s2ch.pgCursorX;
                     s2ch.idAnchor[s2ch.idAnchorCount].line = *drawLine;
                     strcpy(s2ch.idAnchor[s2ch.idAnchorCount].id, s2ch.resList[re].id);
-                    pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
+                    pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH, 2);
                     line = psp2chDrawResStr(str, c, line, lineEnd, startX, endX, drawLine);
                     break;
                 }
@@ -1972,7 +2006,7 @@ int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, in
                 s2ch.pgCursorX = startX;
                 if (--(*skip) == 0)
                 {
-                    pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
+                    pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH, 2);
                     line = psp2chDrawResStr(str, c, line, lineEnd, startX, endX, drawLine);
                     line++;
                     (*drawLine)++;
@@ -2051,7 +2085,7 @@ int psp2chDrawResText(int res, int* skip, int line, int lineEnd, int startX, int
             {
                 while (str)
                 {
-                    pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
+                    pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH, 2);
                     str = pgPrintHtml(str, c, startX, endX, *drawLine);
                     (*drawLine)++;
                     if (++line > lineEnd)
@@ -2063,13 +2097,13 @@ int psp2chDrawResText(int res, int* skip, int line, int lineEnd, int startX, int
                 }
             }
         }
-        pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
+        pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH, 2);
     }
     else
     {
         while (str)
         {
-            pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
+            pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH, 2);
             str = pgPrintHtml(str, c, startX, endX, *drawLine);
             (*drawLine)++;
             if (++line > lineEnd)
@@ -2079,7 +2113,7 @@ int psp2chDrawResText(int res, int* skip, int line, int lineEnd, int startX, int
             s2ch.pgCursorX = startX;
             s2ch.pgCursorY += LINE_PITCH;
         }
-        pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH);
+        pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH, 2);
     }
     s2ch.pgCursorX = startX;
     s2ch.pgCursorY += LINE_PITCH ;
@@ -2102,12 +2136,26 @@ void psp2chDrawRes(int drawLine)
 
     if (s2ch.tateFlag)
     {
-        endX = RES_SCR_WIDTH_V;
+        if (wide)
+        {
+            endX = 1024;
+        }
+        else
+        {
+            endX = RES_SCR_WIDTH_V;
+        }
         lineEnd = DRAW_LINE_V;
     }
     else
     {
-        endX = RES_SCR_WIDTH;
+        if (wide)
+        {
+            endX = 1024;
+        }
+        else
+        {
+            endX = RES_SCR_WIDTH;
+        }
         lineEnd = DRAW_LINE_H;
     }
     // 表示行に変化なし
@@ -2146,11 +2194,11 @@ void psp2chDrawRes(int drawLine)
         line = psp2chDrawResHeader(re, &skip, lineEnd, lineEnd, 0, endX, s2ch.resColor, s2ch.resHeaderColor, &drawLine);
         if (line > lineEnd)
         {
-            pgFillvram(s2ch.resColor.bg, 0, s2ch.pgCursorY, endX, LINE_PITCH);
+            pgFillvram(s2ch.resColor.bg, 0, s2ch.pgCursorY, endX, LINE_PITCH, 2);
             return;
         }
         line = psp2chDrawResText(re, &skip, lineEnd, lineEnd, 0, endX, s2ch.resColor, &drawLine);
-        pgFillvram(s2ch.resColor.bg, 0, s2ch.pgCursorY+LINE_PITCH, endX, LINE_PITCH);
+        pgFillvram(s2ch.resColor.bg, 0, s2ch.pgCursorY+LINE_PITCH, endX, LINE_PITCH, 2);
     }
     // 1行上に移動
     else if (drawLine == preLine-1)
@@ -2225,7 +2273,7 @@ void psp2chDrawRes(int drawLine)
             }
             if (re >= s2ch.res.count)
             {
-                pgFillvram(s2ch.resColor.bg, 0, s2ch.pgCursorY, endX, (lineEnd + 1 - line)*LINE_PITCH);
+                pgFillvram(s2ch.resColor.bg, 0, s2ch.pgCursorY, endX, (lineEnd + 1 - line)*LINE_PITCH, 2);
                 break;
             }
         }

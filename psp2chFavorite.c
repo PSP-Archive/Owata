@@ -320,7 +320,7 @@ int psp2chFavorite(void)
                         free(s2ch.resList);
                         s2ch.resList = NULL;
                         preLine = -2;
-                        pgFillvram(WHITE, 0, 0, SCR_WIDTH, BUF_HEIGHT);
+                        pgFillvram(WHITE, 0, 0, SCR_WIDTH, BUF_HEIGHT, 2);
                         s2ch.sel = 4;
                         return 0;
                     }
@@ -978,7 +978,7 @@ void psp2chDrawFavorite(void)
     {
         start = 0;
     }
-    pgFillvram(s2ch.threadColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
+    pgFillvram(s2ch.threadColor.bg, s2ch.viewX, 0, scrW, BUF_HEIGHT, 2);
     s2ch.pgCursorY = 0;
     for (i = start; i < start + lineEnd; i++)
     {
@@ -989,7 +989,7 @@ void psp2chDrawFavorite(void)
         s2ch.pgCursorX = 0;
         if (i == s2ch.fav.select)
         {
-            pgFillvram(s2ch.threadColor.s_bg, 0, s2ch.pgCursorY, BUF_WIDTH, LINE_PITCH);
+            pgFillvram(s2ch.threadColor.s_bg, s2ch.viewX, s2ch.pgCursorY, scrW, LINE_PITCH, 2);
             pgPrintNumber(i + 1, s2ch.threadColor.s_num, s2ch.threadColor.s_bg);
         }
         else
@@ -1061,7 +1061,7 @@ void psp2chDrawFavoriteIta(void)
     {
         start = 0;
     }
-    pgFillvram(s2ch.threadColor.bg, 0, 0, BUF_WIDTH, BUF_HEIGHT);
+    pgFillvram(s2ch.threadColor.bg, 0, 0, BUF_WIDTH * 2, BUF_HEIGHT, 2);
     s2ch.pgCursorY = 0;
     for (i = start; i < start + lineEnd; i++)
     {
@@ -1072,7 +1072,7 @@ void psp2chDrawFavoriteIta(void)
         s2ch.pgCursorX = 0;
         if (i == s2ch.favIta.select)
         {
-            pgFillvram(s2ch.threadColor.s_bg, 0, s2ch.pgCursorY, BUF_WIDTH, LINE_PITCH);
+            pgFillvram(s2ch.threadColor.s_bg, 0, s2ch.pgCursorY, BUF_WIDTH * 2, LINE_PITCH, 2);
             pgPrintNumber(i + 1, s2ch.threadColor.s_num, s2ch.threadColor.s_bg);
         }
         else

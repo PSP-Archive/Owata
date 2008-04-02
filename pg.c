@@ -15,9 +15,9 @@
 #include "cp932.h"
 
 unsigned int __attribute__((aligned(16))) list[512*512];
-unsigned int __attribute__((aligned(16))) winPixels[BUF_WIDTH*BUF_HEIGHT];
-unsigned int __attribute__((aligned(16))) pixels[BUF_WIDTH*BUF_HEIGHT];
-unsigned int __attribute__((aligned(16))) barPixels[BUF_WIDTH*32];
+unsigned int __attribute__((aligned(16))) winPixels[BUF_WIDTH*BUF_HEIGHT*2];
+unsigned int __attribute__((aligned(16))) pixels[BUF_WIDTH*BUF_HEIGHT*2];
+unsigned int __attribute__((aligned(16))) barPixels[BUF_WIDTH*32*2];
 unsigned int* printBuf;
 void* framebuffer;
 intraFont* jpn0;
@@ -239,7 +239,7 @@ void pgFontLoad(void)
         s2ch.running = 0;
         sceKernelExitGame();
     }
-    pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT);
+    pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
     pgPrintMonaWait();
     pgCopy(0, 0);
     framebuffer = sceGuSwapBuffers();
@@ -269,29 +269,29 @@ void pgWaitV()
 現在の書き込みバッファにおける座標x,yのアドレスを返す
 printBufを変更することで書き込みバッファを変えられます
 *****************************/
-unsigned int* pgGetVramAddr(unsigned long x,unsigned long y)
+unsigned int* pgGetVramAddr(unsigned long x,unsigned long y, int w)
 {
-    return printBuf + x + y * BUF_WIDTH;
+    return printBuf + x + y * BUF_WIDTH * w;
 }
 
 /*****************************
 左上座標x1,y1、幅、高さw,h、色colorで四角形を塗りつぶす
 *****************************/
-void pgFillvram(int color, int x1, int y1, int w, int h)
+void pgFillvram(int color, int x1, int y1, int w, int h, int wide)
 {
     unsigned int *vptr0;       //pointer to vram
     unsigned int *vptr;
     unsigned long i, j;
 
-    vptr0 = pgGetVramAddr(0, y1 & 0x01FF) + x1;
+    vptr0 = pgGetVramAddr(0, y1 & 0x01FF, wide) + x1;
     for (i = 0; i < h;) {
         vptr = vptr0;;
         for (j = 0; j < w; j++) {
             *vptr++ = color;
         }
-        vptr0 += BUF_WIDTH;
+        vptr0 += BUF_WIDTH * wide;
         if (((++i + y1)&0x01FF) == 0) {
-            vptr0 -= ZBUF_SIZE;
+            vptr0 -= ZBUF_SIZE * wide;
         }
     }
 }
@@ -321,7 +321,7 @@ void pgTitleBar(char* ita, char* title)
     s2ch.pgCursorX = 0;
     if (s2ch.tateFlag)
     {
-        pgFillvram(s2ch.formColor.title_bg, 0, 0, SCR_HEIGHT, FONT_HEIGHT + LINE_PITCH + 1);
+        pgFillvram(s2ch.formColor.title_bg, 0, 0, SCR_HEIGHT, FONT_HEIGHT + LINE_PITCH + 1, 2);
         s2ch.pgCursorY = 1;
         pgPrint(buf, s2ch.formColor.ita, s2ch.formColor.title_bg, SCR_HEIGHT);
         s2ch.pgCursorX += 8;
@@ -337,7 +337,7 @@ void pgTitleBar(char* ita, char* title)
     }
     else
     {
-        pgFillvram(s2ch.formColor.title_bg, 0, 0, SCR_WIDTH, FONT_HEIGHT);
+        pgFillvram(s2ch.formColor.title_bg, 0, 0, SCR_WIDTH, FONT_HEIGHT, 2);
         s2ch.pgCursorY = 0;
         pgPrint(buf, s2ch.formColor.ita, s2ch.formColor.title_bg, SCR_WIDTH);
         s2ch.pgCursorX += 8;
@@ -357,7 +357,7 @@ void pgTitleBar(char* ita, char* title)
                 *dst = *src++;
                 dst += BUF_WIDTH;
             }
-            src += (BUF_WIDTH - SCR_HEIGHT);
+            src += (BUF_WIDTH * 2 - SCR_HEIGHT);
         }
     }
     else
@@ -371,7 +371,7 @@ void pgTitleBar(char* ita, char* title)
                 *dst++ = *src++;
             }
             dst += (BUF_WIDTH - SCR_WIDTH);
-            src += (BUF_WIDTH - SCR_WIDTH);
+            src += (BUF_WIDTH * 2 - SCR_WIDTH);
         }
     }
     printBuf = temp;
@@ -395,7 +395,7 @@ void pgMenuBar(char* str)
     s2ch.pgCursorX = 0;
     if (s2ch.tateFlag)
     {
-        pgFillvram(s2ch.menuColor.bg, 0, 0, SCR_HEIGHT, FONT_HEIGHT + LINE_PITCH);
+        pgFillvram(s2ch.menuColor.bg, 0, 0, SCR_HEIGHT, FONT_HEIGHT + LINE_PITCH, 2);
         s2ch.pgCursorY = 0;
         str = pgPrint(str, s2ch.menuColor.text, s2ch.menuColor.bg, SCR_HEIGHT);
         s2ch.pgCursorY += LINE_PITCH;
@@ -408,7 +408,7 @@ void pgMenuBar(char* str)
     }
     else
     {
-        pgFillvram(s2ch.menuColor.bg, 0, 0, SCR_WIDTH, FONT_HEIGHT);
+        pgFillvram(s2ch.menuColor.bg, 0, 0, SCR_WIDTH, FONT_HEIGHT, 2);
         s2ch.pgCursorY = 0;
         pgPrint(str, s2ch.menuColor.text, s2ch.menuColor.bg, SCR_WIDTH);
         s2ch.pgCursorX = SCR_WIDTH - FONT_HEIGHT * 3;
@@ -447,7 +447,7 @@ void pgMenuBar(char* str)
                 *dst = *src++;
                 dst += BUF_WIDTH;
             }
-            src += (BUF_WIDTH - SCR_HEIGHT);
+            src += (BUF_WIDTH * 2 - SCR_HEIGHT);
         }
     }
     else
@@ -461,7 +461,7 @@ void pgMenuBar(char* str)
                 *dst++ = *src++;
             }
             dst += (BUF_WIDTH - SCR_WIDTH);
-            src += (BUF_WIDTH - SCR_WIDTH);
+            src += (BUF_WIDTH * 2 - SCR_WIDTH);
         }
     }
     printBuf = temp;
@@ -499,7 +499,7 @@ void pgEditBox(int color, int x1, int y1, int x2, int y2)
     if (y2 > SCR_HEIGHT) {
         y2 = SCR_HEIGHT;
     }
-    vptr0 = pgGetVramAddr(0, y1);
+    vptr0 = pgGetVramAddr(0, y1, 2);
     for (j = x1; j < x2; j++) {
         vptr0[j] = RGB(0x99, 0x99, 0x99);
     }
@@ -606,13 +606,13 @@ void pgScrollbar(S_SCROLLBAR bar, S_2CH_BAR_COLOR c)
     }
     if (s2ch.tateFlag)
     {
-        pgFillvram(c.bg, SCR_WIDTH - bar.y - bar.h, bar.x, bar.h, bar.w);
-        pgFillvram(c.slider, SCR_WIDTH - sliderY - sliderH, bar.x + 1, sliderH, bar.w - 1);
+        pgFillvram(c.bg, SCR_WIDTH - bar.y - bar.h, bar.x, bar.h, bar.w, 1);
+        pgFillvram(c.slider, SCR_WIDTH - sliderY - sliderH, bar.x + 1, sliderH, bar.w - 1, 1);
     }
     else
     {
-        pgFillvram(c.bg, bar.x, bar.y, bar.w, bar.h);
-        pgFillvram(c.slider, bar.x+1, sliderY, bar.w-1, sliderH);
+        pgFillvram(c.bg, bar.x, bar.y, bar.w, bar.h, 1);
+        pgFillvram(c.slider, bar.x+1, sliderY, bar.w-1, sliderH, 1);
     }
     printBuf = pixels;
 }
@@ -662,7 +662,7 @@ void pgCopyWindow(int offset, int x, int y, int w, int h)
 
     if (s2ch.tateFlag)
     {
-        src = printBuf + ((offset + y) & 0x01FF) * BUF_WIDTH + x;
+        src = printBuf + ((offset + y) & 0x01FF) * BUF_WIDTH * 2 + x;
         dst0 = (unsigned int*)(0x04000000 + framebuffer) + SCR_WIDTH - 1;
         dst0 += x * BUF_WIDTH - (y & 0x01FF);
         for (i = 0; i < h; i++)
@@ -673,15 +673,15 @@ void pgCopyWindow(int offset, int x, int y, int w, int h)
                 *dst = *src++;
                 dst += BUF_WIDTH;
             }
-            src += (BUF_WIDTH - w);
-            if (src >= printBuf + ZBUF_SIZE) {
-                src -= ZBUF_SIZE;
+            src += (BUF_WIDTH * 2 - w);
+            if (src >= printBuf + ZBUF_SIZE * 2) {
+                src -= ZBUF_SIZE * 2;
             }
         }
     }
     else
     {
-        src = printBuf + ((offset + y) & 0x01FF) * BUF_WIDTH + x;
+        src = printBuf + ((offset + y) & 0x01FF) * BUF_WIDTH * 2 + x;
         dst = (unsigned int*)(0x04000000 + framebuffer);
         dst += (y & 0x01FF) * BUF_WIDTH + x;
         for (i = 0; i < h; i++)
@@ -691,9 +691,9 @@ void pgCopyWindow(int offset, int x, int y, int w, int h)
                 *dst++ = *src++;
             }
             dst += (BUF_WIDTH - w);
-            src += (BUF_WIDTH - w);
-            if (src >= printBuf + ZBUF_SIZE) {
-                src -= ZBUF_SIZE;
+            src += (BUF_WIDTH * 2 - w);
+            if (src >= printBuf + ZBUF_SIZE * 2) {
+                src -= ZBUF_SIZE * 2;
             }
         }
     }
@@ -711,7 +711,7 @@ void pgCopy(int offsetX, int offsetY)
     offsetY &= 0x01FF;
     if (s2ch.tateFlag)
     {
-        src = printBuf + offsetX + (offsetY * BUF_WIDTH);
+        src = printBuf + offsetX + (offsetY * BUF_WIDTH * 2);
         dst0 = (unsigned int*)(0x04000000+framebuffer) + SCR_WIDTH - 1;
         for (y = 0; y < SCR_WIDTH; y++)
         {
@@ -721,15 +721,15 @@ void pgCopy(int offsetX, int offsetY)
                 *dst = *src++;
                 dst += BUF_WIDTH;
             }
-            src += (BUF_WIDTH - SCR_HEIGHT);
-            if (src >= printBuf + ZBUF_SIZE) {
-                src -= ZBUF_SIZE;
+            src += (BUF_WIDTH * 2 - SCR_HEIGHT);
+            if (src >= printBuf + ZBUF_SIZE * 2) {
+                src -= ZBUF_SIZE * 2;
             }
         }
     }
     else
     {
-        src = printBuf + offsetX + (offsetY * BUF_WIDTH);
+        src = printBuf + offsetX + (offsetY * BUF_WIDTH * 2);
         dst = (unsigned int*)(0x04000000+framebuffer);
         for (y = 0; y < SCR_HEIGHT; y++)
         {
@@ -738,9 +738,9 @@ void pgCopy(int offsetX, int offsetY)
                 *dst++ = *src++;
             }
             dst += (BUF_WIDTH - SCR_WIDTH);
-            src += (BUF_WIDTH - SCR_WIDTH);
-            if (src >= printBuf + ZBUF_SIZE) {
-                src -= ZBUF_SIZE;
+            src += (BUF_WIDTH * 2 - SCR_WIDTH);
+            if (src >= printBuf + ZBUF_SIZE * 2) {
+                src -= ZBUF_SIZE * 2;
             }
         }
     }
@@ -766,7 +766,7 @@ void pgPrintNumber(int num, int color,int bgcolor)
     for (j = 0; j < count;j++) {
         font = (unsigned short*)(fontA + ((buf[j] - 0x20) << 5));
         cx = *font++;
-        vptr0 = pgGetVramAddr(s2ch.pgCursorX, s2ch.pgCursorY);
+        vptr0 = pgGetVramAddr(s2ch.pgCursorX, s2ch.pgCursorY, 2);
         s2ch.pgCursorX += cx;
         for (cy = 0; cy < FONT_HEIGHT; cy++) {
             vptr = vptr0;
@@ -780,9 +780,9 @@ void pgPrintNumber(int num, int color,int bgcolor)
                 vptr++;
                 b >>= 1;
             }
-            vptr0 += BUF_WIDTH;
-            if (vptr0 >= printBuf + ZBUF_SIZE) {
-                vptr0 -= ZBUF_SIZE;
+            vptr0 += BUF_WIDTH * 2;
+            if (vptr0 >= printBuf + ZBUF_SIZE * 2) {
+                vptr0 -= ZBUF_SIZE * 2;
             }
             font++;
         }
@@ -806,7 +806,7 @@ int pgPutChar(unsigned char *cfont,int ch,int color,int bgcolor, int width)
         return 1;
     }
     s2ch.pgCursorY &= 0x01FF;
-    vptr0 = pgGetVramAddr(s2ch.pgCursorX, s2ch.pgCursorY);
+    vptr0 = pgGetVramAddr(s2ch.pgCursorX, s2ch.pgCursorY, 2);
     s2ch.pgCursorX += cx;
     for (cy = 0; cy < FONT_HEIGHT; cy++) {
         vptr = vptr0;
@@ -820,9 +820,9 @@ int pgPutChar(unsigned char *cfont,int ch,int color,int bgcolor, int width)
             vptr++;
             b >>= 1;
         }
-        vptr0 += BUF_WIDTH;
-        if (vptr0 >= printBuf + ZBUF_SIZE) {
-            vptr0 -= ZBUF_SIZE;
+        vptr0 += BUF_WIDTH * 2;
+        if (vptr0 >= printBuf + ZBUF_SIZE * 2) {
+            vptr0 -= ZBUF_SIZE * 2;
         }
         font++;
     }
@@ -1504,7 +1504,7 @@ void pgHome(void)
 
 void pgPrintMona(void)
 {
-    pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT);
+    pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
     s2ch.pgCursorY = LINE_PITCH;
     s2ch.pgCursorX = 60;
     pgPrint("ｵﾜﾀブラウザ", RED, WHITE, SCR_WIDTH);
@@ -1555,7 +1555,7 @@ void pgPrintMona(void)
 
 void pgPrintMonaWait(void)
 {
-    pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT);
+    pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
     s2ch.pgCursorY = LINE_PITCH;
     s2ch.pgCursorX = 60;
     pgPrint("ｵﾜﾀブラウザ", RED, WHITE, SCR_WIDTH);
@@ -1592,7 +1592,7 @@ void pgPrintMonaWait(void)
 
 void pgPrintOwata(void)
 {
-    pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT);
+    pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
     s2ch.pgCursorX = 160;
     s2ch.pgCursorY = 80;
     pgPrint("人生ｵﾜﾀ＼(^o^)／", BLACK, WHITE, SCR_WIDTH);
@@ -1600,7 +1600,7 @@ void pgPrintOwata(void)
 
 void pgPrintTate(void)
 {
-    pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT);
+    pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
     s2ch.pgCursorY = LINE_PITCH;
     s2ch.pgCursorX = 60;
     pgPrint("ｵﾜﾀブラウザ", RED, WHITE, SCR_WIDTH);
