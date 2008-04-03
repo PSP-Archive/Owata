@@ -261,11 +261,6 @@ int psp2chFavorite(void)
             }
             else if (rMenu)
             {
-                // ソート
-                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favH.sort) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favV.sort))
-                {
-                    psp2chFavSortDialog();
-                }
                 // 全板検索
                 if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favH.search2ch) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favV.search2ch))
                 {
@@ -279,10 +274,18 @@ int psp2chFavorite(void)
                         s2ch.sel = 7;
                     }
                 }
-                // 一括取得開始
-                if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favH.update) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favV.update))
+                if (!focus)
                 {
-                    update = 0;
+                    // ソート
+                    if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favH.sort) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favV.sort))
+                    {
+                        psp2chFavSortDialog();
+                    }
+                    // 一括取得開始
+                    if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favH.update) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.favV.update))
+                    {
+                        update = 0;
+                    }
                 }
             }
             else

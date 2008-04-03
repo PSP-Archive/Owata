@@ -503,14 +503,14 @@ void pgEditBox(int color, int x1, int y1, int x2, int y2)
     for (j = x1; j < x2; j++) {
         vptr0[j] = RGB(0x99, 0x99, 0x99);
     }
-    vptr0 += BUF_WIDTH;
+    vptr0 += BUF_WIDTH * 2;
     vptr0[x1+0] = RGB(0x99, 0x99, 0x99);
     for (j = x1+1; j < x2-1; j++) {
         vptr0[j] = RGB(0x33, 0x33, 0x33);
     }
     vptr0[x2-1] = RGB(0x99, 0x99, 0x99);
     for (i = y1+2; i < y2-1; i++) {
-        vptr0 += BUF_WIDTH;
+        vptr0 += BUF_WIDTH * 2;
         vptr0[x1+0] = RGB(0x99, 0x99, 0x99);
         vptr0[x1+1] = RGB(0x33, 0x33, 0x33);
         for (j = x1+2; j < x2-1; j++) {
@@ -518,7 +518,7 @@ void pgEditBox(int color, int x1, int y1, int x2, int y2)
         }
         vptr0[x2-1] = RGB(0x99, 0x99, 0x99);
     }
-    vptr0 += BUF_WIDTH;
+    vptr0 += BUF_WIDTH * 2;
     for (j = x1; j < x2; j++) {
         vptr0[j] = RGB(0x99, 0x99, 0x99);
     }

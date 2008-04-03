@@ -298,7 +298,7 @@ typedef struct {
     S_2CH_RES_ANCHOR resAnchor[50];
     S_2CH_ID_ANCHOR idAnchor[40];
     S_2CH_NUM_ANCHOR numAnchor[40];
-    S_2CH_ANCHOR_LIST anchorList[180];
+    S_2CH_ANCHOR_LIST anchorList[100];
     int urlAnchorCount;
     int resAnchorCount;
     int idAnchorCount;
