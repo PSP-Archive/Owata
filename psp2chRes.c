@@ -505,6 +505,8 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                         {
                             psp2chSort(-1); // 前回のソート順で再ソート
                         }
+                        s2ch.viewX = 0;
+                        s2ch.viewY = 0;
                         s2ch.sel = ret;
                         return ret;
                     }
