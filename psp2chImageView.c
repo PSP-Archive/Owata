@@ -400,19 +400,19 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
             }
             if(pad.Buttons & PSP_CTRL_UP)
             {
-                startY--;
+                startY -= 2;
             }
             if(pad.Buttons & PSP_CTRL_DOWN)
             {
-                startY++;
+                startY += 2;
             }
             if(pad.Buttons & PSP_CTRL_LEFT)
             {
-                startX--;
+                startX -= 2;
             }
             if(pad.Buttons & PSP_CTRL_RIGHT)
             {
-                startX++;
+                startX += 2;
             }
             padX = pad.Lx - 127;
             padY = pad.Ly - 127;

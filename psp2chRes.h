@@ -11,6 +11,8 @@ int psp2chThreadRes(int ret);
 int psp2chJumpRes(int ret);
 int psp2chSearchRes(int ret);
 int psp2chRes(char* host, char* dir, char* title, int dat, int ret);
+void psp2chResSend(char* host, char* dir, char* title, int dat, int *totalLine, S_SCROLLBAR *bar, int numMenu);
+int psp2chResJump(int urlMenu);
 void psp2chResResetAnchors(void);
 int psp2chResCursorMove(int totalLine, int lineEnd, int* cursorX, int* cursorY, int limitY);
 int psp2chResSetLine(S_SCROLLBAR* bar);

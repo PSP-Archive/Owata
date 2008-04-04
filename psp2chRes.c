@@ -164,12 +164,11 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
     static int cursorX = 240, cursorY = 130;
     static int totalLine = 0;
     static S_SCROLLBAR bar;
-    static char* message = NULL;
     static char* menuStr = NULL;
     static int resMenu = -1, urlMenu = -1, idMenu = -1, numMenu = -1;
     char path[256];
-    char *p, *q;
-    int i, j, tmp;
+    char *p;
+    int i, j;
     int lineEnd, rMenu;
 
     if (s2ch.tateFlag)
@@ -188,14 +187,6 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
             return -1;
         }
         totalLine = psp2chResSetLine(&bar);
-        if (s2ch.res.start > totalLine - lineEnd)
-        {
-            s2ch.res.start = totalLine - lineEnd;
-        }
-        if (s2ch.res.start < 0)
-        {
-            s2ch.res.start = 0;
-        }
         s2ch.viewX = 0;
         s2ch.viewY = 0;
     }
@@ -250,14 +241,6 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                 {
                     lineEnd = DRAW_LINE_H;
                 }
-                if (s2ch.res.start > totalLine - lineEnd)
-                {
-                    s2ch.res.start = totalLine - lineEnd;
-                }
-                if (s2ch.res.start < 0)
-                {
-                    s2ch.res.start = 0;
-                }
                 psp2chResResetAnchors();
                 preLine = -2;
             }
@@ -268,14 +251,6 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                 psp2chMenu();
                 totalLine = psp2chResSetLine(&bar);
                 psp2chResLineGet(i, j);
-                if (s2ch.res.start > totalLine - lineEnd)
-                {
-                    s2ch.res.start = totalLine - lineEnd;
-                }
-                if (s2ch.res.start < 0)
-                {
-                    s2ch.res.start = 0;
-                }
                 preLine = -2;
             }
             // レスアンカーメニュー
@@ -300,14 +275,6 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                             }
                         }
                         s2ch.res.start = j;
-                        if (s2ch.res.start > totalLine - lineEnd)
-                        {
-                            s2ch.res.start = totalLine - lineEnd;
-                        }
-                        if (s2ch.res.start < 0)
-                        {
-                            s2ch.res.start = 0;
-                        }
                     }
                 }
                 // 戻る
@@ -320,66 +287,15 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
             // URLアンカーメニュー
             else if (urlMenu >= 0)
             {
+                // URL処理
                 if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.url) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.url))
                 {
                     psp2chSaveIdx(title, dat);
                     /* 2ちゃんリンク移動 */
                     if ((p = strstr(s2ch.urlAnchor[urlMenu].host, ".2ch.net")) && p[8] == '\0')
                     {
-                        if (s2ch.itaList == NULL)
+                        if (psp2chResJump(urlMenu) == 1)
                         {
-                            if (psp2chItaList() < 0)
-                            {
-                                return ret;
-                            }
-                        }
-                        strcpy(jmpHost, s2ch.urlAnchor[urlMenu].host);
-                        memcpy(path, s2ch.urlAnchor[urlMenu].path, 256);
-                        path[255] = '\0';
-                        if ((p = strstr(path, "test/read.cgi/")))
-                        {
-                            p += 14;
-                            q = strchr(p, '/');
-                            if (!q)
-                            {
-                                return ret;
-                            }
-                            *q = '\0';
-                            memcpy(jmpDir, p, 32);
-                            jmpDir[31] = '\0';
-                            q++;
-                            sscanf(q, "%d", &jmpDat);
-                            jmpTitle[0] = '\0';
-                            for (i = 0; i < s2ch.ita.count; i++)
-                            {
-                                if (strcmp(s2ch.itaList[i].host, s2ch.urlAnchor[urlMenu].host) == 0 &&
-                                        strcmp(s2ch.itaList[i].dir, jmpDir) == 0)
-                                {
-                                    strcpy(jmpTitle, s2ch.itaList[i].title);
-                                    break;
-                                }
-                            }
-                            if (jmpTitle[0] == '\0')
-                            {
-                                return ret;
-                            }
-                        }
-                        else
-                        {
-                            return ret;
-                        }
-                        memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
-                        s2ch.mh.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT |
-                            PSP_UTILITY_MSGDIALOG_OPTION_YESNO_BUTTONS | PSP_UTILITY_MSGDIALOG_OPTION_DEFAULT_NO;
-                        strcpy(s2ch.mh.message, TEXT_11);
-                        pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
-                        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
-                        if (s2ch.mh.buttonPressed == PSP_UTILITY_MSGDIALOG_RESULT_YES)
-                        {
-                            free(s2ch.resList);
-                            s2ch.resList = NULL;
-                            s2ch.res.start = 0;
-                            s2ch.sel = 6;
                             return ret;
                         }
                     }
@@ -399,19 +315,17 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
             // IDメニュー
             else if (idMenu >= 0)
             {
+                // ID 抽出
                 if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.idView) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.idView))
                 {
                     psp2chIdAnchor(idMenu);
                 }
+                // NGID 登録
                 else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.idNG) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.idNG))
                 {
                     psp2chNGAdd(ngIDFile, s2ch.idAnchor[idMenu].id);
                     psp2chResCheckNG();
                     totalLine = psp2chResSetLine(&bar);
-                    if (s2ch.res.start > totalLine - lineEnd)
-                    {
-                        s2ch.res.start = totalLine - lineEnd;
-                    }
                     preLine = -2;
                 }
                 // 戻る
@@ -424,31 +338,10 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
             // レス番号メニュー
             else if (numMenu >= 0)
             {
+                // 自動アンカーで書き込む
                 if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.resForm) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.resForm))
                 {
-                    tmp = s2ch.tateFlag;
-                    s2ch.tateFlag = 0;
-                    if (message == NULL)
-                    {
-                        message = (char*)calloc(1, 2048);
-                    }
-                    if (message == NULL)
-                    {
-                        psp2chErrorDialog("memorry error\nForm message");
-                        return 0;
-                    }
-                    sprintf(path, ">>%d\n", s2ch.numAnchor[numMenu].num + 1);
-                    strcat(message, path);
-                    if (psp2chForm(host, dir, dat, s2ch.resList[0].title, message) > 0)
-                    {
-                        psp2chSaveIdx(title, dat);
-                        psp2chGetDat(host, dir, title, dat);
-                        psp2chResList(host, dir, title, dat);
-                        s2ch.res.start++;
-                        totalLine = psp2chResSetLine(&bar);
-                    }
-                    s2ch.tateFlag = tmp;
-                    preLine = -2;
+                    psp2chResSend(host, dir, title, dat, &totalLine, &bar, numMenu);
                 }
                 // 戻る
                 else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.resFBack) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.resFBack))
@@ -484,14 +377,6 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                         wide = (wide) ? 0 : 1;
                         totalLine = psp2chResSetLine(&bar);
                         psp2chResLineGet(i, j);
-                        if (s2ch.res.start > totalLine - lineEnd)
-                        {
-                            s2ch.res.start = totalLine - lineEnd;
-                        }
-                        if (s2ch.res.start < 0)
-                        {
-                            s2ch.res.start = 0;
-                        }
                         preLine = -2;
                     }
                 }
@@ -513,46 +398,18 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                     // 書き込み
                     else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.form) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.form))
                     {
-                        tmp = s2ch.tateFlag;
-                        s2ch.tateFlag = 0;
-                        if (message == NULL)
-                        {
-                            message = (char*)calloc(1, 2048);
-                        }
-                        if (message == NULL)
-                        {
-                            psp2chErrorDialog("memorry error\nForm message");
-                            return 0;
-                        }
-                        // 書き込みがあったときのみ更新
-                        if (psp2chForm(host, dir, dat, s2ch.resList[0].title, message) > 0)
-                        {
-                            psp2chSaveIdx(title, dat);
-                            psp2chGetDat(host, dir, title, dat);
-                            psp2chResList(host, dir, title, dat);
-                            s2ch.res.start++;
-                            totalLine = psp2chResSetLine(&bar);
-                        }
-                        s2ch.tateFlag = tmp;
-                        preLine = -2;
+                        psp2chResSend(host, dir, title, dat, &totalLine, &bar, -1);
                     }
                     // 更新
                     else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.reload) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.reload))
                     {
-                        psp2chSaveIdx(title, dat);
+                        psp2chResLineSet(&i, &j);
                         if (psp2chGetDat(host, dir, title, dat) == 0)
                         {
                             psp2chResList(host, dir, title, dat);
                             totalLine = psp2chResSetLine(&bar);
+                            psp2chResLineGet(i, j);
                             s2ch.res.start++;
-                            if (s2ch.res.start > totalLine - lineEnd)
-                            {
-                                s2ch.res.start = totalLine - lineEnd;
-                            }
-                            if (s2ch.res.start < 0)
-                            {
-                                s2ch.res.start = 0;
-                            }
                         }
                     }
                     // DAT削除
@@ -581,6 +438,14 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                     }
                 }
             }
+        }
+        if (s2ch.res.start > totalLine - lineEnd)
+        {
+            s2ch.res.start = totalLine - lineEnd;
+        }
+        if (s2ch.res.start < 0)
+        {
+            s2ch.res.start = 0;
         }
         // レスアンカーメニュー
         if (resMenu >= 0)
@@ -702,6 +567,112 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         framebuffer = sceGuSwapBuffers();
     }
     return ret;
+}
+
+/*****************************
+書き込みボタン処理
+*****************************/
+void psp2chResSend(char* host, char* dir, char* title, int dat, int *totalLine, S_SCROLLBAR *bar, int numMenu)
+{
+    static char* message = NULL;
+    int tmp;
+    char path[256];
+
+    tmp = s2ch.tateFlag;
+    s2ch.tateFlag = 0;
+    if (message == NULL)
+    {
+        message = (char*)calloc(1, 2048);
+    }
+    if (message == NULL)
+    {
+        psp2chErrorDialog("memorry error\nForm message");
+        return;
+    }
+    if (numMenu >= 0)
+    {
+        sprintf(path, ">>%d\n", s2ch.numAnchor[numMenu].num + 1);
+        strcat(message, path);
+    }
+    // 書き込みがあったときのみ更新
+    if (psp2chForm(host, dir, dat, s2ch.resList[0].title, message) > 0)
+    {
+        psp2chSaveIdx(title, dat);
+        psp2chGetDat(host, dir, title, dat);
+        psp2chResList(host, dir, title, dat);
+        s2ch.res.start++;
+        *totalLine = psp2chResSetLine(bar);
+    }
+    s2ch.tateFlag = tmp;
+    preLine = -2;
+}
+
+/*****************************
+2ちゃんのスレに移動
+*****************************/
+int psp2chResJump(int urlMenu)
+{
+    char path[256];
+    char *p, *q;
+    int i;
+
+    if (s2ch.itaList == NULL)
+    {
+        if (psp2chItaList() < 0)
+        {
+            return 0;
+        }
+    }
+    strcpy(jmpHost, s2ch.urlAnchor[urlMenu].host);
+    memcpy(path, s2ch.urlAnchor[urlMenu].path, 256);
+    path[255] = '\0';
+    if ((p = strstr(path, "test/read.cgi/")))
+    {
+        p += 14;
+        q = strchr(p, '/');
+        if (!q)
+        {
+            return 0;
+        }
+        *q = '\0';
+        memcpy(jmpDir, p, 32);
+        jmpDir[31] = '\0';
+        q++;
+        sscanf(q, "%d", &jmpDat);
+        jmpTitle[0] = '\0';
+        for (i = 0; i < s2ch.ita.count; i++)
+        {
+            if (strcmp(s2ch.itaList[i].host, s2ch.urlAnchor[urlMenu].host) == 0 &&
+                    strcmp(s2ch.itaList[i].dir, jmpDir) == 0)
+            {
+                strcpy(jmpTitle, s2ch.itaList[i].title);
+                break;
+            }
+        }
+        if (jmpTitle[0] == '\0')
+        {
+            return 0;
+        }
+    }
+    else
+    {
+        return 0;
+    }
+    memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
+    s2ch.mh.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT |
+        PSP_UTILITY_MSGDIALOG_OPTION_YESNO_BUTTONS | PSP_UTILITY_MSGDIALOG_OPTION_DEFAULT_NO;
+    strcpy(s2ch.mh.message, TEXT_11);
+    pspShowMessageDialog(&s2ch.mh, DIALOG_LANGUAGE_AUTO);
+    sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+    if (s2ch.mh.buttonPressed == PSP_UTILITY_MSGDIALOG_RESULT_YES)
+    {
+        free(s2ch.resList);
+        s2ch.resList = NULL;
+        s2ch.res.start = 0;
+        s2ch.sel = 6;
+        return 1;
+    }
+    return 0;
 }
 
 /*****************************
@@ -1675,7 +1646,7 @@ datファイルにアクセスして保存
 *****************************/
 int psp2chGetDat(char* host, char* dir, char* title, int dat)
 {
-    int ret, range, len;
+    int ret, range, len, startRes, startLine;
     S_NET net;
     SceUID fd;
     char path[256];
@@ -1705,8 +1676,8 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
     {
         buf[0] = '\0';
         range = 0;
-        s2ch.res.start = 0;
-        s2ch.res.select = 0;
+        startRes = 0;
+        startLine = 0;
     }
     else
     {
@@ -1720,7 +1691,7 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
         *q = 0;
         strcpy(eTag, p);
         q++;
-        sscanf(q, "%d %d %d", &range, &s2ch.res.start, &s2ch.res.select);
+        sscanf(q, "%d %d %d", &range, &startRes, &startLine);
         sprintf(buf, "If-Modified-Since: %s\r\nIf-None-Match: %s\r\nRange: bytes=%d-\r\n", lastModified, eTag, range - 1);
     }
     sprintf(path, "%s/dat/%d.dat", dir, dat);
@@ -1789,7 +1760,7 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
     }
     sceIoWrite(fd, net.head.Last_Modified, strlen(net.head.Last_Modified));
     sceIoWrite(fd, net.head.ETag, strlen(net.head.ETag));
-    sprintf(buf, "%d\n%d\n%d\n", range,s2ch.res.start, s2ch.res.select);
+    sprintf(buf, "%d\n%d\n%d\n", range, startRes, startLine);
     sceIoWrite(fd, buf, strlen(buf));
     sceIoClose(fd);
     return 0;
