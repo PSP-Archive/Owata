@@ -143,6 +143,16 @@ void psp2chResSetMenuString(void)
 /**************
   レス表示
 ***************/
+#define setMenuStr(S) \
+    if (s2ch.tateFlag)\
+    {\
+        menuStr = s2ch.menuResV.S;\
+    }\
+    else\
+    {\
+        menuStr = s2ch.menuResH.S;\
+    }
+
 int psp2chFavoriteRes(int ret)
 {
     return psp2chRes(s2ch.favList[favSort[s2ch.fav.select]].host, s2ch.favList[favSort[s2ch.fav.select]].dir, s2ch.favList[favSort[s2ch.fav.select]].title, s2ch.favList[favSort[s2ch.fav.select]].dat, ret);
@@ -450,50 +460,22 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         // レスアンカーメニュー
         if (resMenu >= 0)
         {
-            if (s2ch.tateFlag)
-            {
-                menuStr = s2ch.menuResV.aRes;
-            }
-            else
-            {
-                menuStr = s2ch.menuResH.aRes;
-            }
+            setMenuStr(aRes);
         }
         // URLアンカーメニュー
         else if (urlMenu >= 0)
         {
-            if (s2ch.tateFlag)
-            {
-                menuStr = s2ch.menuResV.aUrl;
-            }
-            else
-            {
-                menuStr = s2ch.menuResH.aUrl;
-            }
+            setMenuStr(aUrl);
         }
         // IDメニュー
         else if (idMenu >= 0)
         {
-            if (s2ch.tateFlag)
-            {
-                menuStr = s2ch.menuResV.aId;
-            }
-            else
-            {
-                menuStr = s2ch.menuResH.aId;
-            }
+            setMenuStr(aId);
         }
         // レス番メニュー
         else if (numMenu >= 0)
         {
-            if (s2ch.tateFlag)
-            {
-                menuStr = s2ch.menuResV.aNum;
-            }
-            else
-            {
-                menuStr = s2ch.menuResH.aNum;
-            }
+            setMenuStr(aNum);
         }
         // シフトメニュー
         else if (rMenu)
@@ -540,14 +522,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         // 通常メニュー
         else
         {
-            if (s2ch.tateFlag)
-            {
-                menuStr = s2ch.menuResV.main;
-            }
-            else
-            {
-                menuStr = s2ch.menuResH.main;
-            }
+            setMenuStr(main);
         }
         if (wide)
         {
