@@ -7,6 +7,6 @@
 
 void psp2chImageViewJpeg(char* fname);
 void psp2chImageViewPng(char* fname);
-void psp2chImageViewer(int* img[], int width, int height, int bufWidth, char* fname);
+void psp2chImageViewer(int* img[], int width, int height, char* fname);
 
 #endif
