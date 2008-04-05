@@ -1606,6 +1606,11 @@ int psp2chResList(char* host, char* dir, char* title, int dat)
     }
     psp2chResCheckNG();
     psp2chResSetLine(NULL);
+    if (startRes > s2ch.res.count || startRes < 0)
+    {
+        startRes = 0;
+        startLine = 0;
+    }
     psp2chResLineGet(startRes, startLine);
     psp2chSaveIdx(title, dat);
     return 0;
