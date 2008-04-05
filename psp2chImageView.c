@@ -6,8 +6,6 @@
 #include <malloc.h>
 #include <jpeglib.h>
 #include <png.h>
-#include <pspdebug.h>
-#include <pspgu.h>
 #include "psp2ch.h"
 #include "pg.h"
 #include "psp2chImageView.h"
@@ -17,6 +15,9 @@ extern unsigned int list[BUF_WIDTH*BUF_HEIGHT]; // pg.c
 extern unsigned int pixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
 extern int preLine; // psp2chRes.c
 
+/*****************************
+jpegファイルを読み込んで24ビットBMPに変換
+*****************************/
 void psp2chImageViewJpeg(char* fname)
 {
     FILE* infile;
@@ -126,6 +127,9 @@ void psp2chImageViewJpeg(char* fname)
     preLine = -2;
 }
 
+/*****************************
+PNGファイルを読み込んで24ビットBMPに変換
+*****************************/
 void psp2chImageViewPng(char* fname)
 {
     FILE* infile;
@@ -215,6 +219,10 @@ void psp2chImageViewPng(char* fname)
     preLine = -2;
 }
 
+/*****************************
+メニュー処理
+BMPデータをVRAMに転送
+*****************************/
 void psp2chImageViewer(int* img[], int width, int height, char* fname)
 {
     int w, h, startX, startY, width2, height2;

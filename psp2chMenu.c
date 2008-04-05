@@ -606,7 +606,7 @@ void psp2chMenuFont(void)
 /****************
 カラー設定ウィンドウ
 ****************/
-#define MENU_COLOR_WIDTH (160)
+#define MENU_COLOR_WIDTH (100)
 #define MENU_COLOR_ITEM (5)
 int psp2chMenuColor(void)
 {
