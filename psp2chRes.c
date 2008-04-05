@@ -204,7 +204,9 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
     {
         rMenu = psp2chResCursorMove(totalLine, lineEnd, &cursorX, &cursorY, bar.view);
         psp2chResPadMove(&cursorX, &cursorY, bar.x, bar.view);
+        // ポインタチェック
         i = 0;
+        j = 0;
         numMenu = -1;
         idMenu  = -1;
         resMenu = -1;
@@ -217,26 +219,86 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                 switch(s2ch.anchorList[i].type)
                 {
                 case 0:
+                    // レス番メニュー
                     numMenu = s2ch.anchorList[i].id;
+                    setMenuStr(aNum);
                     break;
                 case 1:
+                    // IDメニュー
                     idMenu = s2ch.anchorList[i].id;
+                    setMenuStr(aId);
                     break;
                 case 2:
+                    // レスアンカーメニュー
                     resMenu = s2ch.anchorList[i].id;
+                    setMenuStr(aRes);
                     break;
                 case 3:
+                    // URLアンカーメニュー
                     urlMenu = s2ch.anchorList[i].id;
+                    setMenuStr(aUrl);
                     break;
                 }
+                j = 1;
                 break;
             }
             i++;
         }
+        // ポインタメニューでないとき
+        if (j == 0)
+        {
+            // シフトメニュー
+            if (rMenu)
+            {
+                // お気に入りリストにあるかチェック
+                j = 0;
+                if (s2ch.fav.count)
+                {
+                    for (i = 0; i < s2ch.fav.count; i++)
+                    {
+                        if (s2ch.favList[i].dat == dat && strcmp(s2ch.favList[i].title, title) == 0)
+                        {
+                            j = 1;
+                            break;
+                        }
+                    }
+                }
+                // お気に入りにある
+                if (j)
+                {
+                    if (s2ch.tateFlag)
+                    {
+                        sprintf(path, s2ch.menuResV.sub2, cursorMode, wide);
+                    }
+                    else
+                    {
+                        sprintf(path, s2ch.menuResH.sub2, cursorMode, wide);
+                    }
+                }
+                // お気に入りにない
+                else
+                {
+                    if (s2ch.tateFlag)
+                    {
+                        sprintf(path, s2ch.menuResV.sub1, cursorMode, wide);
+                    }
+                    else
+                    {
+                        sprintf(path, s2ch.menuResH.sub1, cursorMode, wide);
+                    }
+                }
+                menuStr = path;
+            }
+            // 通常メニュー
+            else
+            {
+                setMenuStr(main);
+            }
+        }
         if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
             s2ch.oldPad = s2ch.pad;
-            // SELECTボタン
+            // SELECTボタン 縦横切り替え
             if (s2ch.pad.Buttons & PSP_CTRL_SELECT)
             {
                 psp2chResLineSet(&i, &j);
@@ -254,7 +316,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                 psp2chResResetAnchors();
                 preLine = -2;
             }
-            // STARTボタン
+            // STARTボタン メニューウィンドー表示
             else if(s2ch.pad.Buttons & PSP_CTRL_START)
             {
                 psp2chResLineSet(&i, &j);
@@ -266,7 +328,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
             // レスアンカーメニュー
             else if (resMenu >= 0)
             {
-                // レスウィンドウ表示
+                // アンカーレス表示
                 if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.resView) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.resView))
                 {
                     psp2chResAnchor(resMenu);
@@ -457,73 +519,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         {
             s2ch.res.start = 0;
         }
-        // レスアンカーメニュー
-        if (resMenu >= 0)
-        {
-            setMenuStr(aRes);
-        }
-        // URLアンカーメニュー
-        else if (urlMenu >= 0)
-        {
-            setMenuStr(aUrl);
-        }
-        // IDメニュー
-        else if (idMenu >= 0)
-        {
-            setMenuStr(aId);
-        }
-        // レス番メニュー
-        else if (numMenu >= 0)
-        {
-            setMenuStr(aNum);
-        }
-        // シフトメニュー
-        else if (rMenu)
-        {
-            // お気に入りリストにあるかチェック
-            j = 0;
-            if (s2ch.fav.count)
-            {
-                for (i = 0; i < s2ch.fav.count; i++)
-                {
-                    if (s2ch.favList[i].dat == dat && strcmp(s2ch.favList[i].title, title) == 0)
-                    {
-                        j = 1;
-                        break;
-                    }
-                }
-            }
-            // お気に入りにある
-            if (j)
-            {
-                if (s2ch.tateFlag)
-                {
-                    sprintf(path, s2ch.menuResV.sub2, cursorMode, wide);
-                }
-                else
-                {
-                    sprintf(path, s2ch.menuResH.sub2, cursorMode, wide);
-                }
-            }
-            // お気に入りにない
-            else
-            {
-                if (s2ch.tateFlag)
-                {
-                    sprintf(path, s2ch.menuResV.sub1, cursorMode, wide);
-                }
-                else
-                {
-                    sprintf(path, s2ch.menuResH.sub1, cursorMode, wide);
-                }
-            }
-            menuStr = path;
-        }
-        // 通常メニュー
-        else
-        {
-            setMenuStr(main);
-        }
+        // 横スクロール
         if (wide)
         {
             s2ch.viewX = psp2chPadSet(s2ch.viewX);
@@ -583,7 +579,7 @@ void psp2chResSend(char* host, char* dir, char* title, int dat, int *totalLine, 
 }
 
 /*****************************
-2ちゃんのスレに移動
+リンク先のスレに移動
 *****************************/
 int psp2chResJump(int urlMenu)
 {
