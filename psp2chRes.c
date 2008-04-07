@@ -779,7 +779,7 @@ int psp2chResCursorMove(int totalLine, int lineEnd, int* cursorX, int* cursorY, 
         }
         if((s2ch.pad.Buttons & s2ch.btnResH.s.pUp && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.s.pUp && s2ch.tateFlag))
         {
-            if (cursorMode)
+            if (rMenu && cursorMode)
             {
                 cursorPosition--;
                 if (cursorPosition < 0)
@@ -799,7 +799,7 @@ int psp2chResCursorMove(int totalLine, int lineEnd, int* cursorX, int* cursorY, 
         }
         else if((s2ch.pad.Buttons & s2ch.btnResH.s.pDown && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.s.pDown && s2ch.tateFlag))
         {
-            if (cursorMode)
+            if (rMenu && cursorMode)
             {
                 cursorPosition++;
                 if (cursorPosition > 2)
@@ -837,7 +837,7 @@ int psp2chResCursorMove(int totalLine, int lineEnd, int* cursorX, int* cursorY, 
         }
         psp2chDrawRes(s2ch.res.start);
         psp2chResSetAnchorList(lineEnd, cursorPosition);
-        if (cursorMode && !rMenu)
+        if (cursorMode && (!rMenu || positionFlag))
         {
             line = *cursorY / LINE_PITCH + s2ch.res.start;
             if((s2ch.pad.Buttons & s2ch.btnResH.s.up && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.btnResV.s.up && s2ch.tateFlag) || positionFlag == 1)

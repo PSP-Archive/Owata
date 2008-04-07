@@ -252,7 +252,7 @@ void psp2chImageViewBmp(char* fname)
         return;
     }
     // ”ñˆ³k‚Ì‚İ
-    if (biCopmression)
+    if (bi.biCompression)
     {
         fclose(infile);
         return;
