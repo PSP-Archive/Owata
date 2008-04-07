@@ -16,7 +16,7 @@ extern unsigned int pixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
 extern int preLine; // psp2chRes.c
 
 /*****************************
-jpegファイルを読み込んで24ビットBMPに変換
+jpegファイルを読み込んで32ビットRGBAに変換
 *****************************/
 void psp2chImageViewJpeg(char* fname)
 {
@@ -50,7 +50,7 @@ void psp2chImageViewJpeg(char* fname)
     jpeg_start_decompress(&cinfo);
     width = cinfo.output_width;
     // バッファの幅を16バイトアラインに
-    bufWidth = width + (16 - width % 16) % 16;
+    bufWidth = width + ((16 - (width & 0x0F)) & 0x0F);
     height = cinfo.output_height;
     img = (JSAMPARRAY)malloc(sizeof(JSAMPROW) * height);
     if (!img)
@@ -128,7 +128,7 @@ void psp2chImageViewJpeg(char* fname)
 }
 
 /*****************************
-PNGファイルを読み込んで24ビットBMPに変換
+PNGファイルを読み込んで32ビットRGBAに変換
 *****************************/
 void psp2chImageViewPng(char* fname)
 {
@@ -168,7 +168,7 @@ void psp2chImageViewPng(char* fname)
     png_read_info(png_ptr, info_ptr);
     png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, &interlace_type, NULL, NULL);
     // バッファの幅を16バイトアラインに
-    bufWidth = width + (16 - width % 16) % 16;
+    bufWidth = width + ((16 - (width & 0x0F)) & 0x0F);
     //パレット系->RGB系に拡張
     if (color_type == PNG_COLOR_TYPE_PALETTE ||
         (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8) ||
@@ -214,6 +214,146 @@ void psp2chImageViewPng(char* fname)
     png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
     fclose(infile);
     psp2chImageViewer((int**)img, (int)width, (int)height, fname);
+    free(imgbuf);
+    free(img);
+    preLine = -2;
+}
+
+/*****************************
+BMPファイルを読み込んで32ビットRGBAに変換
+*****************************/
+void psp2chImageViewBmp(char* fname)
+{
+    FILE* infile;
+    int i, j, y, bufWidth, height, len;
+    BITMAPFILEHEADER bf;
+    BITMAPINFOHEADER bi;
+    unsigned char **img, *imgbuf, *buf, *tmp;
+
+    infile = fopen(fname, "rb" );
+    if (!infile)
+    {
+        return;
+    }
+    if (fread(&bf, sizeof(BITMAPFILEHEADER), 1, infile) != 1)
+    {
+        fclose(infile);
+        return;
+    }
+    // BITMAP 認識文字 "BM"
+    if (memcmp(bf.bfType, "BM", 2) != 0)
+    {
+        fclose(infile);
+        return;
+    }
+    if (fread(&bi, sizeof(BITMAPINFOHEADER), 1, infile) != 1)
+    {
+        fclose(infile);
+        return;
+    }
+    // 非圧縮のみ
+    if (biCopmression)
+    {
+        fclose(infile);
+        return;
+    }
+    if (bi.biHeight < 0)
+    {
+        height = -bi.biHeight;
+    }
+    else
+    {
+        height = bi.biHeight;
+    }
+    // バッファの幅を16バイトアラインに
+    bufWidth = bi.biWidth + ((16 - (bi.biWidth & 0x0F)) & 0x0F);
+    img = (unsigned char**)malloc(sizeof(unsigned char*) * height);
+    if (!img)
+    {
+        fclose(infile);
+        return;
+    }
+    imgbuf = (unsigned char*)calloc(sizeof(unsigned char), 4 * bufWidth * height);
+    if (!imgbuf)
+    {
+        free(img);
+        fclose(infile);
+        return;
+    }
+    len = bi.biWidth * bi.biBitCount / 8;
+    len += (4 - (len & 3)) & 3;
+    buf = (unsigned char*)calloc(sizeof(unsigned char), len);
+    if (!buf)
+    {
+        free(imgbuf);
+        free(img);
+        fclose(infile);
+        return;
+    }
+    tmp = imgbuf;
+    for (i = 0; i < height; i++ )
+    {
+        img[i] = &tmp[i * bufWidth * 4];
+    }
+    fseek(infile, bf.bfOffBits, SEEK_SET);
+    // 24ビットBMPをRGBAに
+    if (bi.biBitCount == 24)
+    {
+        for (j = 0; j < height; j++)
+        {
+            if (bi.biHeight < 0)
+            {
+                y = j;
+            }
+            else
+            {
+                y = height - j - 1;
+            }
+            fread(buf, 1, len, infile);
+            for (i = 0; i < bi.biWidth; i++)
+            {
+                img[y][i * 4 + 0] = buf[i * 3 + 2];
+                img[y][i * 4 + 1] = buf[i * 3 + 1];
+                img[y][i * 4 + 2] = buf[i * 3 + 0];
+                img[y][i * 4 + 3] = 0xFF;
+            }
+        }
+    }
+    // 32ビットBMPをRGBAに
+    else if (bi.biBitCount == 32)
+    {
+        for (j = 0; j <height; j++)
+        {
+            if (bi.biHeight < 0)
+            {
+                y = j;
+            }
+            else
+            {
+                y = height - j - 1;
+            }
+            fread(buf, 1, len, infile);
+            for (i = 0; i < bi.biWidth; i++)
+            {
+                img[y][i * 4 + 0] = buf[i * 4 + 2];
+                img[y][i * 4 + 1] = buf[i * 4 + 1];
+                img[y][i * 4 + 2] = buf[i * 4 + 0];
+                img[y][i * 4 + 3] = 0xFF;
+            }
+        }
+    }
+    // 未対応
+    else
+    {
+        free(buf);
+        free(imgbuf);
+        free(img);
+        fclose(infile);
+        return;
+    }
+    free(buf);
+    fclose(infile);
+    psp2chImageViewer((int**)img, bi.biWidth, height, fname);
     free(imgbuf);
     free(img);
     preLine = -2;

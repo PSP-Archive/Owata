@@ -522,7 +522,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         // â°ÉXÉNÉçÅ[Éã
         if (wide)
         {
-            if (cursorMode || (cursorX == 0 || cursorX == bar.x))
+            if (cursorMode || cursorX == 0 || cursorX == bar.x)
             {
                 s2ch.viewX = psp2chPadSet(s2ch.viewX);
             }

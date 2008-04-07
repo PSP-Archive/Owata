@@ -453,6 +453,11 @@ int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
             psp2chImageViewPng(path);
             sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         }
+        else if ((ext[1] == 'b' || ext[1] == 'B') && (ext[2] == 'm' || ext[2] == 'M') && (ext[3] == 'p' || ext[3] == 'P'))
+        {
+            psp2chImageViewBmp(path);
+            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        }
         else
         {
             psp2chTinyBrowser(path);
@@ -504,6 +509,11 @@ int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
     else if ((ext[1] == 'p' || ext[1] == 'P') && (ext[2] == 'n' || ext[2] == 'N') && (ext[3] == 'g' || ext[3] == 'G'))
     {
         psp2chImageViewPng(path);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+    }
+    else if ((ext[1] == 'b' || ext[1] == 'B') && (ext[2] == 'm' || ext[2] == 'M') && (ext[3] == 'p' || ext[3] == 'P'))
+    {
+        psp2chImageViewBmp(path);
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
     }
     else
