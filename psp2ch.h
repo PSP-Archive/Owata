@@ -151,6 +151,11 @@ typedef struct {
 } S_2CH_FORM_COLOR;
 
 typedef struct {
+    int arrow1;
+    int arrow2;
+} S_2CH_CURSOR_COLOR;
+
+typedef struct {
     int x;
     int y;
     int w;
@@ -315,6 +320,7 @@ typedef struct {
     S_2CH_ITA_COLOR cateOffColor;
     S_2CH_FORM_COLOR formColor;
     S_2CH_TXT_COLOR menuWinColor;
+    S_2CH_CURSOR_COLOR cursorColor;
     S_2CH_RES_BUTTONS btnResH;
     S_2CH_RES_BUTTONS btnResV;
     S_2CH_RES_MENU_STR menuResH;

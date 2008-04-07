@@ -522,7 +522,10 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
         // â°ÉXÉNÉçÅ[Éã
         if (wide)
         {
-            s2ch.viewX = psp2chPadSet(s2ch.viewX);
+            if (cursorMode || (cursorX == 0 || cursorX == bar.x))
+            {
+                s2ch.viewX = psp2chPadSet(s2ch.viewX);
+            }
         }
         s2ch.viewY = s2ch.res.start * LINE_PITCH;
         pgCopy(s2ch.viewX, s2ch.viewY);

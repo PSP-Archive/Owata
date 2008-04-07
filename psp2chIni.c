@@ -242,6 +242,9 @@ void psp2chIniSetColor(const char* file)
                 setHex("MENU_WIN_BG", s2ch.menuWinColor.bg, BLACK);
                 setHex("MENU_WIN_S_TEXT", s2ch.menuWinColor.s_text, WHITE);
                 setHex("MENU_WIN_S_BG", s2ch.menuWinColor.s_bg, BLUE);
+
+                setHex("CURSOR_ARROW1", s2ch.cursorColor.arrow1, BLACK);
+                setHex("CURSOR_ARROW2", s2ch.cursorColor.arrow2, WHITE);
                 free(buf);
                 return;
             }
@@ -329,6 +332,9 @@ void psp2chIniSetColor(const char* file)
     s2ch.menuWinColor.bg = BLACK;
     s2ch.menuWinColor.s_text = WHITE;
     s2ch.menuWinColor.s_bg = BLUE;
+    // ÉJÅ[É\Éã
+    s2ch.cursorColor.arrow1 = BLACK;
+    s2ch.cursorColor.arrow2 = WHITE;
 }
 
 /********************

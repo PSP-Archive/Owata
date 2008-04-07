@@ -630,11 +630,11 @@ void pgPadCursor(int x, int y)
         vptr = (unsigned int*)(0x04000000+framebuffer) + x * BUF_WIDTH + SCR_WIDTH - y - 19;
         for (i = 0; i < 48; i++)
         {
-            vptr[cursorImgBV[i]] = BLACK;
+            vptr[cursorImgBV[i]] = s2ch.cursorColor.arrow1;
         }
         for (i = 0; i < 58; i++)
         {
-            vptr[cursorImgWV[i]] = WHITE;
+            vptr[cursorImgWV[i]] = s2ch.cursorColor.arrow2;
         }
     }
     else
@@ -642,11 +642,11 @@ void pgPadCursor(int x, int y)
         vptr = (unsigned int*)(0x04000000+framebuffer) + x + y * BUF_WIDTH;
         for (i = 0; i < 48; i++)
         {
-            vptr[cursorImgB[i]] = BLACK;
+            vptr[cursorImgB[i]] = s2ch.cursorColor.arrow1;
         }
         for (i = 0; i < 58; i++)
         {
-            vptr[cursorImgW[i]] = WHITE;
+            vptr[cursorImgW[i]] = s2ch.cursorColor.arrow2;
         }
     }
 }
