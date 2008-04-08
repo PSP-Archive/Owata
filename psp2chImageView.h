@@ -30,6 +30,7 @@ typedef struct tagBITMAPINFOHEADER{
 void psp2chImageViewJpeg(char* fname);
 void psp2chImageViewPng(char* fname);
 void psp2chImageViewBmp(char* fname);
+void psp2chImageViewGif(char* fname);
 void psp2chImageViewer(int* img[], int width, int height, char* fname);
 
 #endif

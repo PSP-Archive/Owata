@@ -6,6 +6,7 @@
 #include <malloc.h>
 #include <jpeglib.h>
 #include <png.h>
+#include "giflib/gif_lib.h"
 #include "psp2ch.h"
 #include "pg.h"
 #include "psp2chImageView.h"
@@ -356,6 +357,194 @@ void psp2chImageViewBmp(char* fname)
     psp2chImageViewer((int**)img, bi.biWidth, height, fname);
     free(imgbuf);
     free(img);
+    preLine = -2;
+}
+
+/*****************************
+GIFファイルを読み込んで32ビットRGBAに変換
+*****************************/
+void psp2chImageViewGif(char* fname)
+{
+    int InterlacedOffset[] = { 0, 4, 2, 1 }; /* The way Interlaced image should. */
+    int InterlacedJumps[] = { 8, 8, 4, 2 };    /* be read - offsets and jumps... */
+    int i, j, Size, Row, Col, Width, Height, Count, ExtCode;
+    GifFileType *GifFile;
+    GifRowType *ScreenBuffer, ImgBuf, GifRow;
+    GifRecordType RecordType;
+    GifByteType *Extension;
+    GifColorType *ColorMapEntry;
+    ColorMapObject *ColorMap;
+    unsigned char **img, *buf, *BufferP;
+
+    GifFile = DGifOpenFileName(fname);
+    if ((ScreenBuffer = (GifRowType *)malloc(GifFile->SHeight * sizeof(GifRowType *))) == NULL)
+    {
+        DGifCloseFile(GifFile);
+        return;
+    }
+    Size = GifFile->SWidth * sizeof(GifPixelType);/* Size in bytes one row.*/
+    if ((ImgBuf = (GifRowType)malloc(Size * GifFile->SHeight)) == NULL)
+    {
+        free(ScreenBuffer);
+        DGifCloseFile(GifFile);
+        return;
+    }
+    if ((img = (unsigned char**)malloc(sizeof(unsigned char*) * GifFile->SHeight)) == NULL)
+    {
+        free(ImgBuf);
+        free(ScreenBuffer);
+        DGifCloseFile(GifFile);
+        return;
+    }
+    if ((buf = (unsigned char*)malloc(4 * GifFile->SWidth * GifFile->SHeight)) == NULL)
+    {
+        free(img);
+        free(ImgBuf);
+        free(ScreenBuffer);
+        DGifCloseFile(GifFile);
+        return;
+    }
+    for (i = 0; i < GifFile->SHeight; i++)
+    {
+        ScreenBuffer[i] = &ImgBuf[i * Size];
+        img[i] = &buf[i * 4 * GifFile->SWidth];
+    }
+    for (i = 0; i < GifFile->SWidth; i++)  /* Set its color to BackGround. */
+    {
+        ScreenBuffer[0][i] = GifFile->SBackGroundColor;
+    }
+    for (i = 1; i < GifFile->SHeight; i++)
+    {
+        memcpy(ScreenBuffer[i], ScreenBuffer[0], Size);
+    }
+    /* Scan the content of the GIF file and load the image(s) in: */
+    do
+    {
+        if (DGifGetRecordType(GifFile, &RecordType) == GIF_ERROR)
+        {
+            free(buf);
+            free(img);
+            free(ImgBuf);
+            free(ScreenBuffer);
+            DGifCloseFile(GifFile);
+            return;
+        }
+        switch (RecordType)
+        {
+	    case IMAGE_DESC_RECORD_TYPE:
+            if (DGifGetImageDesc(GifFile) == GIF_ERROR)
+            {
+                free(buf);
+                free(img);
+                free(ImgBuf);
+                free(ScreenBuffer);
+                DGifCloseFile(GifFile);
+                return;
+            }
+            Row = GifFile->Image.Top; /* Image Position relative to Screen. */
+            Col = GifFile->Image.Left;
+            Width = GifFile->Image.Width;
+            Height = GifFile->Image.Height;
+            if (GifFile->Image.Left + GifFile->Image.Width > GifFile->SWidth ||
+               GifFile->Image.Top + GifFile->Image.Height > GifFile->SHeight)
+            {
+                free(buf);
+                free(img);
+                free(ImgBuf);
+                free(ScreenBuffer);
+                DGifCloseFile(GifFile);
+                return;
+            }
+            if (GifFile->Image.Interlace) {
+                /* Need to perform 4 passes on the images: */
+                for (Count = i = 0; i < 4; i++)
+                {
+                    for (j = Row + InterlacedOffset[i]; j < Row + Height; j += InterlacedJumps[i])
+                    {
+                        if (DGifGetLine(GifFile, &ScreenBuffer[j][Col], Width) == GIF_ERROR)
+                        {
+                            free(buf);
+                            free(img);
+                            free(ImgBuf);
+                            free(ScreenBuffer);
+                            DGifCloseFile(GifFile);
+                            return;
+                        }
+                    }
+                }
+            }
+            else {
+                for (i = 0; i < Height; i++)
+                {
+                    if (DGifGetLine(GifFile, &ScreenBuffer[Row++][Col], Width) == GIF_ERROR)
+                    {
+                        free(buf);
+                        free(img);
+                        free(ImgBuf);
+                        free(ScreenBuffer);
+                        DGifCloseFile(GifFile);
+                        return;
+                    }
+                }
+            }
+            break;
+	    case EXTENSION_RECORD_TYPE:
+            /* Skip any extension blocks in file: */
+            if (DGifGetExtension(GifFile, &ExtCode, &Extension) == GIF_ERROR)
+            {
+                free(buf);
+                free(img);
+                free(ImgBuf);
+                free(ScreenBuffer);
+                DGifCloseFile(GifFile);
+                return;
+            }
+            while (Extension != NULL)
+            {
+                if (DGifGetExtensionNext(GifFile, &Extension) == GIF_ERROR)
+                {
+                    free(buf);
+                    free(img);
+                    free(ImgBuf);
+                    free(ScreenBuffer);
+                    DGifCloseFile(GifFile);
+                    return;
+                }
+            }
+            break;
+	    case TERMINATE_RECORD_TYPE:
+            break;
+	    default:		    /* Should be traps by DGifGetRecordType. */
+            break;
+        }
+    } while (RecordType != TERMINATE_RECORD_TYPE);
+    ColorMap = (GifFile->Image.ColorMap ? GifFile->Image.ColorMap : GifFile->SColorMap);
+    if (ColorMap == NULL)
+    {
+        free(buf);
+        free(img);
+        free(ImgBuf);
+        free(ScreenBuffer);
+        DGifCloseFile(GifFile);
+        return;
+    }
+    for (i = 0; i < GifFile->SHeight; i++) {
+        GifRow = ScreenBuffer[i];
+        BufferP = img[i];
+        for (j = 0; j < GifFile->SWidth; j++) {
+            ColorMapEntry = &ColorMap->Colors[GifRow[j]];
+            *BufferP++ = ColorMapEntry->Red;
+            *BufferP++ = ColorMapEntry->Green;
+            *BufferP++ = ColorMapEntry->Blue;
+            *BufferP++ = 0xFF;
+        }
+    }
+    psp2chImageViewer((int**)img, GifFile->SWidth, GifFile->SHeight, fname);
+    DGifCloseFile(GifFile);
+    free(buf);
+    free(img);
+    free(ImgBuf);
+    free(ScreenBuffer);
     preLine = -2;
 }
 
