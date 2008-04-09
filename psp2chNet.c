@@ -106,7 +106,7 @@ psp2chRequest();でリクエストヘッダ送信
 ソケットを閉じる
 成功時には0を返す
 *****************************/
-int psp2chGet(const char* host, const char* path, const char* header, S_NET* net)
+int psp2chGet(const char* host, const char* path, const char* header, char* cook, S_NET* net)
 {
     int mySocket;
     char requestText[512];
@@ -142,7 +142,7 @@ int psp2chGet(const char* host, const char* path, const char* header, S_NET* net
         return -1;
     }
     // Response Header 受信
-    psp2chGetHttpHeaders(mySocket, net, NULL);
+    psp2chGetHttpHeaders(mySocket, net, cook);
     // Response Body 受信
     if (psp2chResponse(mySocket, host, path, net) < 0)
     {

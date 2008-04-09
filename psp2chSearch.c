@@ -289,7 +289,7 @@ int psp2chSearchList(void)
     psp2chSjisToEuc(euc, keyWords);
     psp2chUrlEncode(buf, euc);
     sprintf(query, "?STR=%s&COUNT=%d&OFFSET=%d", buf, count, offset);
-    ret = psp2chGet(findHost, query, "", &net);
+    ret = psp2chGet(findHost, query, "", NULL, &net);
     if (ret < 0)
     {
         return ret;

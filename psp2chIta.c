@@ -471,7 +471,7 @@ int psp2chGetMenu(void)
     char itadir[32];
     char *p, *q, *line;
 
-    ret = psp2chGet(menuHost, path, "", &net);
+    ret = psp2chGet(menuHost, path, "", NULL, &net);
     if (ret < 0)
     {
         return ret;

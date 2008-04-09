@@ -374,7 +374,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
                     /* ŠO•”ƒŠƒ“ƒN */
                     else
                     {
-                        psp2chUrlAnchor(urlMenu, title, dat, s2ch.res.start*LINE_PITCH);
+                        psp2chUrlAnchor(urlMenu, s2ch.res.start*LINE_PITCH);
                     }
                 }
                 // –ß‚é
@@ -1674,7 +1674,7 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
         sprintf(buf, "If-Modified-Since: %s\r\nIf-None-Match: %s\r\nRange: bytes=%d-\r\n", lastModified, eTag, range - 1);
     }
     sprintf(path, "%s/dat/%d.dat", dir, dat);
-    ret = psp2chGet(host, path, buf, &net);
+    ret = psp2chGet(host, path, buf, NULL, &net);
     if (ret < 0)
     {
         return ret;

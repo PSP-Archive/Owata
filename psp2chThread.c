@@ -467,7 +467,7 @@ int psp2chGetSubject(int ita)
         sprintf(buf, "If-Modified-Since: %s\r\nIf-None-Match: %s\r\n", lastModified, eTag);
     }
     sprintf(path, "%s/subject.txt", s2ch.itaList[ita].dir);
-    ret = psp2chGet(s2ch.itaList[ita].host, path, buf, &net);
+    ret = psp2chGet(s2ch.itaList[ita].host, path, buf, NULL, &net);
     if (ret < 0)
     {
         return ret;
