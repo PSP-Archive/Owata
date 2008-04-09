@@ -443,22 +443,22 @@ int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
     if (fd >= 0)
     {
         sceIoClose(fd);
-        if ((ext[1] == 'j' || ext[1] == 'J') && (ext[2] == 'p' || ext[2] == 'P') && (ext[3] == 'g' || ext[3] == 'G'))
+        if (stricmp(ext, ".jpg") == 0)
         {
             psp2chImageViewJpeg(path);
             sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         }
-        else if ((ext[1] == 'p' || ext[1] == 'P') && (ext[2] == 'n' || ext[2] == 'N') && (ext[3] == 'g' || ext[3] == 'G'))
+        else if (stricmp(ext, ".png") == 0)
         {
             psp2chImageViewPng(path);
             sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         }
-        else if ((ext[1] == 'b' || ext[1] == 'B') && (ext[2] == 'm' || ext[2] == 'M') && (ext[3] == 'p' || ext[3] == 'P'))
+        else if (stricmp(ext, ".bmp") == 0)
         {
             psp2chImageViewBmp(path);
             sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         }
-        else if ((ext[1] == 'g' || ext[1] == 'G') && (ext[2] == 'i' || ext[2] == 'I') && (ext[3] == 'f' || ext[3] == 'F'))
+        else if (stricmp(ext, ".gif") == 0)
         {
             psp2chImageViewGif(path);
             sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
@@ -506,22 +506,22 @@ int psp2chUrlAnchor(int anchor, char* title, int dat, int offset)
     sceIoWrite(fd, net.body, net.length);
     free(net.body);
     sceIoClose(fd);
-    if ((ext[1] == 'j' || ext[1] == 'J') && (ext[2] == 'p' || ext[2] == 'P') && (ext[3] == 'g' || ext[3] == 'G'))
+    if (stricmp(ext, ".jpg") == 0)
     {
         psp2chImageViewJpeg(path);
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
     }
-    else if ((ext[1] == 'p' || ext[1] == 'P') && (ext[2] == 'n' || ext[2] == 'N') && (ext[3] == 'g' || ext[3] == 'G'))
+    else if (stricmp(ext, ".png") == 0)
     {
         psp2chImageViewPng(path);
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
     }
-    else if ((ext[1] == 'b' || ext[1] == 'B') && (ext[2] == 'm' || ext[2] == 'M') && (ext[3] == 'p' || ext[3] == 'P'))
+    else if (stricmp(ext, ".bmp") == 0)
     {
         psp2chImageViewBmp(path);
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
     }
-    else if ((ext[1] == 'g' || ext[1] == 'G') && (ext[2] == 'i' || ext[2] == 'I') && (ext[3] == 'f' || ext[3] == 'F'))
+    else if (stricmp(ext, ".gif") == 0)
     {
         psp2chImageViewGif(path);
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
