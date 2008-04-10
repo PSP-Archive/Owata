@@ -19,7 +19,7 @@ extern int preLine; // psp2chRes.c
 /*****************************
 jpegファイルを読み込んで32ビットRGBAに変換
 *****************************/
-void psp2chImageViewJpeg(char* fname)
+int psp2chImageViewJpeg(char* fname)
 {
     FILE* infile;
     JSAMPARRAY img;
@@ -34,7 +34,7 @@ void psp2chImageViewJpeg(char* fname)
     infile = fopen(fname, "rb" );
     if (!infile)
     {
-        return;
+        return -1;
     }
     // 一応ヘッダのチェック
     fread(header, 1, 2, infile);
@@ -42,7 +42,7 @@ void psp2chImageViewJpeg(char* fname)
     if (header[0] != 0xFF || header[1] != 0xD8)
     {
         fclose(infile);
-        return;
+        return -1;
     }
     cinfo.err = jpeg_std_error(&jerr);
     jpeg_create_decompress(&cinfo);
@@ -57,14 +57,14 @@ void psp2chImageViewJpeg(char* fname)
     if (!img)
     {
         fclose(infile);
-        return;
+        return -1;
     }
     imgbuf = (JSAMPROW)calloc(sizeof(JSAMPLE), 4 * bufWidth * height);
     if (!imgbuf)
     {
         free(img);
         fclose(infile);
-        return;
+        return -1;
     }
     buf = (JSAMPROW)calloc(sizeof(JSAMPLE), 3 * bufWidth);
     if (!buf)
@@ -72,7 +72,7 @@ void psp2chImageViewJpeg(char* fname)
         free(imgbuf);
         free(img);
         fclose(infile);
-        return;
+        return -1;
     }
     tmp = imgbuf;
     for (i = 0; i < height; i++ )
@@ -116,7 +116,7 @@ void psp2chImageViewJpeg(char* fname)
         free(img);
         jpeg_destroy_decompress(&cinfo);
         fclose(infile);
-        return;
+        return -1;
     }
     free(buf);
     jpeg_finish_decompress(&cinfo);
@@ -126,12 +126,13 @@ void psp2chImageViewJpeg(char* fname)
     free(imgbuf);
     free(img);
     preLine = -2;
+    return 0;
 }
 
 /*****************************
 PNGファイルを読み込んで32ビットRGBAに変換
 *****************************/
-void psp2chImageViewPng(char* fname)
+int psp2chImageViewPng(char* fname)
 {
     FILE* infile;
     png_structp png_ptr;
@@ -147,13 +148,14 @@ void psp2chImageViewPng(char* fname)
     infile = fopen(fname, "rb");
     if (!infile)
     {
-        return;
+        return -1;
     }
     fread(header, 1, 8, infile);
+    // PNGチェック
     if (png_sig_cmp(header, 0, 8))
     {
         fclose(infile);
-        return;
+        return -1;
     }
     png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     info_ptr = png_create_info_struct(png_ptr);
@@ -162,7 +164,7 @@ void psp2chImageViewPng(char* fname)
     {
         png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
         fclose(infile);
-        return;
+        return -1;
     }
     png_init_io(png_ptr, infile);
     png_set_sig_bytes(png_ptr, 8);
@@ -197,14 +199,14 @@ void psp2chImageViewPng(char* fname)
     if (!img)
     {
         fclose(infile);
-        return;
+        return -1;
     }
     imgbuf = (png_bytep)malloc(png_get_rowbytes(png_ptr, info_ptr) * bufWidth);
     if (!imgbuf)
     {
         free(img);
         fclose(infile);
-        return;
+        return -1;
     }
     for (i = 0; i < height; i++)
     {
@@ -218,12 +220,13 @@ void psp2chImageViewPng(char* fname)
     free(imgbuf);
     free(img);
     preLine = -2;
+    return 0;
 }
 
 /*****************************
 BMPファイルを読み込んで32ビットRGBAに変換
 *****************************/
-void psp2chImageViewBmp(char* fname)
+int psp2chImageViewBmp(char* fname)
 {
     FILE* infile;
     int i, j, y, bufWidth, height, len;
@@ -234,29 +237,29 @@ void psp2chImageViewBmp(char* fname)
     infile = fopen(fname, "rb" );
     if (!infile)
     {
-        return;
+        return -1;
     }
     if (fread(&bf, sizeof(BITMAPFILEHEADER), 1, infile) != 1)
     {
         fclose(infile);
-        return;
+        return -1;
     }
     // BITMAP 認識文字 "BM"
     if (memcmp(bf.bfType, "BM", 2) != 0)
     {
         fclose(infile);
-        return;
+        return -1;
     }
     if (fread(&bi, sizeof(BITMAPINFOHEADER), 1, infile) != 1)
     {
         fclose(infile);
-        return;
+        return -1;
     }
     // 非圧縮のみ
     if (bi.biCompression)
     {
         fclose(infile);
-        return;
+        return -1;
     }
     if (bi.biHeight < 0)
     {
@@ -272,14 +275,14 @@ void psp2chImageViewBmp(char* fname)
     if (!img)
     {
         fclose(infile);
-        return;
+        return -1;
     }
     imgbuf = (unsigned char*)calloc(sizeof(unsigned char), 4 * bufWidth * height);
     if (!imgbuf)
     {
         free(img);
         fclose(infile);
-        return;
+        return -1;
     }
     len = bi.biWidth * bi.biBitCount / 8;
     len += (4 - (len & 3)) & 3;
@@ -289,7 +292,7 @@ void psp2chImageViewBmp(char* fname)
         free(imgbuf);
         free(img);
         fclose(infile);
-        return;
+        return -1;
     }
     tmp = imgbuf;
     for (i = 0; i < height; i++ )
@@ -350,7 +353,7 @@ void psp2chImageViewBmp(char* fname)
         free(imgbuf);
         free(img);
         fclose(infile);
-        return;
+        return -1;
     }
     free(buf);
     fclose(infile);
@@ -358,12 +361,13 @@ void psp2chImageViewBmp(char* fname)
     free(imgbuf);
     free(img);
     preLine = -2;
+    return 0;
 }
 
 /*****************************
 GIFファイルを読み込んで32ビットRGBAに変換
 *****************************/
-void psp2chImageViewGif(char* fname)
+int psp2chImageViewGif(char* fname)
 {
     int InterlacedOffset[] = { 0, 4, 2, 1 }; /* The way Interlaced image should. */
     int InterlacedJumps[] = { 8, 8, 4, 2 };    /* be read - offsets and jumps... */
@@ -376,25 +380,28 @@ void psp2chImageViewGif(char* fname)
     ColorMapObject *ColorMap;
     unsigned char **img, *buf, *BufferP;
 
-    GifFile = DGifOpenFileName(fname);
+    if ((GifFile = DGifOpenFileName(fname)) == NULL)
+    {
+        return -1;
+    }
     if ((ScreenBuffer = (GifRowType *)malloc(GifFile->SHeight * sizeof(GifRowType *))) == NULL)
     {
         DGifCloseFile(GifFile);
-        return;
+        return -1;
     }
     Size = GifFile->SWidth * sizeof(GifPixelType);/* Size in bytes one row.*/
     if ((ImgBuf = (GifRowType)malloc(Size * GifFile->SHeight)) == NULL)
     {
         free(ScreenBuffer);
         DGifCloseFile(GifFile);
-        return;
+        return -1;
     }
     if ((img = (unsigned char**)malloc(sizeof(unsigned char*) * GifFile->SHeight)) == NULL)
     {
         free(ImgBuf);
         free(ScreenBuffer);
         DGifCloseFile(GifFile);
-        return;
+        return -1;
     }
     if ((buf = (unsigned char*)malloc(4 * GifFile->SWidth * GifFile->SHeight)) == NULL)
     {
@@ -402,7 +409,7 @@ void psp2chImageViewGif(char* fname)
         free(ImgBuf);
         free(ScreenBuffer);
         DGifCloseFile(GifFile);
-        return;
+        return -1;
     }
     for (i = 0; i < GifFile->SHeight; i++)
     {
@@ -427,7 +434,7 @@ void psp2chImageViewGif(char* fname)
             free(ImgBuf);
             free(ScreenBuffer);
             DGifCloseFile(GifFile);
-            return;
+            return -1;
         }
         switch (RecordType)
         {
@@ -439,7 +446,7 @@ void psp2chImageViewGif(char* fname)
                 free(ImgBuf);
                 free(ScreenBuffer);
                 DGifCloseFile(GifFile);
-                return;
+                return -1;
             }
             Row = GifFile->Image.Top; /* Image Position relative to Screen. */
             Col = GifFile->Image.Left;
@@ -453,7 +460,7 @@ void psp2chImageViewGif(char* fname)
                 free(ImgBuf);
                 free(ScreenBuffer);
                 DGifCloseFile(GifFile);
-                return;
+                return -1;
             }
             if (GifFile->Image.Interlace) {
                 /* Need to perform 4 passes on the images: */
@@ -468,7 +475,7 @@ void psp2chImageViewGif(char* fname)
                             free(ImgBuf);
                             free(ScreenBuffer);
                             DGifCloseFile(GifFile);
-                            return;
+                            return -1;
                         }
                     }
                 }
@@ -483,7 +490,7 @@ void psp2chImageViewGif(char* fname)
                         free(ImgBuf);
                         free(ScreenBuffer);
                         DGifCloseFile(GifFile);
-                        return;
+                        return -1;
                     }
                 }
             }
@@ -497,7 +504,7 @@ void psp2chImageViewGif(char* fname)
                 free(ImgBuf);
                 free(ScreenBuffer);
                 DGifCloseFile(GifFile);
-                return;
+                return -1;
             }
             while (Extension != NULL)
             {
@@ -508,7 +515,7 @@ void psp2chImageViewGif(char* fname)
                     free(ImgBuf);
                     free(ScreenBuffer);
                     DGifCloseFile(GifFile);
-                    return;
+                    return -1;
                 }
             }
             break;
@@ -526,7 +533,7 @@ void psp2chImageViewGif(char* fname)
         free(ImgBuf);
         free(ScreenBuffer);
         DGifCloseFile(GifFile);
-        return;
+        return -1;
     }
     for (i = 0; i < GifFile->SHeight; i++) {
         GifRow = ScreenBuffer[i];
@@ -546,11 +553,12 @@ void psp2chImageViewGif(char* fname)
     free(ImgBuf);
     free(ScreenBuffer);
     preLine = -2;
+    return 0;
 }
 
 /*****************************
 メニュー処理
-BMPデータをVRAMに転送
+RGBAデータをVRAMに転送
 *****************************/
 void psp2chImageViewer(int* img[], int width, int height, char* fname)
 {

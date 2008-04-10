@@ -27,10 +27,10 @@ typedef struct tagBITMAPINFOHEADER{
     unsigned long  biClrImporant;
 } __attribute__ ((packed)) BITMAPINFOHEADER;
 
-void psp2chImageViewJpeg(char* fname);
-void psp2chImageViewPng(char* fname);
-void psp2chImageViewBmp(char* fname);
-void psp2chImageViewGif(char* fname);
+int psp2chImageViewJpeg(char* fname);
+int psp2chImageViewPng(char* fname);
+int psp2chImageViewBmp(char* fname);
+int psp2chImageViewGif(char* fname);
 void psp2chImageViewer(int* img[], int width, int height, char* fname);
 
 #endif

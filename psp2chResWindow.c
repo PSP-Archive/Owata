@@ -483,15 +483,15 @@ int psp2chUrlAnchor(int anchor, int offset)
     }
     switch(net.status)
     {
-        case 200: // OK
-            break;
-        default:
-            /*
-            psp2chErrorDialog("HTTP error\nhost %s path %s\nStatus code %d", s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path, ret);
-            pgWaitVn(60);
-            */
-            free(net.body);
-            return -1;
+    case 200: // OK
+        break;
+    default:
+        /*
+        psp2chErrorDialog("HTTP error\nhost %s path %s\nStatus code %d", s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path, ret);
+        pgWaitVn(60);
+        */
+        free(net.body);
+        return -1;
     }
     // save
     fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
@@ -540,19 +540,51 @@ int psp2chUrlAnchor(int anchor, int offset)
     return 0;
 }
 
+/**************
+imepita.jpの時は画像を表示
+***************/
 int psp2chImepita(int anchor, int offset)
 {
     SceUID fd;
     int i, ret;
     S_NET net;
     char cookie[256];
-    char referer[256];
     char header[512];
     char path[256];
+    char file[256];
     char tmp[4];
     unsigned char digest[16];
 
-    sprintf(referer, "Referer: http://%s/%s", s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path);
+    sprintf(file, "%s/%s", s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path);
+    sceKernelUtilsMd5Digest((u8*)file, strlen(file), digest);
+    sprintf(file, "%s/%s/", s2ch.cwDir, cacheDir);
+    for (i = 0; i < 16; i++)
+    {
+        sprintf(tmp, "%02x", digest[i]);
+        strcat(file, tmp);
+    }
+    fd = sceIoOpen(file, PSP_O_RDONLY, 0777);
+    if (fd >= 0)
+    {
+        sceIoClose(fd);
+        // 拡張子がないので総当りで表示
+        if (psp2chImageViewJpeg(file) == 0)
+        {
+            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            return 0;
+        }
+        if (psp2chImageViewPng(file) == 0)
+        {
+            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            return 0;
+        }
+        if (psp2chImageViewGif(file) == 0)
+        {
+            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+            return 0;
+        }
+        return -1;
+    }
     ret = psp2chGet(s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path, "", cookie, &net);
     if (ret < 0)
     {
@@ -566,8 +598,8 @@ int psp2chImepita(int anchor, int offset)
     default:
         return -1;
     }
-    sprintf(header, "%s\r\nCookie: %s\r\n", referer, cookie);
     sprintf(path, "image/%s", s2ch.urlAnchor[anchor].path);
+    sprintf(header, "Referer: http://%s/%s\r\nCookie: %s\r\n", s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path, cookie);
     ret = psp2chGet(s2ch.urlAnchor[anchor].host, path, header, NULL, &net);
     if (ret < 0)
     {
@@ -582,18 +614,11 @@ int psp2chImepita(int anchor, int offset)
         return -1;
     }
     // save
-    sceKernelUtilsMd5Digest((u8*)path, strlen(path), digest);
-    sprintf(path, "%s/%s/", s2ch.cwDir, cacheDir);
-    for (i = 0; i < 16; i++)
-    {
-        sprintf(tmp, "%02x", digest[i]);
-        strcat(path, tmp);
-    }
-    fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
+    fd = sceIoOpen(file, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
     if (fd < 0)
     {
         free(net.body);
-        psp2chErrorDialog("File open error\n%s", path);
+        psp2chErrorDialog("File open error\n%s", file);
         return fd;
     }
     strcpy(header, "表\示します");
@@ -608,9 +633,20 @@ int psp2chImepita(int anchor, int offset)
     sceIoWrite(fd, net.body, net.length);
     free(net.body);
     sceIoClose(fd);
+    if (psp2chImageViewJpeg(file) == 0)
     {
-        psp2chImageViewJpeg(path);
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        return 0;
     }
-    return 0;
+    if (psp2chImageViewPng(file) == 0)
+    {
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        return 0;
+    }
+    if (psp2chImageViewGif(file) == 0)
+    {
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        return 0;
+    }
+    return -1;
 }
