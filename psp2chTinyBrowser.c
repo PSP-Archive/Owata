@@ -201,6 +201,8 @@ int psp2chTinyBrowser(char* path)
                     }
                     html.count = count;
                     bar.total = count * LINE_PITCH;
+					sprintf(menu, "　○ : コード(%s)　　× : 戻る　　□ : 削除", codeStr[code]);
+					pgPrintMenuBar(menu);
                 }
                 if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
                 {
@@ -217,8 +219,7 @@ int psp2chTinyBrowser(char* path)
             pgWindowFrame(startX, startY, startX + scrX + barW, startY + scrY);
             bar.start = html.start * LINE_PITCH;
             pgScrollbar(bar, s2ch.resABarColor);
-            sprintf(menu, "　○ : コード(%s)　　× : 戻る　　□ : 削除", codeStr[code]);
-            pgMenuBar(menu);
+            pgCopyMenuBar();
             sceDisplayWaitVblankStart();
             framebuffer = sceGuSwapBuffers();
         }

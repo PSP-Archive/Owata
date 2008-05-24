@@ -128,6 +128,7 @@ int psp2chSearch(int retSel)
                 menuStr = s2ch.menuSearchH.main;
             }
         }
+        pgPrintMenuBar(menuStr);
         if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
             s2ch.oldPad = s2ch.pad;
@@ -178,7 +179,7 @@ int psp2chSearch(int retSel)
         s2ch.viewX = psp2chPadSet(s2ch.viewX);
         psp2chDrawSearch();
         pgCopy(s2ch.viewX, 0);
-        pgMenuBar(menuStr);
+        pgCopyMenuBar();
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
     }

@@ -134,6 +134,7 @@ int psp2chThread(int retSel)
                 menuStr = s2ch.menuThreadH.main;
             }
         }
+        pgPrintMenuBar(menuStr);
         if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
             s2ch.oldPad = s2ch.pad;
@@ -210,7 +211,7 @@ int psp2chThread(int retSel)
         s2ch.viewX = psp2chPadSet(s2ch.viewX);
         psp2chDrawThread();
         pgCopy(s2ch.viewX, 0);
-        pgMenuBar(menuStr);
+        pgCopyMenuBar();
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
     }
@@ -360,7 +361,8 @@ int psp2chThreadList(int ita)
     }
     free(buf);
     tmpCount = s2ch.thread.count;
-    pgMenuBar("取得済みスレッドの検索中");
+    pgPrintMenuBar("取得済みスレッドの検索中");
+    pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
     dfd = sceIoDopen(file);

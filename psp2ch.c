@@ -22,6 +22,12 @@
 
 extern unsigned int list[512*512]; // pg.c
 extern intraFont* jpn0; // pg.c
+extern RECT barSrcRectH; // pg.c
+extern RECT barSrcRectV; // pg.c
+extern RECT menuDstRectH; // pg.c
+extern RECT menuDstRectV; // pg.c
+extern RECT titleDstRectH; // pg.c
+extern RECT titleDstRectV; // pg.c
 
 char* ver = "0.7.2";
 S_2CH s2ch;
@@ -41,6 +47,13 @@ int psp2ch(void)
 
     sceCtrlSetSamplingCycle(0);
     sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
+        pgPrintMona();
+        s2ch.pgCursorX = 450;
+        s2ch.pgCursorY = 260;
+        pgPrint(ver, BLUE, WHITE, SCR_WIDTH);
+        pgCopy(0, 0);
+        sceDisplayWaitVblankStart();
+        framebuffer = sceGuSwapBuffers();
     while (s2ch.running)
     {
         switch (s2ch.sel)
@@ -109,13 +122,6 @@ void psp2chStart(void)
                 return;
             }
         }
-        pgPrintMona();
-        s2ch.pgCursorX = 450;
-        s2ch.pgCursorY = 260;
-        pgPrint(ver, BLUE, WHITE, SCR_WIDTH);
-        pgCopy(0, 0);
-        sceDisplayWaitVblankStart();
-        framebuffer = sceGuSwapBuffers();
     }
 }
 
@@ -149,13 +155,14 @@ start:表示開始行
 select:カーソル選択行
 を変更しRボタン情報を返す
 *****************************/
-int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd, int shift)
+int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd, int shift, int* change)
 {
     static int keyStart = 0, keyRepeat = 0;
     static clock_t keyTime = 0;
     int rMenu;
     int padUp = 0, padDown = 0;
 
+	*change = 0;
     if (s2ch.tateFlag)
     {
         if (s2ch.pad.Lx == 255)
@@ -189,6 +196,7 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd, int shift)
     }
     if (s2ch.pad.Buttons != s2ch.oldPad.Buttons || keyRepeat || padUp || padDown)
     {
+		*change = 1;
         if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
             keyStart = 1;
@@ -429,6 +437,35 @@ int psp2chInit(void)
         s2ch.font.lineV = 28;
         break;
     }
+	barSrcRectH.left = 0;
+	barSrcRectH.top = 0;
+	barSrcRectH.right = SCR_WIDTH;
+	barSrcRectH.bottom = FONT_HEIGHT;
+
+	barSrcRectV.left = 0;
+	barSrcRectV.top = 0;
+	barSrcRectV.right = SCR_HEIGHT;
+	barSrcRectV.bottom = FONT_HEIGHT + LINE_PITCH;
+
+	menuDstRectH.left = 0;
+	menuDstRectH.top = SCR_HEIGHT - FONT_HEIGHT;
+	menuDstRectH.right = SCR_WIDTH;
+	menuDstRectH.bottom = SCR_HEIGHT;
+
+	menuDstRectV.left = 0;
+	menuDstRectV.top = 0;
+	menuDstRectV.right = FONT_HEIGHT + LINE_PITCH;
+	menuDstRectV.bottom = SCR_HEIGHT;
+
+	titleDstRectH.left = 0;
+	titleDstRectH.top = 0;
+	titleDstRectH.right = SCR_WIDTH;
+	titleDstRectH.bottom = FONT_HEIGHT;
+
+	titleDstRectV.left = SCR_WIDTH - (FONT_HEIGHT + LINE_PITCH);
+	titleDstRectV.top = 0;
+	titleDstRectV.right = SCR_WIDTH;
+	titleDstRectV.bottom = SCR_HEIGHT;
     return 0;
 }
 
@@ -550,6 +587,7 @@ int psp2chInputDialog(const unsigned short* text1, char* text2)
     temp = s2ch.tateFlag;
     s2ch.tateFlag = 0;
     keyWords[0] = '\0';
+    pgPrintMenuBar("　○ : 入力　　　× : 戻る　　　□ : 決定");
     while (s2ch.running)
     {
         if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
@@ -580,7 +618,7 @@ int psp2chInputDialog(const unsigned short* text1, char* text2)
             s2ch.pgCursorY =  87;
             pgPrint(keyWords, BLACK, WHITE, 340);
             pgCopy(0, 0);
-            pgMenuBar("　○ : 入力　　　× : 戻る　　　□ : 決定");
+			pgCopyMenuBar();
             s2ch.pgCursorX = 240;
             s2ch.pgCursorY =  77;
             intraFontSetStyle(jpn0, 1.0f, YELLOW, 0, INTRAFONT_ALIGN_CENTER);

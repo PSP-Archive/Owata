@@ -64,7 +64,8 @@ int psp2chResolve(const char* host, struct in_addr* addr)
     char *p;
 
     sprintf(buf, "  %s のアドレスを解決しています", host);
-    pgMenuBar(buf);
+    pgPrintMenuBar(buf);
+	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
     sprintf(buf, "%s/hosts", s2ch.cwDir);
@@ -90,7 +91,8 @@ int psp2chResolve(const char* host, struct in_addr* addr)
     }
     if(Cat_ResolverURL( host, addr ) < 0 )
     {
-        pgMenuBar("  Cat_ResolverURL error");
+        pgPrintMenuBar("  Cat_ResolverURL error");
+		pgCopyMenuBar();
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
         return -1;
@@ -222,7 +224,8 @@ int psp2chRequest(int mySocket, const char* host, const char* path, const char* 
         return ret;
     }
     sprintf(buf, "  %s (%s)", host, inet_ntoa(addr));
-    pgMenuBar(buf);
+    pgPrintMenuBar(buf);
+	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
     // Tell the socket to connect to the IP address we found, on port 80 (HTTP)
@@ -230,7 +233,8 @@ int psp2chRequest(int mySocket, const char* host, const char* path, const char* 
     sain.sin_port = htons(80);
     sain.sin_addr.s_addr = addr.s_addr;
     sprintf(buf, "  http://%s/%s に接続しています", host, path);
-    pgMenuBar(buf);
+    pgPrintMenuBar(buf);
+	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
     ret = connect(mySocket,(struct sockaddr *)&sain, sizeof(sain) );
@@ -238,7 +242,8 @@ int psp2chRequest(int mySocket, const char* host, const char* path, const char* 
         psp2chErrorDialog("Connect errror");
         return ret;
     }
-    pgMenuBar("接続しました");
+    pgPrintMenuBar("接続しました");
+	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
     // send our request
@@ -255,7 +260,8 @@ int psp2chResponse(int mySocket, const char* host, const char* path, S_NET* net)
     int ret, size;
 
     sprintf(buf, "http://%s/%s からデータを転送しています...", host, path);
-    pgMenuBar(buf);
+    pgPrintMenuBar(buf);
+	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
     size = 0;
@@ -282,7 +288,8 @@ int psp2chResponse(int mySocket, const char* host, const char* path, S_NET* net)
     net->length = size;
     net->body[size] = '\0';
     sprintf(buf, "完了");
-    pgMenuBar(buf);
+    pgPrintMenuBar(buf);
+	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
     return 0;
@@ -315,7 +322,8 @@ int psp2chGetStatusLine(int mySocket)
         }
     } while (in != '\n');
     incomingBuffer[i] = '\0';
-    pgMenuBar(incomingBuffer);
+    pgPrintMenuBar(incomingBuffer);
+	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
     sscanf(incomingBuffer, "HTTP/%d.%d %d %s\r\n", &verMajor, &verMinor, &code, phrase);
@@ -429,7 +437,8 @@ int connect_to_apctl(int config)
         return 0;
     }
 
-    pgMenuBar("  Connecting...");
+    pgPrintMenuBar("  Connecting...");
+	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
     time = clock();
@@ -455,7 +464,8 @@ int connect_to_apctl(int config)
         {
             break;  // connected with static IP
         }
-        pgMenuBar(buf);
+        pgPrintMenuBar(buf);
+		pgCopyMenuBar();
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
         if (clock() > time + 1000000 * 8)
@@ -465,13 +475,14 @@ int connect_to_apctl(int config)
     }
     if (state != 4)
     {
-        pgMenuBar("  接続に失敗しました。");
+        pgPrintMenuBar("  接続に失敗しました。");
     }
     else
     {
-        pgMenuBar("  接続しました。");
+        pgPrintMenuBar("  接続しました。");
         Cat_ResolverInitEngine();
     }
+	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
     return 0;
@@ -511,7 +522,8 @@ int psp2chApConnect(void)
         // IP取得済み
         return 0;
     }
-    pgMenuBar("接続の設定を検索しています...");
+    pgPrintMenuBar("接続の設定を検索しています...");
+	pgCopyMenuBar();
     pgWaitVn(2);
     framebuffer = sceGuSwapBuffers();
     for (i = 1; i < 100; i++) // skip the 0th connection

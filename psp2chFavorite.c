@@ -96,7 +96,7 @@ int psp2chFavorite(void)
     static char* menuStr = "";
     static int focus = -1, update = -1;
     int lineEnd, rMenu;
-    int i, res;
+    int i, res, change = 0;
 
     if (s2ch.favList == NULL)
     {
@@ -140,22 +140,22 @@ int psp2chFavorite(void)
         {
             if (focus)
             {
-                rMenu = psp2chCursorSet(&s2ch.favIta, lineEnd, s2ch.favV.shift);
+                rMenu = psp2chCursorSet(&s2ch.favIta, lineEnd, s2ch.favV.shift, &change);
             }
             else
             {
-                rMenu = psp2chCursorSet(&s2ch.fav, lineEnd, s2ch.favV.shift);
+                rMenu = psp2chCursorSet(&s2ch.fav, lineEnd, s2ch.favV.shift, &change);
             }
         }
         else
         {
             if (focus)
             {
-                rMenu = psp2chCursorSet(&s2ch.favIta, lineEnd, s2ch.favH.shift);
+                rMenu = psp2chCursorSet(&s2ch.favIta, lineEnd, s2ch.favH.shift, &change);
             }
             else
             {
-                rMenu = psp2chCursorSet(&s2ch.fav, lineEnd, s2ch.favH.shift);
+                rMenu = psp2chCursorSet(&s2ch.fav, lineEnd, s2ch.favH.shift, &change);
             }
         }
         if (rMenu)
@@ -215,7 +215,7 @@ int psp2chFavorite(void)
             {
                 psp2chDrawFavorite();
                 pgCopy(s2ch.viewX, 0);
-                pgMenuBar(menuStr);
+                pgCopyMenuBar();
                 sceDisplayWaitVblankStart();
                 framebuffer = sceGuSwapBuffers();
                 s2ch.fav.select = update;
@@ -359,18 +359,22 @@ int psp2chFavorite(void)
                     }
                 }
             }
+			pgPrintMenuBar(menuStr);
         }
+		if (change)
+		{
+			if (focus)
+			{
+				psp2chDrawFavoriteIta();
+			}
+			else
+			{
+				psp2chDrawFavorite();
+			}
+		}
         s2ch.viewX = psp2chPadSet(s2ch.viewX);
-        if (focus)
-        {
-            psp2chDrawFavoriteIta();
-        }
-        else
-        {
-            psp2chDrawFavorite();
-        }
         pgCopy(s2ch.viewX, 0);
-        pgMenuBar(menuStr);
+        pgCopyMenuBar();
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
     }

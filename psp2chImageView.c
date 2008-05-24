@@ -650,6 +650,7 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
                         sceIoClose(dst);
                         sceIoClose(src);
                     }
+					pgPrintMenuBar("　○ : PICTUREフォルダへコピー　");
                 }
                 else
                 {
@@ -665,9 +666,7 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
                             if (imgW == NULL)
                             {
                                 // 画面幅用画像作成
-                                pgMenuBar("画面の幅に合わせた画像を作成しています");
-                                sceDisplayWaitVblankStart();
-                                framebuffer = sceGuSwapBuffers();
+                                pgPrintMenuBar("画面の幅に合わせた画像を作成しています");
                                 imgW = (int*)malloc(sizeof(int) * SCR_WIDTH * imgWH);
                                 if (imgW == NULL)
                                 {
@@ -694,9 +693,7 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
                             if (imgH == NULL)
                             {
                                 // 画面高さ用画像作成
-                                pgMenuBar("画面の高さに合わせた画像を作成しています");
-                                sceDisplayWaitVblankStart();
-                                framebuffer = sceGuSwapBuffers();
+                                pgPrintMenuBar("画面の高さに合わせた画像を作成しています");
                                 imgH = (int*)malloc(sizeof(int) * imgHW * SCR_HEIGHT);
                                 if (imgH == NULL)
                                 {
@@ -742,6 +739,7 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
                         break;
                     }
                 }
+                pgPrintMenuBar("　○ : 拡大縮小　　× : 戻る　　△ : メニューオン・オフ　　□ : 削除");
             }
             if(pad.Buttons & PSP_CTRL_UP)
             {
@@ -828,14 +826,7 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
         }
         if (menu)
         {
-            if (rMenu)
-            {
-                pgMenuBar("　○ : PICTUREフォルダへコピー　");
-            }
-            else
-            {
-                pgMenuBar("　○ : 拡大縮小　　× : 戻る　　△ : メニューオン・オフ　　□ : 削除");
-            }
+            pgCopyMenuBar();
         }
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();

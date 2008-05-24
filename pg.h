@@ -15,9 +15,9 @@
 #define DRAW_LINE_V (s2ch.font.lineV)
 #define FRAME_SIZE (BUF_WIDTH * SCR_HEIGHT)
 #define ZBUF_SIZE (BUF_WIDTH * BUF_HEIGHT)
-//#define RGB(r,g,b) (0xF000|(((b>>4) & 0xF)<<8)|(((g>>4) & 0xF)<<4)|((r>>4) & 0xF))
+#define RGB(r,g,b) (0xF000|(((b>>4) & 0xF)<<8)|(((g>>4) & 0xF)<<4)|((r>>4) & 0xF))
 //#define RGB(r,g,b) (0x8000|(((b>>3) & 0x1F)<<10)|(((g>>3) & 0x1F)<<5)|((r>>3) & 0x1F))
-#define RGB(r,g,b) (0xFF000000|(b)<<16|(g)<<8|(r))
+//#define RGB(r,g,b) (0xFF000000|(b)<<16|(g)<<8|(r))
 #define WHITE RGB(255,255,255)
 #define BLACK RGB(0,0,0)
 #define RED RGB(255,0,0)
@@ -30,16 +30,33 @@
 
 #include "psp2ch.h"
 
+typedef struct rect_t
+{
+	short left;
+	short top;
+	short right;
+	short bottom;
+} RECT;
+
+typedef struct tex
+{
+	int w;
+	int h;
+	int tb;
+} TEX;
+
 int pgExtraFontInit(void);
 void pgSetupGu(void);
 void pgTermGu(void);
 void pgFontLoad(void);
 void pgWaitV();
 void pgWaitVn(unsigned long count);
-unsigned int* pgGetVramAddr(unsigned long x,unsigned long y, int w);
+unsigned short* pgGetVramAddr(unsigned long x,unsigned long y, int w);
 void pgFillvram(int color, int x1, int y1, int w, int h, int wide);
-void pgTitleBar(char* ita, char* title);
-void pgMenuBar(char* str);
+void pgPrintTitleBar(char* ita, char* title);
+void pgCopyTitleBar(void);
+void pgPrintMenuBar(char* str);
+void pgCopyMenuBar(void);
 void pgEditBox(int color, int x1, int y1, int x2, int y2);
 void pgWindowFrame(int x1, int y1, int x2, int y2);
 void pgScrollbar(S_SCROLLBAR bar, S_2CH_BAR_COLOR c);

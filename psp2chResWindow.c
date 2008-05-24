@@ -222,6 +222,7 @@ void psp2chResAnchor(int anc)
     anchor.select = 0;
     printBuf = winPixels;
     drawLine = anchor.select;
+    pgPrintMenuBar("　× : 戻る　　　");
     while (s2ch.running)
     {
         if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
@@ -271,7 +272,7 @@ void psp2chResAnchor(int anc)
             pgWindowFrame(startX, startY, startX + scrX + barW, startY + scrY);
             bar.start = anchor.start * LINE_PITCH;
             pgScrollbar(bar, s2ch.resABarColor);
-            pgMenuBar("　× : 戻る　　　");
+            pgCopyMenuBar();
             sceDisplayWaitVblankStart();
             framebuffer = sceGuSwapBuffers();
         }
@@ -343,6 +344,7 @@ void psp2chIdAnchor(int anc)
     anchor.select = 0;
     printBuf = winPixels;
     drawLine = anchor.select;
+    pgPrintMenuBar("　× : 戻る　　　");
     while (s2ch.running)
     {
         if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
@@ -385,7 +387,7 @@ void psp2chIdAnchor(int anc)
             pgWindowFrame(startX, startY, startX + scrX + barW, startY + scrY);
             bar.start = anchor.start * LINE_PITCH;
             pgScrollbar(bar, s2ch.resABarColor);
-            pgMenuBar("　× : 戻る　　　");
+            pgCopyMenuBar();
             sceDisplayWaitVblankStart();
             framebuffer = sceGuSwapBuffers();
         }
@@ -503,11 +505,12 @@ int psp2chUrlAnchor(int anchor, int offset)
     }
     strcpy(buf, "表\示します");
     pgCopy(0, offset);
-    pgMenuBar(buf);
+    pgPrintMenuBar(buf);
+	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
     pgCopy(0, offset);
-    pgMenuBar(buf);
+    pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
     sceIoWrite(fd, net.body, net.length);
@@ -623,11 +626,12 @@ int psp2chImepita(int anchor, int offset)
     }
     strcpy(header, "表\示します");
     pgCopy(0, offset);
-    pgMenuBar(header);
+    pgPrintMenuBar(header);
+    pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
     pgCopy(0, offset);
-    pgMenuBar(header);
+    pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
     sceIoWrite(fd, net.body, net.length);

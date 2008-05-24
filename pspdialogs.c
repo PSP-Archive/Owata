@@ -168,12 +168,12 @@ void pspShowOSK(OSK_HELPER *oskhelper, u8 language)
 
 void minimalRender()
 {
-      sceGuStart(GU_DIRECT,list);
-      sceGuClearColor(0xff000000);
-      sceGuClearDepth(0);
-      sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
-      sceGuFinish();
-      sceGuSync(0,0);
+	sceGuStart(GU_DIRECT,list);
+	sceGuClearColor(0xff000000);
+	sceGuClearDepth(0);
+	sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
+	sceGuFinish();
+	sceGuSync(0,0);
 }
 
 

@@ -159,7 +159,8 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
     while (s2ch.running)
     {
         pgCopy(0,0);
-        pgMenuBar("画面は切り替わりません　○で入力画面に　×でレス表\示に戻ります");
+        pgPrintMenuBar("画面は切り替わりません　○で入力画面に　×でレス表\示に戻ります");
+		pgCopyMenuBar();
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
         sceCtrlPeekBufferPositive(&s2ch.pad, 1);
@@ -219,6 +220,7 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
     {
         sage = 1;
     }
+    pgPrintMenuBar("　○ : 入力　　　× : 戻る　　　△ : 送信");
     while (s2ch.running)
     {
         if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
@@ -390,7 +392,7 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
             }
         }
         pgCopy(0, 0);
-        pgMenuBar("　○ : 入力　　　× : 戻る　　　△ : 送信");
+		pgCopyMenuBar();
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
     }

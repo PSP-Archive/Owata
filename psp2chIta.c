@@ -92,6 +92,7 @@ int psp2chIta(void)
     static int focus = 0, end = 0;
     static char* menuStr = "";
     int lineEnd, rMenu;
+	int change = 0;
 
     if (s2ch.itaList == NULL)
     {
@@ -128,19 +129,17 @@ int psp2chIta(void)
             }
             if (s2ch.tateFlag)
             {
-                rMenu = psp2chCursorSet(&s2ch.ita, lineEnd, s2ch.itaV.shift);
+                rMenu = psp2chCursorSet(&s2ch.ita, lineEnd, s2ch.itaV.shift, &change);
             }
             else
             {
-                rMenu = psp2chCursorSet(&s2ch.ita, lineEnd, s2ch.itaH.shift);
+                rMenu = psp2chCursorSet(&s2ch.ita, lineEnd, s2ch.itaH.shift, &change);
             }
             if (s2ch.ita.start < s2ch.categoryList[s2ch.category.select].itaId)
             {
                 s2ch.ita.start = s2ch.categoryList[s2ch.category.select].itaId;
                 s2ch.ita.select = s2ch.categoryList[s2ch.category.select].itaId;
             }
-            psp2chDrawCategory(s2ch.category.start, s2ch.category.select, s2ch.cateOffColor);
-            psp2chDrawIta(s2ch.ita.start, s2ch.ita.select, s2ch.cateOffColor);
             if (rMenu)
             {
                 if (s2ch.tateFlag)
@@ -168,16 +167,14 @@ int psp2chIta(void)
         {
             if (s2ch.tateFlag)
             {
-                rMenu = psp2chCursorSet(&s2ch.category, lineEnd, s2ch.itaV.shift);
+                rMenu = psp2chCursorSet(&s2ch.category, lineEnd, s2ch.itaV.shift, &change);
             }
             else
             {
-                rMenu = psp2chCursorSet(&s2ch.category, lineEnd, s2ch.itaH.shift);
+                rMenu = psp2chCursorSet(&s2ch.category, lineEnd, s2ch.itaH.shift, &change);
             }
             s2ch.ita.start = s2ch.categoryList[s2ch.category.select].itaId;
             s2ch.ita.select = s2ch.categoryList[s2ch.category.select].itaId;
-            psp2chDrawCategory(s2ch.category.start, s2ch.category.select, s2ch.cateOnColor);
-            psp2chDrawIta(s2ch.ita.start, s2ch.ita.select, s2ch.cateOnColor);
             if (rMenu)
             {
                 if (s2ch.tateFlag)
@@ -290,9 +287,23 @@ int psp2chIta(void)
                     s2ch.sel = 1;
                 }
             }
+			pgPrintMenuBar(menuStr);
         }
+		if (change)
+		{
+			if (focus)
+			{
+				psp2chDrawCategory(s2ch.category.start, s2ch.category.select, s2ch.cateOffColor);
+				psp2chDrawIta(s2ch.ita.start, s2ch.ita.select, s2ch.cateOffColor);
+			}
+			else
+			{
+				psp2chDrawCategory(s2ch.category.start, s2ch.category.select, s2ch.cateOnColor);
+				psp2chDrawIta(s2ch.ita.start, s2ch.ita.select, s2ch.cateOnColor);
+			}
+		}
         pgCopy(0, 0);
-        pgMenuBar(menuStr);
+        pgCopyMenuBar();
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
     }
