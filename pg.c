@@ -285,7 +285,6 @@ void pgCopyRect(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect)
 	//sceGuDrawBufferList(GU_PSM_8888, framebuffer, BUF_WIDTH);
 	sceGuScissor(dst_rect->left, dst_rect->top, dst_rect->right, dst_rect->bottom);
 	sceGuTexMode(GU_PSM_4444, 0, 0, GU_FALSE);
-	sceGuTexImage(0, tex->w, tex->h, tex->tb, src);
 	sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGBA);
 	if (sw == dw && sh == dh)
 		sceGuTexFilter(GU_NEAREST, GU_NEAREST);
@@ -293,12 +292,13 @@ void pgCopyRect(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect)
 		sceGuTexFilter(GU_LINEAR, GU_LINEAR);
 	for (j = 0; (j + SLICE_SIZE) < sw; j = j + SLICE_SIZE)
 	{
+		sceGuTexImage(0, tex->w, tex->h, tex->tb, (short*)src + j);
 		vertices = (struct Vertex *)sceGuGetMemory(2 * sizeof(struct Vertex));
-		vertices[0].u = src_rect->left + j;
+		vertices[0].u = src_rect->left;
 		vertices[0].v = src_rect->top;
 		vertices[0].x = dst_rect->left + j * dw / sw;
 		vertices[0].y = dst_rect->top;
-		vertices[1].u = src_rect->left + j + SLICE_SIZE;
+		vertices[1].u = src_rect->left + SLICE_SIZE;
 		vertices[1].v = src_rect->bottom;
 		vertices[1].x = dst_rect->left + (j + SLICE_SIZE) * dw / sw;
 		vertices[1].y = dst_rect->bottom;
@@ -306,12 +306,13 @@ void pgCopyRect(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect)
 	}
 	if (j < sw)
 	{
+		sceGuTexImage(0, tex->w, tex->h, tex->tb, (short*)src + j);
 		vertices = (struct Vertex *)sceGuGetMemory(2 * sizeof(struct Vertex));
-		vertices[0].u = src_rect->left + j;
+		vertices[0].u = src_rect->left;
 		vertices[0].v = src_rect->top;
 		vertices[0].x = dst_rect->left + j * dw / sw;
 		vertices[0].y = dst_rect->top;
-		vertices[1].u = src_rect->right;
+		vertices[1].u = src_rect->left + sw - j;
 		vertices[1].v = src_rect->bottom;
 		vertices[1].x = dst_rect->right;
 		vertices[1].y = dst_rect->bottom;
@@ -338,7 +339,6 @@ void pgCopyRectRotate(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect)
 	//sceGuDrawBufferList(GU_PSM_8888, framebuffer, BUF_WIDTH);
 	sceGuScissor(dst_rect->left, dst_rect->top, dst_rect->right, dst_rect->bottom);
 	sceGuTexMode(GU_PSM_4444, 0, 0, GU_FALSE);
-	sceGuTexImage(0, tex->w, tex->h, tex->tb, src);
 	sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGBA);
 	if (sw == dh && sh == dw)
 		sceGuTexFilter(GU_NEAREST, GU_NEAREST);
@@ -346,12 +346,13 @@ void pgCopyRectRotate(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect)
 		sceGuTexFilter(GU_LINEAR, GU_LINEAR);
 	for (j = 0; (j + SLICE_SIZE) < sw; j = j + SLICE_SIZE)
 	{
+		sceGuTexImage(0, tex->w, tex->h, tex->tb, (short*)src + j);
 		vertices = (struct Vertex *)sceGuGetMemory(2 * sizeof(struct Vertex));
-		vertices[0].u = src_rect->left + j;
+		vertices[0].u = src_rect->left;
 		vertices[0].v = src_rect->top;
 		vertices[0].x = dst_rect->right;
 		vertices[0].y = dst_rect->top + j * dh / sw;
-		vertices[1].u = src_rect->left + j + SLICE_SIZE;
+		vertices[1].u = src_rect->left + SLICE_SIZE;
 		vertices[1].v = src_rect->bottom;
 		vertices[1].x = dst_rect->left;
 		vertices[1].y = dst_rect->top + (j + SLICE_SIZE) * dh / sw;
@@ -359,12 +360,13 @@ void pgCopyRectRotate(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect)
 	}
 	if (j < sw)
 	{
+		sceGuTexImage(0, tex->w, tex->h, tex->tb, (short*)src + j);
 		vertices = (struct Vertex *)sceGuGetMemory(2 * sizeof(struct Vertex));
-		vertices[0].u = src_rect->left + j;
+		vertices[0].u = src_rect->left;
 		vertices[0].v = src_rect->top;
 		vertices[0].x = dst_rect->right;
 		vertices[0].y = dst_rect->top + j * dh / sw;
-		vertices[1].u = src_rect->right;
+		vertices[1].u = src_rect->left + sw - j;
 		vertices[1].v = src_rect->bottom;
 		vertices[1].x = dst_rect->left;
 		vertices[1].y = dst_rect->bottom;
@@ -772,27 +774,27 @@ void pgCopy(int offsetX, int offsetY)
 	offsetY &= 0x01FF;
 	if (s2ch.tateFlag)
 	{
-		src_rect.left = offsetX;
+		src_rect.left = 0;
 		src_rect.top = offsetY;
-		src_rect.right = offsetX + SCR_HEIGHT;
+		src_rect.right = SCR_HEIGHT;
 		src_rect.bottom = offsetY + SCR_WIDTH;
 		dst_rect.left = 0;
 		dst_rect.top = 0;
 		dst_rect.right = SCR_WIDTH;
 		dst_rect.bottom = SCR_HEIGHT;
-		pgCopyRectRotate(printBuf, &tex, &src_rect, &dst_rect);
+		pgCopyRectRotate(printBuf + offsetX, &tex, &src_rect, &dst_rect);
 	}
 	else
 	{
-		src_rect.left = offsetX;
+		src_rect.left = 0;
 		src_rect.top = offsetY;
-		src_rect.right = offsetX + SCR_WIDTH;
+		src_rect.right = SCR_WIDTH;
 		src_rect.bottom = offsetY + SCR_HEIGHT;
 		dst_rect.left = 0;
 		dst_rect.top = 0;
 		dst_rect.right = SCR_WIDTH;
 		dst_rect.bottom = SCR_HEIGHT;
-		pgCopyRect(printBuf, &tex, &src_rect, &dst_rect);
+		pgCopyRect(printBuf + offsetX, &tex, &src_rect, &dst_rect);
 	}
 }
 

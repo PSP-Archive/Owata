@@ -361,8 +361,10 @@ int psp2chFavorite(void)
             }
 			pgPrintMenuBar(menuStr);
         }
-		if (change)
+		res = psp2chPadSet(s2ch.viewX);
+		if (res != s2ch.viewX || change)
 		{
+			s2ch.viewX = res;
 			if (focus)
 			{
 				psp2chDrawFavoriteIta();
@@ -372,7 +374,6 @@ int psp2chFavorite(void)
 				psp2chDrawFavorite();
 			}
 		}
-        s2ch.viewX = psp2chPadSet(s2ch.viewX);
         pgCopy(s2ch.viewX, 0);
         pgCopyMenuBar();
         sceDisplayWaitVblankStart();

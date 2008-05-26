@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
     *ch = '\0';
     SetupCallbacks();
     pgSetupGu();
-    pspDebugScreenInit();
+    //pspDebugScreenInit();
     psp2chInit();
     pgFontLoad();
     psp2ch(); // main loop

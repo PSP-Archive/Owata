@@ -75,7 +75,7 @@ int psp2chSearch(int retSel)
 {
     static char* menuStr = "";
     static int ret = 0;
-    int lineEnd, rMenu, change;
+    int lineEnd, rMenu, change, res;
 
     if (s2ch.findList == NULL)
     {
@@ -176,9 +176,10 @@ int psp2chSearch(int retSel)
                 }
             }
         }
-        s2ch.viewX = psp2chPadSet(s2ch.viewX);
-		if (change)
+		res = psp2chPadSet(s2ch.viewX);
+		if (res != s2ch.viewX || change)
 		{
+			s2ch.viewX = res;
 	        psp2chDrawSearch();
 		}
         pgCopy(s2ch.viewX, 0);

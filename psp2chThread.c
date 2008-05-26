@@ -88,7 +88,7 @@ int psp2chThread(int retSel)
 {
     static char* menuStr = "";
     static int ret = 0;
-    int lineEnd, rMenu, change;
+    int lineEnd, rMenu, change, res;
 
     if (ret == 0)
     {
@@ -134,7 +134,6 @@ int psp2chThread(int retSel)
                 menuStr = s2ch.menuThreadH.main;
             }
         }
-        pgPrintMenuBar(menuStr);
         if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
             s2ch.oldPad = s2ch.pad;
@@ -207,10 +206,12 @@ int psp2chThread(int retSel)
                     s2ch.sel = 1;
                 }
             }
+			pgPrintMenuBar(menuStr);
         }
-        s2ch.viewX = psp2chPadSet(s2ch.viewX);
-		if (change)
+		res = psp2chPadSet(s2ch.viewX);
+		if (res != s2ch.viewX || change)
 		{
+			s2ch.viewX = res;
 	        psp2chDrawThread();
 		}
         pgCopy(s2ch.viewX, 0);
