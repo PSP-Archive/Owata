@@ -1852,7 +1852,7 @@ void psp2chResLineGet(int startRes, int startLine)
 *****************************/
 int psp2chDrawResStr(char* str, S_2CH_RES_COLOR c, int line, int lineEnd, int startX, int endX, int *drawLine)
 {
-	while ((str = pgPrintHtml(str, c, startX, endX, *drawLine)))
+	while ((str = pgPrintHtml(str, &c, startX, endX, *drawLine)))
 	{
 		s2ch.pgCursorX = startX;
 		s2ch.pgCursorY += LINE_PITCH;
@@ -2137,7 +2137,7 @@ int psp2chDrawResText(int res, int* skip, int line, int lineEnd, int startX, int
 				while (str)
 				{
 					pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH, 2);
-					str = pgPrintHtml(str, c, startX, endX, *drawLine);
+					str = pgPrintHtml(str, &c, startX, endX, *drawLine);
 					(*drawLine)++;
 					if (++line > lineEnd)
 					{
@@ -2155,7 +2155,7 @@ int psp2chDrawResText(int res, int* skip, int line, int lineEnd, int startX, int
 		while (str)
 		{
 			pgFillvram(c.bg, startX, s2ch.pgCursorY, endX-startX, LINE_PITCH, 2);
-			str = pgPrintHtml(str, c, startX, endX, *drawLine);
+			str = pgPrintHtml(str, &c, startX, endX, *drawLine);
 			(*drawLine)++;
 			if (++line > lineEnd)
 			{

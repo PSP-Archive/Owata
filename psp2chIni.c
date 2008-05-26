@@ -17,7 +17,7 @@ extern const char* colorFile; // psp2chMenu.c
         p = strstr(p, "0x");\
         if(p){\
             p+=2;\
-            sscanf(p, "%X", &(B));\
+            sscanf(p, "%hX", &(B));\
         }\
         else{(B) = (C);}\
     }\

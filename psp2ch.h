@@ -84,75 +84,75 @@ typedef struct {
 } S_2CH_SCREEN;
 
 typedef struct {
-    int num;
-    int name1;
-    int name2;
-    int mail;
-    int date;
-    int id1;
-    int id2;
-    int id3;
+    unsigned short num;
+    unsigned short name1;
+    unsigned short name2;
+    unsigned short mail;
+    unsigned short date;
+    unsigned short id1;
+    unsigned short id2;
+    unsigned short id3;
 } S_2CH_HEADER_COLOR;
 
 typedef struct {
-    int text;
-    int bg;
-    int link;
-    int alink;
+    unsigned short text;
+    unsigned short bg;
+    unsigned short link;
+    unsigned short alink;
 } S_2CH_RES_COLOR;
 
 typedef struct {
-    int slider;
-    int bg;
+    unsigned short slider;
+    unsigned short bg;
 } S_2CH_BAR_COLOR;
 
 typedef struct {
-    int text;
-    int bg;
-    int bat1;
-    int bat2;
-    int bat3;
+    unsigned short text;
+    unsigned short bg;
+    unsigned short bat1;
+    unsigned short bat2;
+    unsigned short bat3;
 } S_2CH_MENU_COLOR;
 
 typedef struct {
-    int num;
-    int category;
-    int text1;
-    int text2;
-    int bg;
-    int count1;
-    int count2;
-    int s_num;
-    int s_category;
-    int s_text1;
-    int s_text2;
-    int s_bg;
-    int s_count1;
-    int s_count2;
+    unsigned short num;
+    unsigned short category;
+    unsigned short text1;
+    unsigned short text2;
+    unsigned short bg;
+    unsigned short count1;
+    unsigned short count2;
+    unsigned short s_num;
+    unsigned short s_category;
+    unsigned short s_text1;
+    unsigned short s_text2;
+    unsigned short s_bg;
+    unsigned short s_count1;
+    unsigned short s_count2;
 } S_2CH_THREAD_COLOR;
 
 typedef struct {
-    int text;
-    int bg;
-    int s_text;
-    int s_bg;
+    unsigned short text;
+    unsigned short bg;
+    unsigned short s_text;
+    unsigned short s_bg;
 } S_2CH_TXT_COLOR;
 
 typedef struct {
     S_2CH_TXT_COLOR cate;
     S_2CH_TXT_COLOR ita;
-    int base;
+    unsigned short base;
 } S_2CH_ITA_COLOR;
 
 typedef struct {
-    int ita;
-    int title;
-    int title_bg;
+    unsigned short ita;
+    unsigned short title;
+    unsigned short title_bg;
 } S_2CH_FORM_COLOR;
 
 typedef struct {
-    int arrow1;
-    int arrow2;
+    unsigned short arrow1;
+    unsigned short arrow2;
 } S_2CH_CURSOR_COLOR;
 
 typedef struct {

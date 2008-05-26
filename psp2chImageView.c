@@ -557,7 +557,7 @@ int psp2chImageViewGif(char* fname)
 }
 
 /*--------------------------------------------------------
-	矩形範囲をコピー
+	矩形範囲を拡大縮小
 --------------------------------------------------------*/
 #define SLICE_SIZE 64
 void blt(void *src, TEX *tex, RECT *src_rect, double thumb)
@@ -584,9 +584,10 @@ void blt(void *src, TEX *tex, RECT *src_rect, double thumb)
 	else
 		sceGuTexFilter(GU_LINEAR, GU_LINEAR);
 	i = 0;
+	/* textureをSLICE_SIZE * BUF_HEIGHTに切り取ってループ */
 	while (sh > BUF_HEIGHT)
 	{
-		for (j = 0; (j + SLICE_SIZE) <= sw; j = j + SLICE_SIZE)
+		for (j = 0; (j + SLICE_SIZE) < sw; j = j + SLICE_SIZE)
 		{
 			sceGuTexImage(0, tex->w, tex->h, tex->tb, p + j);
 			vertices = (struct Vertex *)sceGuGetMemory(2 * sizeof(struct Vertex));
@@ -618,7 +619,7 @@ void blt(void *src, TEX *tex, RECT *src_rect, double thumb)
 		p += tex->tb * BUF_HEIGHT;
 		i++;
 	}
-		for (j = 0; (j + SLICE_SIZE) <= sw; j = j + SLICE_SIZE)
+		for (j = 0; (j + SLICE_SIZE) < sw; j = j + SLICE_SIZE)
 		{
 			sceGuTexImage(0, tex->w, tex->h, tex->tb, p + j);
 			vertices = (struct Vertex *)sceGuGetMemory(2 * sizeof(struct Vertex));

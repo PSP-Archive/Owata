@@ -404,6 +404,7 @@ void pgFillRect(unsigned long color, RECT *rect)
 *****************************/
 void pgPrintTitleBar(char* ita, char* title)
 {
+	static struct tm pre;
 	unsigned short *temp;
 	time_t timep;
 	struct tm *t;
@@ -413,10 +414,17 @@ void pgPrintTitleBar(char* ita, char* title)
 	sceKernelLibcTime(&timep);
 	timep += 9 * 60 * 60;
 	t = localtime(&timep);
+	if (t->tm_hour == pre.tm_hour && t->tm_min == pre.tm_min && t->tm_sec == pre.tm_sec)
+	{
+		return;
+	}
+	pre.tm_hour = t->tm_hour;
+	pre.tm_min = t->tm_min;
+	pre.tm_sec = t->tm_sec;
 	sprintf(date, "%02d:%02d:%02d", t->tm_hour, t->tm_min, t->tm_sec);
 	sprintf(buf, " [%s]", ita);
 	temp = printBuf;
-	printBuf = titlePixels;
+	printBuf = titlePixels; 
 	s2ch.pgCursorX = 0;
 	if (s2ch.tateFlag)
 	{
@@ -770,13 +778,16 @@ void pgCopyWindow(int offset, int x, int y, int w, int h)
 void pgCopy(int offsetX, int offsetY)
 {
 	RECT src_rect, dst_rect;
+	int sx;
 
+	sx = offsetX & 0x1F;
+	offsetX &= 0xFFFFFFE0;
 	offsetY &= 0x01FF;
 	if (s2ch.tateFlag)
 	{
-		src_rect.left = 0;
+		src_rect.left = sx;
 		src_rect.top = offsetY;
-		src_rect.right = SCR_HEIGHT;
+		src_rect.right = sx + SCR_HEIGHT;
 		src_rect.bottom = offsetY + SCR_WIDTH;
 		dst_rect.left = 0;
 		dst_rect.top = 0;
@@ -786,9 +797,9 @@ void pgCopy(int offsetX, int offsetY)
 	}
 	else
 	{
-		src_rect.left = 0;
+		src_rect.left = sx;
 		src_rect.top = offsetY;
-		src_rect.right = SCR_WIDTH;
+		src_rect.right = sx + SCR_WIDTH;
 		src_rect.bottom = offsetY + SCR_HEIGHT;
 		dst_rect.left = 0;
 		dst_rect.top = 0;
@@ -845,7 +856,7 @@ void pgPrintNumber(int num, int color,int bgcolor)
 1文字をフォントから読み込んでwidth内で表示可能なら表示して0を返す
 widthを超える場合は表示しないで1を返す
 *****************************/
-int pgPutChar(unsigned char *cfont,int ch,int color,int bgcolor, int width)
+int pgPutChar(unsigned char *cfont,int ch,unsigned short color,unsigned short bgcolor, int width)
 {
 	unsigned short *vptr0;		 //pointer to vram
 	unsigned short *vptr;		 //pointer to vram
@@ -881,7 +892,7 @@ int pgPutChar(unsigned char *cfont,int ch,int color,int bgcolor, int width)
 	return 0;
 }
 
-int pgPutCharA(const unsigned char c,int color,int bgcolor, int width)
+int pgPutCharA(const unsigned char c,unsigned short color,unsigned short bgcolor, int width)
 {
 	unsigned long index;
 
@@ -901,7 +912,7 @@ int pgPutCharA(const unsigned char c,int color,int bgcolor, int width)
 	return pgPutChar(fontA, index, color, bgcolor, width);
 }
 
-int pgPutCharW(unsigned char hi,unsigned char lo,int color,int bgcolor, int width)
+int pgPutCharW(unsigned char hi,unsigned char lo,unsigned short color,unsigned short bgcolor, int width)
 {
 	unsigned long index;
 
@@ -929,7 +940,7 @@ int pgPutCharW(unsigned char hi,unsigned char lo,int color,int bgcolor, int widt
 	return pgPutChar(fontJ, index, color, bgcolor, width);
 }
 
-int pgPutCharW2(unsigned char hi,unsigned char lo,int color,int bgcolor, int width, int code)
+int pgPutCharW2(unsigned char hi,unsigned char lo,unsigned short color,unsigned short bgcolor, int width, int code)
 {
 	unsigned long index;
 
@@ -977,7 +988,7 @@ int pgPutCharW2(unsigned char hi,unsigned char lo,int color,int bgcolor, int wid
 /*****************************
 実体参照を変換
 *****************************/
-int pgSpecialChars(char** string,int color,int bgcolor, int width)
+int pgSpecialChars(char** string,unsigned short color,unsigned short bgcolor, int width)
 {
 	int i, val;
 	char* str;
@@ -1041,7 +1052,7 @@ int pgSpecialChars(char** string,int color,int bgcolor, int width)
 文字列strを画面幅widthで1行分表示して改行部分のポインタを返す
 strを全部表示したらNULLを返す
 *****************************/
-char* pgPrint(char *str,int color,int bgcolor, int width)
+char* pgPrint(char *str,unsigned short color,unsigned short bgcolor, int width)
 {
 	unsigned char ch = 0,bef = 0;
 	int ret = 0;
@@ -1108,27 +1119,27 @@ strを全部表示したらNULLを返す
 他のHTMLタグは削除
 レスアンカーやURLアンカーがあれば位置情報を保存
 *****************************/
-char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLine)
+char* pgPrintHtml(char *str, S_2CH_RES_COLOR *c, int startX, int width,int drawLine)
 {
 	static int anchorOn = 0;
 	unsigned char ch = 0,bef = 0;
 	int ret = 0;
-	int tcolor;
+	unsigned short tcolor;
 	char *p;
 	int i, j, start, end;
 
 	if (anchorOn)
 	{
-		tcolor = c.link;
+		tcolor = c->link;
 	}
 	else
 	{
-		tcolor = c.text;
+		tcolor = c->text;
 	}
 	while(*str) {
 		ch = (unsigned char)*str;
 		if (bef!=0) {
-			ret = pgPutCharW(bef, ch, tcolor, c.bg, width);
+			ret = pgPutCharW(bef, ch, tcolor, c->bg, width);
 			if (ret) {
 				return --str;
 			}
@@ -1143,16 +1154,16 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
 					urlEnd();
 				}
 				anchorOn = 0;
-				tcolor = c.text;
+				tcolor = c->text;
 			} else {
 				if (ch >= 0xa0 && ch < 0xe0) {
 					anchorOn = 0;
-					tcolor = c.text;
+					tcolor = c->text;
 				}
 				else if (anchorOn == 2) {
 					if ((ch < '0' || ch > '9') && ch != '-' && ch != ',' && ch !='<') {
 						anchorOn = 0;
-						tcolor = c.text;
+						tcolor = c->text;
 						resEnd();
 					}
 				}
@@ -1162,7 +1173,7 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
 					}
 					else {
 						anchorOn = 0;
-						tcolor = c.text;
+						tcolor = c->text;
 						urlEnd();
 					}
 				}
@@ -1170,7 +1181,7 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
 				if (strstr(str, "http://") == str) {
 					s2ch.urlAnchor[s2ch.urlAnchorCount].x1 = s2ch.pgCursorX;
 					s2ch.urlAnchor[s2ch.urlAnchorCount].line = drawLine;
-					tcolor = c.link;
+					tcolor = c->link;
 				}
 				else if (strstr(str, "ttp://") == str) {
 					if (s2ch.urlAnchor[s2ch.urlAnchorCount].x1 == 0) {
@@ -1206,7 +1217,7 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
 							s2ch.urlAnchor[s2ch.urlAnchorCount].path[j] = '\0';
 						}
 						anchorOn = 1;
-						tcolor = c.link;
+						tcolor = c->link;
 					}
 				}
 
@@ -1218,7 +1229,7 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
 						urlEnd();
 					}
 					anchorOn = 0;
-					tcolor = c.text;
+					tcolor = c->text;
 					if (strstr(str, "<br>") == str) {
 						str +=4;
 						return str;
@@ -1234,7 +1245,7 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
 						if ((strstr((str + 4), "&gt;") == (str + 4)) && *(str + 8) >= '0' && *(str + 8) <= '9') {
 							s2ch.resAnchor[s2ch.resAnchorCount].x1 = s2ch.pgCursorX;
 							s2ch.resAnchor[s2ch.resAnchorCount].line = drawLine;
-							tcolor = c.link;
+							tcolor = c->link;
 						}
 						else if (*(str + 4) >= '0' && *(str + 4) <= '9') {
 							if (s2ch.resAnchor[s2ch.resAnchorCount].x1 == 0) {
@@ -1281,22 +1292,22 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR c, int startX, int width,int drawLi
 							}
 							s2ch.resAnchor[s2ch.resAnchorCount].resCount = j;
 							anchorOn = 2;
-							tcolor = c.link;
+							tcolor = c->link;
 						}
 					}
-					ret = pgSpecialChars((char**)(&str), tcolor, c.bg, width);
+					ret = pgSpecialChars((char**)(&str), tcolor, c->bg, width);
 				}
 				else if (ch == ' ' || ch == '\n') {
 					while (ch == ' ' || ch == '\n') {
 						ch = *(++str);
 					}
 					anchorOn = 0;
-					tcolor = c.text;
+					tcolor = c->text;
 					str--;
-					ret = pgPutCharA(' ', tcolor, c.bg, width);
+					ret = pgPutCharA(' ', tcolor, c->bg, width);
 				}
 				else {
-					ret = pgPutCharA(ch, tcolor, c.bg, width);
+					ret = pgPutCharA(ch, tcolor, c->bg, width);
 				}
 				if (ret) {
 					if (anchorOn == 2) {
