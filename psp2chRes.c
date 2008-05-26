@@ -240,7 +240,6 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
 					break;
 				}
 				j = 1;
-				pgPrintMenuBar(menuStr);
 				break;
 			}
 			i++;

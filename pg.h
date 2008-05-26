@@ -17,7 +17,7 @@
 #define ZBUF_SIZE (BUF_WIDTH * BUF_HEIGHT)
 #define RGB(r,g,b) (0xF000|(((b>>4) & 0xF)<<8)|(((g>>4) & 0xF)<<4)|((r>>4) & 0xF))
 //#define RGB(r,g,b) (0x8000|(((b>>3) & 0x1F)<<10)|(((g>>3) & 0x1F)<<5)|((r>>3) & 0x1F))
-//#define RGB(r,g,b) (0xFF000000|(b)<<16|(g)<<8|(r))
+#define RGB8888(r,g,b,a) ((a)<<24|(b)<<16|(g)<<8|(r))
 #define WHITE RGB(255,255,255)
 #define BLACK RGB(0,0,0)
 #define RED RGB(255,0,0)
@@ -29,6 +29,13 @@
 #define GRAY RGB(0xCC,0xCC,0xCC)
 
 #include "psp2ch.h"
+
+struct Vertex
+{
+	unsigned short u, v;
+	unsigned short color;
+	short x, y, z;
+};
 
 typedef struct rect_t
 {
@@ -47,6 +54,8 @@ typedef struct tex
 
 int pgExtraFontInit(void);
 void pgSetupGu(void);
+void pgCopyRect(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect);
+void pgCopyRectRotate(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect);
 void pgTermGu(void);
 void pgFontLoad(void);
 void pgWaitV();

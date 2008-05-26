@@ -6,7 +6,7 @@
 #define __PSP2CH_IMAGE_VIEW__
 
 typedef struct tagBITMAPFILEHEADER {
-    unsigned char bfType[2];
+    unsigned char  bfType[2];
     unsigned long  bfSize;
     unsigned short bfReserved1;
     unsigned short bfReserved2;

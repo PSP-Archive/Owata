@@ -22,7 +22,7 @@ int psp2chTinyBrowser(char* path)
 {
     SceUID fd;
     SceIoStat st;
-    int ret;
+    int ret, change;
     char *txt, *bck;
     S_2CH_SCREEN html;
     S_SCROLLBAR bar;
@@ -143,11 +143,11 @@ int psp2chTinyBrowser(char* path)
         {
             if (s2ch.tateFlag)
             {
-                psp2chCursorSet(&html, lineEnd, s2ch.btnResV.change);
+                psp2chCursorSet(&html, lineEnd, s2ch.btnResV.change, &change);
             }
             else
             {
-                psp2chCursorSet(&html, lineEnd, s2ch.btnResH.change);
+                psp2chCursorSet(&html, lineEnd, s2ch.btnResH.change, &change);
             }
             if (html.select > html.count - lineEnd)
             {
@@ -214,7 +214,10 @@ int psp2chTinyBrowser(char* path)
                     break;
                 }
             }
-            psp2chDrawHtml(line[html.start], html, code);
+			if (change)
+			{
+	            psp2chDrawHtml(line[html.start], html, code);
+			}
             pgCopyWindow(html.start * LINE_PITCH, startX, startY, scrX, scrY);
             pgWindowFrame(startX, startY, startX + scrX + barW, startY + scrY);
             bar.start = html.start * LINE_PITCH;

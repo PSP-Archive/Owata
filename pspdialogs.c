@@ -166,9 +166,12 @@ void pspShowOSK(OSK_HELPER *oskhelper, u8 language)
     }
 }
 
+#define SCR_WIDTH (480)
+#define SCR_HEIGHT (272)
 void minimalRender()
 {
 	sceGuStart(GU_DIRECT,list);
+	sceGuScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
 	sceGuClearColor(0xff000000);
 	sceGuClearDepth(0);
 	sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);

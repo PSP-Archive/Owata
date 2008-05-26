@@ -86,13 +86,6 @@ struct entityTag
 	char c2;
 };
 
-struct Vertex
-{
-	unsigned short u, v;
-	unsigned short color;
-	short x, y, z;
-};
-
 #define MAX_ENTITIES 12
 struct entityTag entity[MAX_ENTITIES];
 void pgEntitiesSet(void)
@@ -290,6 +283,7 @@ void pgCopyRect(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect)
 
 	sceGuStart(GU_DIRECT, list);
 	//sceGuDrawBufferList(GU_PSM_8888, framebuffer, BUF_WIDTH);
+	sceGuScissor(dst_rect->left, dst_rect->top, dst_rect->right, dst_rect->bottom);
 	sceGuTexMode(GU_PSM_4444, 0, 0, GU_FALSE);
 	sceGuTexImage(0, tex->w, tex->h, tex->tb, src);
 	sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGBA);
@@ -330,7 +324,6 @@ void pgCopyRect(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect)
 /*--------------------------------------------------------
 	矩形範囲を90度回転してコピー
 --------------------------------------------------------*/
-
 void pgCopyRectRotate(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect)
 {
 	short j, sw, dw, sh, dh;
@@ -343,6 +336,7 @@ void pgCopyRectRotate(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect)
 
 	sceGuStart(GU_DIRECT, list);
 	//sceGuDrawBufferList(GU_PSM_8888, framebuffer, BUF_WIDTH);
+	sceGuScissor(dst_rect->left, dst_rect->top, dst_rect->right, dst_rect->bottom);
 	sceGuTexMode(GU_PSM_4444, 0, 0, GU_FALSE);
 	sceGuTexImage(0, tex->w, tex->h, tex->tb, src);
 	sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGBA);
@@ -376,6 +370,29 @@ void pgCopyRectRotate(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect)
 		vertices[1].y = dst_rect->bottom;
 		sceGuDrawArray(GU_SPRITES, GU_TEXTURE_16BIT | GU_COLOR_4444 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, NULL, vertices);
 	}
+	sceGuFinish();
+	sceGuSync(0, GU_SYNC_FINISH);
+}
+
+/*--------------------------------------------------------
+	指定した矩形範囲を塗りつぶし
+--------------------------------------------------------*/
+void pgFillRect(unsigned long color, RECT *rect)
+{
+	int r, g, b, a;
+	r = color & 0x0F;
+	g = (color >> 4) & 0x0F;
+	b = (color >> 8) & 0x0F;
+	a = (color >> 12) & 0x0F;
+	r = (r << 4) | r;
+	g = (g << 4) | g;
+	b = (b << 4) | b;
+	a = (a << 4) | a;
+	color = RGB8888(r,g,b,a);
+	sceGuStart(GU_DIRECT, list);
+	sceGuScissor(rect->left, rect->top, rect->right, rect->bottom);
+	sceGuClearColor(color);
+	sceGuClear(GU_COLOR_BUFFER_BIT);
 	sceGuFinish();
 	sceGuSync(0, GU_SYNC_FINISH);
 }
@@ -641,6 +658,7 @@ void pgScrollbar(S_SCROLLBAR bar, S_2CH_BAR_COLOR c)
 {
 	unsigned short *temp;
 	int sliderH, sliderY;
+	RECT rect;
 
 	temp = printBuf;
 	// winPixelsの余ってる部分を使用
@@ -656,13 +674,29 @@ void pgScrollbar(S_SCROLLBAR bar, S_2CH_BAR_COLOR c)
 	}
 	if (s2ch.tateFlag)
 	{
-		pgFillvram(c.bg, SCR_WIDTH - bar.y - bar.h, bar.x, bar.h, bar.w, 1);
-		pgFillvram(c.slider, SCR_WIDTH - sliderY - sliderH, bar.x + 1, sliderH, bar.w - 1, 1);
+		rect.left = SCR_WIDTH - bar.y - bar.h;
+		rect.top = bar.x;
+		rect.right = SCR_WIDTH - bar.y;
+		rect.bottom = bar.x + bar.w;
+		pgFillRect(c.bg, &rect);
+		rect.left = SCR_WIDTH - sliderY - sliderH;
+		rect.top = bar.x + 1;
+		rect.right = SCR_WIDTH - sliderY;
+		rect.bottom = bar.x + bar.w;
+		pgFillRect(c.slider, &rect);
 	}
 	else
 	{
-		pgFillvram(c.bg, bar.x, bar.y, bar.w, bar.h, 1);
-		pgFillvram(c.slider, bar.x+1, sliderY, bar.w-1, sliderH, 1);
+		rect.left = bar.x;
+		rect.top = bar.y;
+		rect.right = bar.x + bar.w;
+		rect.bottom = bar.y + bar.h;
+		pgFillRect(c.bg, &rect);
+		rect.left = bar.x + 1;
+		rect.top = sliderY;
+		rect.right = bar.x + bar.w;
+		rect.bottom = sliderY + sliderH;
+		pgFillRect(c.slider, &rect);
 	}
 	printBuf = temp;
 }

@@ -47,13 +47,6 @@ int psp2ch(void)
 
     sceCtrlSetSamplingCycle(0);
     sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
-        pgPrintMona();
-        s2ch.pgCursorX = 450;
-        s2ch.pgCursorY = 260;
-        pgPrint(ver, BLUE, WHITE, SCR_WIDTH);
-        pgCopy(0, 0);
-        sceDisplayWaitVblankStart();
-        framebuffer = sceGuSwapBuffers();
     while (s2ch.running)
     {
         switch (s2ch.sel)
@@ -99,11 +92,21 @@ int psp2ch(void)
 *****************************/
 void psp2chStart(void)
 {
+	static int start = 0;
+	if (start == 0)
+	{
+		pgPrintMona();
+		s2ch.pgCursorX = 450;
+		s2ch.pgCursorY = 260;
+		pgPrint(ver, BLUE, WHITE, SCR_WIDTH);
+		start = 1;
+	}
     if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
     {
         if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
             s2ch.oldPad = s2ch.pad;
+			start = 0;
             if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
             {
                 if (psp2chOwata())
@@ -122,6 +125,9 @@ void psp2chStart(void)
                 return;
             }
         }
+        pgCopy(0, 0);
+        sceDisplayWaitVblankStart();
+        framebuffer = sceGuSwapBuffers();
     }
 }
 

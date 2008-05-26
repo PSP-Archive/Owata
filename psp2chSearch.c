@@ -75,7 +75,7 @@ int psp2chSearch(int retSel)
 {
     static char* menuStr = "";
     static int ret = 0;
-    int lineEnd, rMenu;
+    int lineEnd, rMenu, change;
 
     if (s2ch.findList == NULL)
     {
@@ -100,11 +100,11 @@ int psp2chSearch(int retSel)
     {
         if (s2ch.tateFlag)
         {
-            rMenu = psp2chCursorSet(&s2ch.find, lineEnd, s2ch.findV.shift);
+            rMenu = psp2chCursorSet(&s2ch.find, lineEnd, s2ch.findV.shift, &change);
         }
         else
         {
-            rMenu = psp2chCursorSet(&s2ch.find, lineEnd, s2ch.findH.shift);
+            rMenu = psp2chCursorSet(&s2ch.find, lineEnd, s2ch.findH.shift, &change);
         }
         if (rMenu)
         {
@@ -177,7 +177,10 @@ int psp2chSearch(int retSel)
             }
         }
         s2ch.viewX = psp2chPadSet(s2ch.viewX);
-        psp2chDrawSearch();
+		if (change)
+		{
+	        psp2chDrawSearch();
+		}
         pgCopy(s2ch.viewX, 0);
         pgCopyMenuBar();
         sceDisplayWaitVblankStart();

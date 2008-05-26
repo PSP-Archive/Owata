@@ -88,7 +88,7 @@ int psp2chThread(int retSel)
 {
     static char* menuStr = "";
     static int ret = 0;
-    int lineEnd, rMenu;
+    int lineEnd, rMenu, change;
 
     if (ret == 0)
     {
@@ -106,11 +106,11 @@ int psp2chThread(int retSel)
     {
         if (s2ch.tateFlag)
         {
-            rMenu = psp2chCursorSet(&s2ch.thread, lineEnd, s2ch.thV.shift);
+            rMenu = psp2chCursorSet(&s2ch.thread, lineEnd, s2ch.thV.shift, &change);
         }
         else
         {
-            rMenu = psp2chCursorSet(&s2ch.thread, lineEnd, s2ch.thH.shift);
+            rMenu = psp2chCursorSet(&s2ch.thread, lineEnd, s2ch.thH.shift, &change);
         }
         if (rMenu)
         {
@@ -209,7 +209,10 @@ int psp2chThread(int retSel)
             }
         }
         s2ch.viewX = psp2chPadSet(s2ch.viewX);
-        psp2chDrawThread();
+		if (change)
+		{
+	        psp2chDrawThread();
+		}
         pgCopy(s2ch.viewX, 0);
         pgCopyMenuBar();
         sceDisplayWaitVblankStart();

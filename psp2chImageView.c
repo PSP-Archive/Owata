@@ -556,32 +556,124 @@ int psp2chImageViewGif(char* fname)
     return 0;
 }
 
+/*--------------------------------------------------------
+	矩形範囲をコピー
+--------------------------------------------------------*/
+#define SLICE_SIZE 64
+void blt(void *src, TEX *tex, RECT *src_rect, double thumb)
+{
+	int i, j, sw, dw, sh, dh, dy;
+	struct Vertex *vertices;
+	int* p = src;
+
+	sw = src_rect->right;
+	dw = (double)sw / thumb;
+	sh = src_rect->bottom;
+	dh = (double)sh / thumb;
+	dy = (double)BUF_HEIGHT / thumb;
+
+	sceGuStart(GU_DIRECT, list);
+	sceGuDrawBufferList(GU_PSM_8888, framebuffer, BUF_WIDTH);
+	sceGuScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
+	sceGuClearColor(RGB8888(128,128,128,255));
+    sceGuClear(GU_COLOR_BUFFER_BIT);
+	sceGuTexMode(GU_PSM_8888, 0, 0, GU_FALSE);
+	sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGBA);
+	if (thumb == 1.0)
+		sceGuTexFilter(GU_NEAREST, GU_NEAREST);
+	else
+		sceGuTexFilter(GU_LINEAR, GU_LINEAR);
+	i = 0;
+	while (sh > BUF_HEIGHT)
+	{
+		for (j = 0; (j + SLICE_SIZE) <= sw; j = j + SLICE_SIZE)
+		{
+			sceGuTexImage(0, tex->w, tex->h, tex->tb, p + j);
+			vertices = (struct Vertex *)sceGuGetMemory(2 * sizeof(struct Vertex));
+			vertices[0].u = 0;
+			vertices[0].v = 0;
+			vertices[0].x = j * dw / sw;
+			vertices[0].y = dy * i;
+			vertices[1].u = SLICE_SIZE;
+			vertices[1].v = BUF_HEIGHT;
+			vertices[1].x = (j + SLICE_SIZE) * dw / sw;
+			vertices[1].y = dy * (i + 1);
+			sceGuDrawArray(GU_SPRITES, GU_TEXTURE_16BIT | GU_COLOR_4444 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, NULL, vertices);
+		}
+		if (j < sw)
+		{
+			sceGuTexImage(0, tex->w, tex->h, tex->tb, p + j);
+			vertices = (struct Vertex *)sceGuGetMemory(2 * sizeof(struct Vertex));
+			vertices[0].u = 0;
+			vertices[0].v = 0;
+			vertices[0].x = j * dw / sw;
+			vertices[0].y = dy * i;
+			vertices[1].u = sw - j;
+			vertices[1].v = BUF_HEIGHT;
+			vertices[1].x = dw;
+			vertices[1].y = dy * (i + 1);
+			sceGuDrawArray(GU_SPRITES, GU_TEXTURE_16BIT | GU_COLOR_4444 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, NULL, vertices);
+		}
+		sh -= BUF_HEIGHT;
+		p += tex->tb * BUF_HEIGHT;
+		i++;
+	}
+		for (j = 0; (j + SLICE_SIZE) <= sw; j = j + SLICE_SIZE)
+		{
+			sceGuTexImage(0, tex->w, tex->h, tex->tb, p + j);
+			vertices = (struct Vertex *)sceGuGetMemory(2 * sizeof(struct Vertex));
+			vertices[0].u = 0;
+			vertices[0].v = 0;
+			vertices[0].x = j * dw / sw;
+			vertices[0].y = dy * i;
+			vertices[1].u = SLICE_SIZE;
+			vertices[1].v = sh;
+			vertices[1].x = (j + SLICE_SIZE) * dw / sw;
+			vertices[1].y = dy * i + sh * dw / sw;
+			sceGuDrawArray(GU_SPRITES, GU_TEXTURE_16BIT | GU_COLOR_4444 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, NULL, vertices);
+		}
+		if (j < sw)
+		{
+			sceGuTexImage(0, tex->w, tex->h, tex->tb, p + j);
+			vertices = (struct Vertex *)sceGuGetMemory(2 * sizeof(struct Vertex));
+			vertices[0].u = 0;
+			vertices[0].v = 0;
+			vertices[0].x = j * dw / sw;
+			vertices[0].y = dy * i;
+			vertices[1].u = sw - j;
+			vertices[1].v = sh;
+			vertices[1].x = dw;
+			vertices[1].y = dy * i + sh * dw / sw;
+			sceGuDrawArray(GU_SPRITES, GU_TEXTURE_16BIT | GU_COLOR_4444 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, NULL, vertices);
+		}
+	sceGuFinish();
+	sceGuSync(0, GU_SYNC_FINISH);
+}
+
 /*****************************
 メニュー処理
 RGBAデータをVRAMに転送
 *****************************/
 void psp2chImageViewer(int* img[], int width, int height, char* fname)
 {
-    int w, h, startX, startY, width2, height2;
     SceCtrlData pad;
     SceCtrlData oldPad;
-    unsigned int* vptr0;
-    unsigned int* vptr;
-    double thumb, thumbW, thumbH;
-    int thumbFlag = 0;
-    int menu = 1, rMenu = 0;
+    SceUID src, dst;
     int padX, padY;
+    int ret, menu = 1, rMenu = 0;
     char picturePath[256], buf[256];
     char *p;
-    SceUID src, dst;
-    int i, j, ret, dx, dy;
-    int *imgW = NULL, *imgH = NULL, *img2, imgWH, imgHW;
+    double thumb, thumbW, thumbH;
+    int thumbFlag = 0;
+    int imgWH, imgHW, startX, startY, width2, height2, sx, sy;
+	RECT srcRect;
+	TEX tex;
 
-    width2 = width;
-    height2 = height;
-    img2 = img[0];
     startX = 0;
     startY = 0;
+    width2 = width;
+    height2 = height;
+	thumb = 1.0;
     thumbW = (double)width / SCR_WIDTH;
     imgWH = height / thumbW;
     thumbH = (double)height / SCR_HEIGHT;
@@ -663,64 +755,21 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
                         }
                         if (thumbFlag == 1)
                         {
-                            if (imgW == NULL)
-                            {
-                                // 画面幅用画像作成
-                                pgPrintMenuBar("画面の幅に合わせた画像を作成しています");
-                                imgW = (int*)malloc(sizeof(int) * SCR_WIDTH * imgWH);
-                                if (imgW == NULL)
-                                {
-                                    psp2chErrorDialog("memorry error\nimgW");
-                                    break;
-                                }
-                                for (i = 0; i < imgWH; i++)
-                                {
-                                    dy = i * thumbW;
-                                    for (j = 0; j < SCR_WIDTH; j++)
-                                    {
-                                        dx = j * thumbW;
-                                        imgW[i * SCR_WIDTH + j] = img[dy][dx];
-                                    }
-                                }
-                            }
                             thumb = thumbW;
                             width2 = SCR_WIDTH;
                             height2 = imgWH;
-                            img2 = imgW;
                         }
                         else if (thumbFlag == 2)
                         {
-                            if (imgH == NULL)
-                            {
-                                // 画面高さ用画像作成
-                                pgPrintMenuBar("画面の高さに合わせた画像を作成しています");
-                                imgH = (int*)malloc(sizeof(int) * imgHW * SCR_HEIGHT);
-                                if (imgH == NULL)
-                                {
-                                    psp2chErrorDialog("memorry error\nimgH");
-                                    break;
-                                }
-                                for (i = 0; i < SCR_HEIGHT; i++)
-                                {
-                                    dy = i * thumbH;
-                                    for (j = 0; j < imgHW; j++)
-                                    {
-                                        dx = j * thumbH;
-                                        imgH[i * imgHW + j] = img[dy][dx];
-                                    }
-                                }
-                            }
                             thumb = thumbH;
                             width2 = imgHW;
                             height2 = SCR_HEIGHT;
-                            img2 = imgH;
                         }
                         else
                         {
-                            thumb = 1;
+                            thumb = 1.0;
                             width2 = width;
                             height2 = height;
-                            img2 = img[0];
                         }
                         startX = 0;
                         startY = 0;
@@ -784,46 +833,16 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
         {
             startY = 0;
         }
-        vptr0 = framebuffer + 0x04000000;
-        for (i = 0, h = 0; h < height2 && h < SCR_HEIGHT; i++)
-        {
-            if (i < startY)
-            {
-                continue;
-            }
-            vptr = vptr0;
-            for (j = 0, w = 0; w < width2 && w < SCR_WIDTH; j++)
-            {
-                if (j < startX)
-                {
-                    continue;
-                }
-                if (thumbFlag)
-                {
-                    *vptr++ = img2[i * width2 + j];
-                }
-                else
-                {
-                    *vptr++ = img[i][j];
-                }
-                w++;
-            }
-            for (; w < SCR_WIDTH; w++)
-            {
-                *vptr++ = GRAY;
-            }
-            vptr0 += BUF_WIDTH;
-            h++;
-        }
-        for (; h < SCR_HEIGHT; h++)
-        {
-            vptr = vptr0;
-            for (i = 0; i < SCR_WIDTH; i++)
-            {
-                *vptr++ = GRAY;
-            }
-            vptr0 += BUF_WIDTH;
-        }
+		sx = startX * thumb;
+		sy = startY * thumb;
+		srcRect.left = 0;
+		srcRect.top = 0;
+		srcRect.right = width - sx;
+		srcRect.bottom = height - sy;
+		tex.w = width;
+		tex.h = height;
+		tex.tb = width;
+		blt(img[0]+sx+sy*width, &tex, &srcRect, thumb);
         if (menu)
         {
             pgCopyMenuBar();
@@ -831,6 +850,4 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
     }
-    free(imgW);
-    free(imgH);
 }

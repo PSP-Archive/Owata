@@ -168,7 +168,7 @@ void psp2chDrawResAnchor(S_2CH_RES_ANCHOR a, S_2CH_SCREEN anchor, int lineFlag)
 ***************/
 void psp2chResAnchor(int anc)
 {
-    int i, j, lineFlag, drawLine;
+    int i, j, lineFlag, drawLine, change;
     S_SCROLLBAR bar;
     S_2CH_SCREEN anchor;
     S_2CH_RES_ANCHOR a = s2ch.resAnchor[anc];
@@ -229,11 +229,11 @@ void psp2chResAnchor(int anc)
         {
             if (s2ch.tateFlag)
             {
-                psp2chCursorSet(&anchor, lineEnd, s2ch.btnResV.change);
+                psp2chCursorSet(&anchor, lineEnd, s2ch.btnResV.change, &change);
             }
             else
             {
-                psp2chCursorSet(&anchor, lineEnd, s2ch.btnResH.change);
+                psp2chCursorSet(&anchor, lineEnd, s2ch.btnResH.change, &change);
             }
             if (anchor.select > anchor.count - lineEnd)
             {
@@ -267,7 +267,10 @@ void psp2chResAnchor(int anc)
                     return;
                 }
             }
-            psp2chDrawResAnchor(a, anchor, lineFlag);
+			if (change)
+			{
+	            psp2chDrawResAnchor(a, anchor, lineFlag);
+			}
             pgCopyWindow(anchor.start * LINE_PITCH, startX, startY, scrX, scrY);
             pgWindowFrame(startX, startY, startX + scrX + barW, startY + scrY);
             bar.start = anchor.start * LINE_PITCH;
@@ -285,7 +288,7 @@ ID’Šo
 ***************/
 void psp2chIdAnchor(int anc)
 {
-    int i, j, lineFlag, drawLine;
+    int i, j, lineFlag, drawLine, change;
     S_SCROLLBAR bar;
     S_2CH_SCREEN anchor;
     S_2CH_RES_ANCHOR a;
@@ -349,7 +352,7 @@ void psp2chIdAnchor(int anc)
     {
         if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
         {
-            psp2chCursorSet(&anchor, lineEnd, 0);
+            psp2chCursorSet(&anchor, lineEnd, 0, &change);
             if (anchor.select > anchor.count - lineEnd)
             {
                 anchor.select = anchor.count - lineEnd;
@@ -382,7 +385,10 @@ void psp2chIdAnchor(int anc)
                     return;
                 }
             }
-            psp2chDrawResAnchor(a, anchor, lineFlag);
+			if (change)
+			{
+	            psp2chDrawResAnchor(a, anchor, lineFlag);
+			}
             pgCopyWindow(anchor.start * LINE_PITCH, startX, startY, scrX, scrY);
             pgWindowFrame(startX, startY, startX + scrX + barW, startY + scrY);
             bar.start = anchor.start * LINE_PITCH;
