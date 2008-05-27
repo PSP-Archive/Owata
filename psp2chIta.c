@@ -288,6 +288,7 @@ int psp2chIta(void)
                 }
             }
 			pgPrintMenuBar(menuStr);
+			change = 1;
         }
 		if (change)
 		{

@@ -207,6 +207,7 @@ int psp2chThread(int retSel)
                 }
             }
 			pgPrintMenuBar(menuStr);
+			change = 1;
         }
 		res = psp2chPadSet(s2ch.viewX);
 		if (res != s2ch.viewX || change)

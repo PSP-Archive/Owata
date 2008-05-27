@@ -189,12 +189,13 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
     static char name[64] = {0};
     static char mail[64] = {0};
     SceUID fd;
-    int focus, sage, ret = 0;
+    int focus, prefocus, sage, ret = 0;
     char buf[256];
     char  *str, *p;
     int changeFlag = 0;
 
     focus = 0;
+	prefocus = -1;
     if (mail[0] == '\0' && name[0] == '\0')
     {
         sprintf(buf, "%s/%s/form.ini", s2ch.cwDir, s2ch.logDir);
@@ -249,6 +250,7 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
                     if (focus == 1)
                     {
                         sage = sage ? 0 : 1;
+						prefocus = -1;
                     }
                 }
                 if(s2ch.pad.Buttons & PSP_CTRL_RIGHT)
@@ -256,6 +258,7 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
                     if (focus == 1)
                     {
                         sage = sage ? 0 : 1;
+						prefocus = -1;
                     }
                 }
                 if(s2ch.pad.Buttons & PSP_CTRL_CIRCLE)
@@ -303,82 +306,42 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
 				{
 					strcpy(mail, "sage");
 				}
-				pgFillvram(RGB(0xCC, 0xFF, 0xCC), 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
-				pgFillvram(s2ch.formColor.title_bg, 0, 0, SCR_WIDTH, 15, 2);
-				s2ch.pgCursorX = 10;
-				s2ch.pgCursorY = 1;
-				pgPrint(subject, s2ch.formColor.title, s2ch.formColor.title_bg, SCR_WIDTH);
-				s2ch.pgCursorX = 10;
-				s2ch.pgCursorY = 30;
-				pgPrint("　名前：", GRAY, RGB(0xCC, 0xFF, 0xCC), 58);
-				s2ch.pgCursorX = 60;
-				pgEditBox(GRAY, 58, 28, 400, 44);
-				pgPrint(name, BLACK, GRAY, 400);
-				s2ch.pgCursorX = 10;
-				s2ch.pgCursorY = 60;
-				pgPrint("メール：", GRAY, RGB(0xCC, 0xFF, 0xCC), 58);
-				s2ch.pgCursorX = 60;
-				pgEditBox(GRAY, 58, 58, 300, 74);
-				pgPrint(mail, BLACK, GRAY, 400);
-				s2ch.pgCursorX = 310;
-				s2ch.pgCursorY = 60;
-				if (sage)
+				if (focus != prefocus)
 				{
-					pgPrint("●", GRAY, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
-				}
-				else
-				{
-					pgPrint("○", GRAY, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
-				}
-				pgPrint("sage (← →キーで切替)", GRAY, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
-				s2ch.pgCursorX = 10;
-				s2ch.pgCursorY = 90;
-				pgEditBox(GRAY, 8, 88, 470, 250);
-				str = message;
-				while ((str = pgPrint(str, BLACK, GRAY, 470)))
-				{
+					prefocus = focus;
+					pgFillvram(RGB(0xCC, 0xFF, 0xCC), 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
+					pgFillvram(s2ch.formColor.title_bg, 0, 0, SCR_WIDTH, 15, 2);
 					s2ch.pgCursorX = 10;
-					s2ch.pgCursorY += LINE_PITCH;
-					if (s2ch.pgCursorY >= 250)
-					{
-						break;
-					}
-				}
-				switch (focus)
-				{
-				case 0:
+					s2ch.pgCursorY = 1;
+					pgPrint(subject, s2ch.formColor.title, s2ch.formColor.title_bg, SCR_WIDTH);
 					s2ch.pgCursorX = 10;
 					s2ch.pgCursorY = 30;
-					pgPrint("　名前：", BLACK, RGB(0xCC, 0xFF, 0xCC), 58);
+					pgPrint("　名前：", GRAY, RGB(0xCC, 0xFF, 0xCC), 58);
 					s2ch.pgCursorX = 60;
-					pgEditBox(WHITE, 58, 28, 400, 44);
-					pgPrint(name, BLACK, WHITE, 400);
-					break;
-				case 1:
+					pgEditBox(GRAY, 58, 28, 400, 44);
+					pgPrint(name, BLACK, GRAY, 400);
 					s2ch.pgCursorX = 10;
 					s2ch.pgCursorY = 60;
-					pgPrint("メール：", BLACK, RGB(0xCC, 0xFF, 0xCC), 58);
+					pgPrint("メール：", GRAY, RGB(0xCC, 0xFF, 0xCC), 58);
 					s2ch.pgCursorX = 60;
-					pgEditBox(WHITE, 58, 58, 300, 74);
-					pgPrint(mail, BLACK, WHITE, 300);
+					pgEditBox(GRAY, 58, 58, 300, 74);
+					pgPrint(mail, BLACK, GRAY, 400);
 					s2ch.pgCursorX = 310;
 					s2ch.pgCursorY = 60;
 					if (sage)
 					{
-						pgPrint("●", BLACK, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
+						pgPrint("●", GRAY, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
 					}
 					else
 					{
-						pgPrint("○", BLACK, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
+						pgPrint("○", GRAY, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
 					}
-					pgPrint("sage (← →キーで切替)", BLACK, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
-					break;
-				case 2:
+					pgPrint("sage (← →キーで切替)", GRAY, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
 					s2ch.pgCursorX = 10;
 					s2ch.pgCursorY = 90;
-					pgEditBox(WHITE, 8, 88, 470, 250);
+					pgEditBox(GRAY, 8, 88, 470, 250);
 					str = message;
-					while ((str = pgPrint(str, BLACK, WHITE, 470)))
+					while ((str = pgPrint(str, BLACK, GRAY, 470)))
 					{
 						s2ch.pgCursorX = 10;
 						s2ch.pgCursorY += LINE_PITCH;
@@ -387,7 +350,51 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
 							break;
 						}
 					}
-					break;
+					switch (focus)
+					{
+					case 0:
+						s2ch.pgCursorX = 10;
+						s2ch.pgCursorY = 30;
+						pgPrint("　名前：", BLACK, RGB(0xCC, 0xFF, 0xCC), 58);
+						s2ch.pgCursorX = 60;
+						pgEditBox(WHITE, 58, 28, 400, 44);
+						pgPrint(name, BLACK, WHITE, 400);
+						break;
+					case 1:
+						s2ch.pgCursorX = 10;
+						s2ch.pgCursorY = 60;
+						pgPrint("メール：", BLACK, RGB(0xCC, 0xFF, 0xCC), 58);
+						s2ch.pgCursorX = 60;
+						pgEditBox(WHITE, 58, 58, 300, 74);
+						pgPrint(mail, BLACK, WHITE, 300);
+						s2ch.pgCursorX = 310;
+						s2ch.pgCursorY = 60;
+						if (sage)
+						{
+							pgPrint("●", BLACK, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
+						}
+						else
+						{
+							pgPrint("○", BLACK, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
+						}
+						pgPrint("sage (← →キーで切替)", BLACK, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
+						break;
+					case 2:
+						s2ch.pgCursorX = 10;
+						s2ch.pgCursorY = 90;
+						pgEditBox(WHITE, 8, 88, 470, 250);
+						str = message;
+						while ((str = pgPrint(str, BLACK, WHITE, 470)))
+						{
+							s2ch.pgCursorX = 10;
+							s2ch.pgCursorY += LINE_PITCH;
+							if (s2ch.pgCursorY >= 250)
+							{
+								break;
+							}
+						}
+						break;
+					}
 				}
             }
         }

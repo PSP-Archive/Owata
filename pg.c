@@ -212,7 +212,10 @@ void pgFontLoad(void)
 	}
 	pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
 	pgPrintMonaWait();
+    pgWaitVn(10);
 	pgCopy(0, 0);
+    pgWaitVn(10);
+    sceDisplayWaitVblankStart();
 	framebuffer = sceGuSwapBuffers();
 	jpn0 = intraFontLoad("flash0:/font/jpn0.pgf",0);
 }

@@ -211,13 +211,9 @@ int psp2chFavorite(void)
         // ˆêŠ‡Žæ“¾ˆ—(1ƒXƒŒ‚²‚Æ‚É•`‰æ)
         if (update >= 0)
         {
+            change = 1;
             if (update < s2ch.fav.count)
             {
-                psp2chDrawFavorite();
-                pgCopy(s2ch.viewX, 0);
-                pgCopyMenuBar();
-                sceDisplayWaitVblankStart();
-                framebuffer = sceGuSwapBuffers();
                 s2ch.fav.select = update;
                 if (s2ch.fav.select >= s2ch.fav.start + lineEnd)
                 {
@@ -360,6 +356,7 @@ int psp2chFavorite(void)
                 }
             }
 			pgPrintMenuBar(menuStr);
+			change = 1;
         }
 		res = psp2chPadSet(s2ch.viewX);
 		if (res != s2ch.viewX || change)

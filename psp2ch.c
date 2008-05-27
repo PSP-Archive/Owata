@@ -145,7 +145,10 @@ int psp2chOwata(void)
     {
         s2ch.tateFlag = 0;
         pgPrintOwata();
+        pgWaitVn(10);
         pgCopy(0, 0);
+        pgWaitVn(10);
+        sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
         pgWaitVn(10);
         s2ch.running = 0;
@@ -165,7 +168,7 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd, int shift, int* change)
 {
     static int keyStart = 0, keyRepeat = 0;
     static clock_t keyTime = 0;
-    int rMenu;
+    int rMenu, start, select;
     int padUp = 0, padDown = 0;
 
 	*change = 0;
@@ -202,7 +205,8 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd, int shift, int* change)
     }
     if (s2ch.pad.Buttons != s2ch.oldPad.Buttons || keyRepeat || padUp || padDown)
     {
-		*change = 1;
+		start = line->start;
+		select = line->select;
         if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
             keyStart = 1;
@@ -293,6 +297,10 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd, int shift, int* change)
                 line->select = line->count - 1;
             }
         }
+		if (start != line->start || select != line->select)
+		{
+			*change = 1;
+		}
     }
     else
     {
