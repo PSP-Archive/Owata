@@ -18,12 +18,12 @@ extern S_2CH s2ch; // psp2chRes.c
 
 TEX tex = {BUF_WIDTH*2, BUF_HEIGHT, BUF_WIDTH*2};
 TEX cur = {32, 32, 32};
-RECT barSrcRectH;
-RECT barSrcRectV;
-RECT menuDstRectH;
-RECT menuDstRectV;
-RECT titleDstRectH;
-RECT titleDstRectV;
+RECT barSrcRectH; // psp2chInit(psp2ch.c)‚Å‰Šú‰»
+RECT barSrcRectV; // psp2chInit(psp2ch.c)‚Å‰Šú‰»
+RECT menuDstRectH; // psp2chInit(psp2ch.c)‚Å‰Šú‰»
+RECT menuDstRectV; // psp2chInit(psp2ch.c)‚Å‰Šú‰»
+RECT titleDstRectH; // psp2chInit(psp2ch.c)‚Å‰Šú‰»
+RECT titleDstRectV; // psp2chInit(psp2ch.c)‚Å‰Šú‰»
 static unsigned char *fontA, *fontJ;
 static int size_fontA, size_fontJ;
 
@@ -382,6 +382,7 @@ void pgCopyRectRotate(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect)
 void pgFillRect(unsigned long color, RECT *rect)
 {
 	int r, g, b, a;
+	// RGBA4444 => RGBA8888‚Ö
 	r = color & 0x0F;
 	g = (color >> 4) & 0x0F;
 	b = (color >> 8) & 0x0F;

@@ -560,17 +560,13 @@ int psp2chImageViewGif(char* fname)
 	‹éŒ`”ÍˆÍ‚ðŠg‘åk¬
 --------------------------------------------------------*/
 #define SLICE_SIZE 64
-void blt(void *src, TEX *tex, RECT *src_rect, double thumb)
+void blt(void *src, TEX *tex, int sw, int sh, int dw, int dh)
 {
-	int i, j, sw, dw, sh, dh, dy;
+	int i, j, dy;
 	struct Vertex *vertices;
 	int* p = src;
 
-	sw = src_rect->right;
-	dw = (double)sw / thumb;
-	sh = src_rect->bottom;
-	dh = (double)sh / thumb;
-	dy = (double)BUF_HEIGHT / thumb;
+	dy = BUF_HEIGHT * dw / sw;
 
 	sceGuStart(GU_DIRECT, list);
 	sceGuDrawBufferList(GU_PSM_8888, framebuffer, BUF_WIDTH);
@@ -579,7 +575,7 @@ void blt(void *src, TEX *tex, RECT *src_rect, double thumb)
     sceGuClear(GU_COLOR_BUFFER_BIT);
 	sceGuTexMode(GU_PSM_8888, 0, 0, GU_FALSE);
 	sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGBA);
-	if (thumb == 1.0)
+	if (sw == dw)
 		sceGuTexFilter(GU_NEAREST, GU_NEAREST);
 	else
 		sceGuTexFilter(GU_LINEAR, GU_LINEAR);
@@ -619,34 +615,34 @@ void blt(void *src, TEX *tex, RECT *src_rect, double thumb)
 		p += tex->tb * BUF_HEIGHT;
 		i++;
 	}
-		for (j = 0; (j + SLICE_SIZE) < sw; j = j + SLICE_SIZE)
-		{
-			sceGuTexImage(0, tex->w, tex->h, tex->tb, p + j);
-			vertices = (struct Vertex *)sceGuGetMemory(2 * sizeof(struct Vertex));
-			vertices[0].u = 0;
-			vertices[0].v = 0;
-			vertices[0].x = j * dw / sw;
-			vertices[0].y = dy * i;
-			vertices[1].u = SLICE_SIZE;
-			vertices[1].v = sh;
-			vertices[1].x = (j + SLICE_SIZE) * dw / sw;
-			vertices[1].y = dy * i + sh * dw / sw;
-			sceGuDrawArray(GU_SPRITES, GU_TEXTURE_16BIT | GU_COLOR_4444 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, NULL, vertices);
-		}
-		if (j < sw)
-		{
-			sceGuTexImage(0, tex->w, tex->h, tex->tb, p + j);
-			vertices = (struct Vertex *)sceGuGetMemory(2 * sizeof(struct Vertex));
-			vertices[0].u = 0;
-			vertices[0].v = 0;
-			vertices[0].x = j * dw / sw;
-			vertices[0].y = dy * i;
-			vertices[1].u = sw - j;
-			vertices[1].v = sh;
-			vertices[1].x = dw;
-			vertices[1].y = dy * i + sh * dw / sw;
-			sceGuDrawArray(GU_SPRITES, GU_TEXTURE_16BIT | GU_COLOR_4444 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, NULL, vertices);
-		}
+	for (j = 0; (j + SLICE_SIZE) < sw; j = j + SLICE_SIZE)
+	{
+		sceGuTexImage(0, tex->w, tex->h, tex->tb, p + j);
+		vertices = (struct Vertex *)sceGuGetMemory(2 * sizeof(struct Vertex));
+		vertices[0].u = 0;
+		vertices[0].v = 0;
+		vertices[0].x = j * dw / sw;
+		vertices[0].y = dy * i;
+		vertices[1].u = SLICE_SIZE;
+		vertices[1].v = sh;
+		vertices[1].x = (j + SLICE_SIZE) * dw / sw;
+		vertices[1].y = dy * i + sh * dw / sw;
+		sceGuDrawArray(GU_SPRITES, GU_TEXTURE_16BIT | GU_COLOR_4444 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, NULL, vertices);
+	}
+	if (j < sw)
+	{
+		sceGuTexImage(0, tex->w, tex->h, tex->tb, p + j);
+		vertices = (struct Vertex *)sceGuGetMemory(2 * sizeof(struct Vertex));
+		vertices[0].u = 0;
+		vertices[0].v = 0;
+		vertices[0].x = j * dw / sw;
+		vertices[0].y = dy * i;
+		vertices[1].u = sw - j;
+		vertices[1].v = sh;
+		vertices[1].x = dw;
+		vertices[1].y = dy * i + sh * dw / sw;
+		sceGuDrawArray(GU_SPRITES, GU_TEXTURE_16BIT | GU_COLOR_4444 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, NULL, vertices);
+	}
 	sceGuFinish();
 	sceGuSync(0, GU_SYNC_FINISH);
 }
@@ -667,7 +663,6 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
     double thumb, thumbW, thumbH;
     int thumbFlag = 0;
     int imgWH, imgHW, startX, startY, width2, height2, sx, sy;
-	RECT srcRect;
 	TEX tex;
 
     startX = 0;
@@ -834,16 +829,12 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
         {
             startY = 0;
         }
-		sx = startX * thumb;
-		sy = startY * thumb;
-		srcRect.left = 0;
-		srcRect.top = 0;
-		srcRect.right = width - sx;
-		srcRect.bottom = height - sy;
+		sx = thumb * startX;
+		sy = thumb * startY;
 		tex.w = width;
 		tex.h = height;
 		tex.tb = width;
-		blt(img[0]+sx+sy*width, &tex, &srcRect, thumb);
+		blt(img[0]+sx+sy*width, &tex, width - sx, height - sy, width2 - startX, height2 - startY);
         if (menu)
         {
             pgCopyMenuBar();
