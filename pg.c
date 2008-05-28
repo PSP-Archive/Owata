@@ -289,6 +289,7 @@ void pgCopyRect(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect)
 	sceGuScissor(dst_rect->left, dst_rect->top, dst_rect->right, dst_rect->bottom);
 	sceGuTexMode(GU_PSM_4444, 0, 0, GU_FALSE);
 	sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGBA);
+	sceGuTexWrap(GU_CLAMP, GU_REPEAT);
 	if (sw == dw && sh == dh)
 		sceGuTexFilter(GU_NEAREST, GU_NEAREST);
 	else
@@ -343,6 +344,7 @@ void pgCopyRectRotate(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect)
 	sceGuScissor(dst_rect->left, dst_rect->top, dst_rect->right, dst_rect->bottom);
 	sceGuTexMode(GU_PSM_4444, 0, 0, GU_FALSE);
 	sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGBA);
+	sceGuTexWrap(GU_CLAMP, GU_REPEAT);
 	if (sw == dh && sh == dw)
 		sceGuTexFilter(GU_NEAREST, GU_NEAREST);
 	else

@@ -65,7 +65,7 @@ void psp2chFavSetMenuString(void)
     sprintf(s2ch.menuFavH.sub, "　%s : 先頭　　%s : 最後　　%s : ソ\ート　　%s : 全板検索　　%s : 一括取得",
             sBtnH[index1], sBtnH[index2], sBtnH[index3], sBtnH[index4], sBtnH[index5]);
     sprintf(s2ch.menuFavItaH.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索",
-            sBtnH[index1], sBtnH[index2], sBtnH[index3]);
+            sBtnH[index1], sBtnH[index2], sBtnH[index4]);
 
     getIndex(s2ch.favV.ok, index1);
     getIndex(s2ch.favV.move, index2);
@@ -85,7 +85,7 @@ void psp2chFavSetMenuString(void)
     sprintf(s2ch.menuFavV.sub, "　%s : 先頭　　%s : 最後　　%s : ソ\ート\n　%s : 全板検索　　%s : 一括取得",
             sBtnV[index1], sBtnV[index2], sBtnV[index3], sBtnV[index4], sBtnH[index5]);
     sprintf(s2ch.menuFavItaV.sub, "　%s : 先頭　　　%s : 最後　　　%s : 全板検索",
-            sBtnV[index1], sBtnV[index2], sBtnV[index3]);
+            sBtnV[index1], sBtnV[index2], sBtnV[index4]);
 }
 
 /**********************
@@ -930,12 +930,12 @@ void psp2chFavSortDialog(void)
                 }
             }
             sceGuStart(GU_DIRECT, list);
-            sceGuClearColor(BLUE);
-            sceGuClearDepth(0);
-            sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
+			sceGuScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
+            sceGuClearColor(0xFFFF0000);
+            sceGuClear(GU_COLOR_BUFFER_BIT);
             s2ch.pgCursorX = 240;
             s2ch.pgCursorY =  77;
-            intraFontSetStyle(jpn0, 1.0f, YELLOW, BLUE, INTRAFONT_ALIGN_CENTER);
+            intraFontSetStyle(jpn0, 1.0f, 0xFF00FFFF, 0xFFFF0000, INTRAFONT_ALIGN_CENTER);
             intraFontPrintUCS2(jpn0, s2ch.pgCursorX, s2ch.pgCursorY, title);
             s2ch.pgCursorX = 240;
             s2ch.pgCursorY += 25;
@@ -943,12 +943,12 @@ void psp2chFavSortDialog(void)
             {
                 if (select == i)
                 {
-                    intraFontSetStyle(jpn0, 0.9f, WHITE, BLACK, INTRAFONT_ALIGN_CENTER);
+                    intraFontSetStyle(jpn0, 0.9f, 0xFFFFFFFF, 0xFF000000, INTRAFONT_ALIGN_CENTER);
                     intraFontPrintUCS2(jpn0, s2ch.pgCursorX, s2ch.pgCursorY, text[i]);
                 }
                 else
                 {
-                    intraFontSetStyle(jpn0, 0.9f, GRAY, 0, INTRAFONT_ALIGN_CENTER);
+                    intraFontSetStyle(jpn0, 0.9f, 0xFFCCCCCC, 0, INTRAFONT_ALIGN_CENTER);
                     intraFontPrintUCS2(jpn0, s2ch.pgCursorX, s2ch.pgCursorY, text[i]);
                 }
                 s2ch.pgCursorX = 240;

@@ -733,12 +733,12 @@ void psp2chThreadSort(void)
                 }
             }
             sceGuStart(GU_DIRECT, list);
-            sceGuClearColor(BLUE);
-            sceGuClearDepth(0);
-            sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
+			sceGuScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
+            sceGuClearColor(0xFFFF0000);
+            sceGuClear(GU_COLOR_BUFFER_BIT);
             s2ch.pgCursorX = 240;
             s2ch.pgCursorY =  77;
-            intraFontSetStyle(jpn0, 1.0f, YELLOW, BLUE, INTRAFONT_ALIGN_CENTER);
+            intraFontSetStyle(jpn0, 1.0f, 0xFF00FFFF, 0xFFFF0000, INTRAFONT_ALIGN_CENTER);
             intraFontPrintUCS2(jpn0, s2ch.pgCursorX, s2ch.pgCursorY, title);
             s2ch.pgCursorX = 240;
             s2ch.pgCursorY += 25;
@@ -746,12 +746,12 @@ void psp2chThreadSort(void)
             {
                 if (select == i)
                 {
-                    intraFontSetStyle(jpn0, 0.9f, WHITE, BLACK, INTRAFONT_ALIGN_CENTER);
+                    intraFontSetStyle(jpn0, 0.9f, 0xFFFFFFFF, 0xFF000000, INTRAFONT_ALIGN_CENTER);
                     intraFontPrintUCS2(jpn0, s2ch.pgCursorX, s2ch.pgCursorY, text[i]);
                 }
                 else
                 {
-                    intraFontSetStyle(jpn0, 0.9f, GRAY, 0, INTRAFONT_ALIGN_CENTER);
+                    intraFontSetStyle(jpn0, 0.9f, 0xFFCCCCCC, 0, INTRAFONT_ALIGN_CENTER);
                     intraFontPrintUCS2(jpn0, s2ch.pgCursorX, s2ch.pgCursorY, text[i]);
                 }
                 s2ch.pgCursorX = 240;

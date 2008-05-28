@@ -50,10 +50,14 @@ void psp2chUrlEncode(char* dst, char* src)
 int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, char* message)
 {
     S_NET net;
-    int ret;
+    int ret, x, y;
     char *encode, *buffer, *str;
     char cookie[128] = {0};
 
+	x = s2ch.viewX;
+	y = s2ch.viewY;
+	s2ch.viewX = 0;
+	s2ch.viewY = 0;
     encode = (char*)malloc(2048*4);
     if (encode == NULL)
     {
@@ -91,6 +95,8 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
     memset(&net, 0, sizeof(S_NET));
     net.body = encode;
     ret = psp2chPost(host, dir, dat, cookie, &net);
+	s2ch.viewX = x;
+	s2ch.viewY = y;
     if (ret < 0)
     {
         free(encode);
@@ -191,7 +197,7 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
     SceUID fd;
     int focus, prefocus, sage, ret = 0;
     char buf[256];
-    char  *str, *p;
+    char  *str, *p, *menuStr = "　○ : 入力　　　× : 戻る　　　△ : 送信";
     int changeFlag = 0;
 
     focus = 0;
@@ -221,7 +227,7 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
     {
         sage = 1;
     }
-    pgPrintMenuBar("　○ : 入力　　　× : 戻る　　　△ : 送信");
+    pgPrintMenuBar(menuStr);
     while (s2ch.running)
     {
         if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
@@ -277,6 +283,7 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
                         psp2chGets(NULL, message, 1024, 32);
                         break;
                     }
+					prefocus = -1;
                 }
                 else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
                 {
@@ -298,6 +305,8 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
                             break;
                         }
                     }
+					pgPrintMenuBar(menuStr);
+					prefocus = -1;
                 }
                 else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
                 {
