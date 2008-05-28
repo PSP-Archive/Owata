@@ -1489,6 +1489,7 @@ int psp2chResList(char* host, char* dir, char* title, int dat)
 		free(resBuffer);
 		resBuffer = NULL;
 		pgPrintMenuBar("DATÇÃì«Ç›çûÇ›Ç…é∏îsÇµÇ‹ÇµÇΩ");
+		pgWaitVn(20);
 		pgCopyMenuBar();
 		sceDisplayWaitVblankStart();
 		framebuffer = sceGuSwapBuffers();
@@ -1697,12 +1698,12 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
 			psp2chErrorDialog(TEXT_10);
 			*/
 			free(net.body);
-			pgWaitVn(40);
 			pgPrintMenuBar("Ç±ÇÃÉXÉåÇÕDATóéÇøÇµÇΩÇÊÇ§Ç≈Ç∑");
+			pgWaitVn(10);
 			pgCopyMenuBar();
 			sceDisplayWaitVblankStart();
 			framebuffer = sceGuSwapBuffers();
-			pgWaitVn(60);
+			pgWaitVn(30);
 			return 1;
 			break;
 		case 304: // Not modified

@@ -211,10 +211,10 @@ int psp2chFavorite(void)
         // ˆêŠ‡Žæ“¾ˆ—(1ƒXƒŒ‚²‚Æ‚É•`‰æ)
         if (update >= 0)
         {
-            change = 1;
             if (update < s2ch.fav.count)
             {
                 s2ch.fav.select = update;
+				psp2chDrawFavorite();
                 if (s2ch.fav.select >= s2ch.fav.start + lineEnd)
                 {
                     s2ch.fav.start = s2ch.fav.select - lineEnd + 1;
@@ -236,11 +236,21 @@ int psp2chFavorite(void)
                 {
                     update = -1;
                 }
+				pgCopy(s2ch.viewX, 0);
+				pgCopyMenuBar();
+				sceDisplayWaitVblankStart();
+				framebuffer = sceGuSwapBuffers();
+				pgCopy(s2ch.viewX, 0);
+				pgCopyMenuBar();
+				sceDisplayWaitVblankStart();
+				framebuffer = sceGuSwapBuffers();
             }
             else
             {
                 update = -1;
                 sceNetApctlDisconnect();
+				pgPrintMenuBar(menuStr);
+				change = 1;
             }
         }
         else if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)

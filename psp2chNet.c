@@ -65,6 +65,7 @@ int psp2chResolve(const char* host, struct in_addr* addr)
 
     sprintf(buf, "  %s のアドレスを解決しています", host);
     pgPrintMenuBar(buf);
+	pgWaitVn(10);
 	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
@@ -92,6 +93,7 @@ int psp2chResolve(const char* host, struct in_addr* addr)
     if(Cat_ResolverURL( host, addr ) < 0 )
     {
         pgPrintMenuBar("  Cat_ResolverURL error");
+		pgWaitVn(10);
 		pgCopyMenuBar();
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
@@ -225,6 +227,7 @@ int psp2chRequest(int mySocket, const char* host, const char* path, const char* 
     }
     sprintf(buf, "  %s (%s)", host, inet_ntoa(addr));
     pgPrintMenuBar(buf);
+	pgWaitVn(10);
 	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
@@ -234,6 +237,7 @@ int psp2chRequest(int mySocket, const char* host, const char* path, const char* 
     sain.sin_addr.s_addr = addr.s_addr;
     sprintf(buf, "  http://%s/%s に接続しています", host, path);
     pgPrintMenuBar(buf);
+	pgWaitVn(10);
 	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
@@ -243,6 +247,7 @@ int psp2chRequest(int mySocket, const char* host, const char* path, const char* 
         return ret;
     }
     pgPrintMenuBar("接続しました");
+	pgWaitVn(10);
 	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
@@ -261,6 +266,7 @@ int psp2chResponse(int mySocket, const char* host, const char* path, S_NET* net)
 
     sprintf(buf, "http://%s/%s からデータを転送しています...", host, path);
     pgPrintMenuBar(buf);
+	pgWaitVn(10);
 	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
@@ -289,6 +295,7 @@ int psp2chResponse(int mySocket, const char* host, const char* path, S_NET* net)
     net->body[size] = '\0';
     sprintf(buf, "完了");
     pgPrintMenuBar(buf);
+	pgWaitVn(10);
 	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
@@ -323,6 +330,7 @@ int psp2chGetStatusLine(int mySocket)
     } while (in != '\n');
     incomingBuffer[i] = '\0';
     pgPrintMenuBar(incomingBuffer);
+	pgWaitVn(10);
 	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
@@ -438,6 +446,7 @@ int connect_to_apctl(int config)
     }
 
     pgPrintMenuBar("  Connecting...");
+	pgWaitVn(10);
 	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
@@ -465,6 +474,7 @@ int connect_to_apctl(int config)
             break;  // connected with static IP
         }
         pgPrintMenuBar(buf);
+		pgWaitVn(10);
 		pgCopyMenuBar();
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
@@ -482,6 +492,7 @@ int connect_to_apctl(int config)
         pgPrintMenuBar("  接続しました。");
         Cat_ResolverInitEngine();
     }
+	pgWaitVn(10);
 	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
@@ -523,8 +534,9 @@ int psp2chApConnect(void)
         return 0;
     }
     pgPrintMenuBar("接続の設定を検索しています...");
+	pgWaitVn(10);
 	pgCopyMenuBar();
-    pgWaitVn(2);
+    sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
     for (i = 1; i < 100; i++) // skip the 0th connection
     {
@@ -543,8 +555,14 @@ int psp2chApConnect(void)
         // 返り値 < 0 : エラー
         // 返り値 = 0 : 接続した
         // 返り値 > 0 : キャンセルされた
-        return Cat_NetworkConnect( draw_callback, screen_update_callback, 0 );
+        i = Cat_NetworkConnect( draw_callback, screen_update_callback, 0 );
         // 全部0なのかな？？？
     }
-    return -1;
+	pgCopy(s2ch.viewX, s2ch.viewY);
+    sceDisplayWaitVblankStart();
+    framebuffer = sceGuSwapBuffers();
+	pgCopy(s2ch.viewX, s2ch.viewY);
+    sceDisplayWaitVblankStart();
+    framebuffer = sceGuSwapBuffers();
+    return i;
 }
