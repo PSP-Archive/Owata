@@ -61,7 +61,7 @@ void pgFontLoad(void);
 void pgWaitV();
 void pgWaitVn(unsigned long count);
 unsigned short* pgGetVramAddr(unsigned long x,unsigned long y, int w);
-void pgFillvram(int color, int x1, int y1, int w, int h, int wide);
+void pgFillvram(unsigned short color, int x1, int y1, int w, int h, int wide);
 void pgFillRect(unsigned long color, RECT *rect);
 void pgPrintTitleBar(char* ita, char* title);
 void pgCopyTitleBar(void);

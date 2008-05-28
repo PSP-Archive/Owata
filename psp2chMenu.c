@@ -103,6 +103,7 @@ int psp2chMenu(void)
     {
         menuStr = s2ch.menuWinH.main;
     }
+	psp2chDrawMenu((char**)menuList, menu, startX, startY, scrX, scrY);
 	pgPrintMenuBar(menuStr);
     while (s2ch.running)
     {
@@ -135,6 +136,7 @@ int psp2chMenu(void)
                     framebuffer = sceGuSwapBuffers();
                     pgCopy(s2ch.viewX, s2ch.viewY);
                     printBuf = winPixels;
+					change = 1;
                 }
                 else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinH.esc) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinV.esc))
                 {
@@ -145,10 +147,11 @@ int psp2chMenu(void)
 			if (change)
 			{
 				psp2chDrawMenu((char**)menuList, menu, startX, startY, scrX, scrY);
+				pgPrintMenuBar(menuStr);
 			}
         }
         pgCopyWindow(0, startX, startY, scrX, scrY);
-        pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
+		pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
         pgCopyMenuBar();
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
@@ -192,6 +195,16 @@ void psp2chMenuNG(void)
     framebuffer = sceGuSwapBuffers();
     pgCopy(s2ch.viewX, s2ch.viewY);
     printBuf = winPixels;
+    if (s2ch.tateFlag)
+    {
+        menuStr = s2ch.menuWinV.main;
+    }
+    else
+    {
+        menuStr = s2ch.menuWinH.main;
+    }
+	psp2chDrawMenu((char**)menuList, menu, startX, startY, scrX, scrY);
+	pgPrintMenuBar(menuStr);
     while (s2ch.running)
     {
         if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
@@ -249,30 +262,24 @@ void psp2chMenuNG(void)
                     framebuffer = sceGuSwapBuffers();
                     pgCopy(s2ch.viewX, s2ch.viewY);
                     printBuf = winPixels;
+					change = 1;
                 }
                 else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinH.esc) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinV.esc))
                 {
                     break;
                 }
             }
-            if (s2ch.tateFlag)
-            {
-                menuStr = s2ch.menuWinV.main;
-            }
-            else
-            {
-                menuStr = s2ch.menuWinH.main;
-            }
 			if (change)
 			{
 	            psp2chDrawMenu((char**)menuList, menu, startX, startY, scrX, scrY);
+				pgPrintMenuBar(menuStr);
 			}
-            pgCopyWindow(0, startX, startY, scrX, scrY);
-            pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
-            pgCopyMenuBar();
-            sceDisplayWaitVblankStart();
-            framebuffer = sceGuSwapBuffers();
         }
+        pgCopyWindow(0, startX, startY, scrX, scrY);
+        pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
+        pgCopyMenuBar();
+        sceDisplayWaitVblankStart();
+        framebuffer = sceGuSwapBuffers();
     }
 }
 
@@ -381,6 +388,16 @@ int psp2chNGDel(const char* file)
         p = q + 1;
     }
     sprintf(path, "%s/%s/%s", s2ch.cwDir, s2ch.logDir, file);
+    if (s2ch.tateFlag)
+    {
+        menuStr = s2ch.menuNGV.main;
+    }
+    else
+    {
+        menuStr = s2ch.menuNGH.main;
+    }
+	psp2chDrawMenu(list, menu, startX, startY, scrX, scrY);
+	pgPrintMenuBar(menuStr);
     while (s2ch.running)
     {
         if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
@@ -417,25 +434,18 @@ int psp2chNGDel(const char* file)
                         list[i] = list[i + 1];
                     }
                 }
-            }
-            if (s2ch.tateFlag)
-            {
-                menuStr = s2ch.menuNGV.main;
-            }
-            else
-            {
-                menuStr = s2ch.menuNGH.main;
+				change = 1;
             }
 			if (change)
 			{
 				psp2chDrawMenu(list, menu, startX, startY, scrX, scrY);
 			}
-            pgCopyWindow(0, startX, startY, scrX, scrY);
-            pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
-            pgCopyMenuBar();
-            sceDisplayWaitVblankStart();
-            framebuffer = sceGuSwapBuffers();
         }
+        pgCopyWindow(0, startX, startY, scrX, scrY);
+        pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
+        pgCopyMenuBar();
+        sceDisplayWaitVblankStart();
+        framebuffer = sceGuSwapBuffers();
     }
     free(list);
     free(buf);
@@ -461,10 +471,11 @@ int psp2chNGAdd(const char* file, char* val)
     sceIoWrite(fd, "\n", 1);
     sceIoClose(fd);
     pgPrintMenuBar("“o˜^‚µ‚Ü‚µ‚½");
+    pgWaitVn(10);
 	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
-    pgWaitVn(60);
+    pgWaitVn(50);
     psp2chResCheckNG();
     return 0;
 }
@@ -536,6 +547,16 @@ void psp2chMenuFont(void)
     {
         menu.start = menu.select - MENU_FONT_ITEM + 1;
     }
+    if (s2ch.tateFlag)
+    {
+        menuStr = s2ch.menuWinV.main;
+    }
+    else
+    {
+        menuStr = s2ch.menuWinH.main;
+    }
+	psp2chDrawMenu((char**)menuList, menu, startX, startY, scrX, scrY);
+    pgPrintMenuBar(menuStr);
     while (s2ch.running)
     {
         if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
@@ -585,19 +606,12 @@ void psp2chMenuFont(void)
                     framebuffer = sceGuSwapBuffers();
                     pgCopy(s2ch.viewX, s2ch.viewY);
                     printBuf = winPixels;
+					change = 1;
                 }
                 else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinH.esc) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinV.esc))
                 {
                     break;
                 }
-            }
-            if (s2ch.tateFlag)
-            {
-                menuStr = s2ch.menuWinV.main;
-            }
-            else
-            {
-                menuStr = s2ch.menuWinH.main;
             }
 			if (change)
 			{
@@ -605,7 +619,6 @@ void psp2chMenuFont(void)
 			}
             pgCopyWindow(0, startX, startY, scrX, scrY);
             pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
-            pgPrintMenuBar(menuStr);
 			pgCopyMenuBar();
             sceDisplayWaitVblankStart();
             framebuffer = sceGuSwapBuffers();
@@ -704,6 +717,16 @@ int psp2chMenuColor(void)
     {
         menu.start = menu.select - MENU_COLOR_ITEM + 1;
     }
+    if (s2ch.tateFlag)
+    {
+        menuStr = s2ch.menuWinV.main;
+    }
+    else
+    {
+        menuStr = s2ch.menuWinH.main;
+    }
+	psp2chDrawMenu((char**)menuList, menu, startX, startY, scrX, scrY);
+    pgPrintMenuBar(menuStr);
     while (s2ch.running)
     {
         if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
@@ -722,31 +745,23 @@ int psp2chMenuColor(void)
                     {
                         psp2chIniSetColor(menuList[menu.select]);
                     }
+					change = 1;
                 }
                 else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinH.esc) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinV.esc))
                 {
                     break;
                 }
             }
-            if (s2ch.tateFlag)
-            {
-                menuStr = s2ch.menuWinV.main;
-            }
-            else
-            {
-                menuStr = s2ch.menuWinH.main;
-            }
 			if (change)
 			{
 	            psp2chDrawMenu((char**)menuList, menu, startX, startY, scrX, scrY);
 			}
-            pgCopyWindow(0, startX, startY, scrX, scrY);
-            pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
-            pgPrintMenuBar(menuStr);
-			pgCopyMenuBar();
-            sceDisplayWaitVblankStart();
-            framebuffer = sceGuSwapBuffers();
         }
+        pgCopyWindow(0, startX, startY, scrX, scrY);
+        pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
+		pgCopyMenuBar();
+        sceDisplayWaitVblankStart();
+        framebuffer = sceGuSwapBuffers();
     }
     for (i = 1; i < menu.count; i++)
     {

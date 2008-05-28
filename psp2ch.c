@@ -623,25 +623,23 @@ int psp2chInputDialog(const unsigned short* text1, char* text2)
                     break;
                 }
             }
-            sceGuStart(GU_DIRECT, list);
-            sceGuClearDepth(0);
-            sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
-            pgFillvram(BLUE, 70, 60, 340, 45, 2);
             pgEditBox(WHITE, 140, 85, 340, 100);
             s2ch.pgCursorX = 142;
             s2ch.pgCursorY =  87;
             pgPrint(keyWords, BLACK, WHITE, 340);
-            pgCopy(0, 0);
-			pgCopyMenuBar();
-            s2ch.pgCursorX = 240;
-            s2ch.pgCursorY =  77;
-            intraFontSetStyle(jpn0, 1.0f, YELLOW, 0, INTRAFONT_ALIGN_CENTER);
-            intraFontPrintUCS2(jpn0, s2ch.pgCursorX, s2ch.pgCursorY, text1);
+			pgCopy(0, 0);
+            sceGuStart(GU_DIRECT, list);
+			sceGuScissor(70, 60, 410, 81);
+			sceGuClearColor(0xFFFF0000);
+			sceGuClear(GU_COLOR_BUFFER_BIT);
+            intraFontSetStyle(jpn0, 1.0f, 0xFF00FFFF, 0, INTRAFONT_ALIGN_CENTER);
+            intraFontPrintUCS2(jpn0, 240, 77, text1);
             sceGuFinish();
             sceGuSync(0,0);
+			pgCopyMenuBar();
+			sceDisplayWaitVblankStart();
+			framebuffer = sceGuSwapBuffers();
         }
-        sceDisplayWaitVblankStart();
-        framebuffer = sceGuSwapBuffers();
     }
     s2ch.tateFlag = temp;
     return 0;

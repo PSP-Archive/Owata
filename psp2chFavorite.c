@@ -215,6 +215,14 @@ int psp2chFavorite(void)
             {
                 s2ch.fav.select = update;
 				psp2chDrawFavorite();
+				pgCopy(s2ch.viewX, 0);
+				pgCopyMenuBar();
+				sceDisplayWaitVblankStart();
+				framebuffer = sceGuSwapBuffers();
+				pgCopy(s2ch.viewX, 0);
+				pgCopyMenuBar();
+				sceDisplayWaitVblankStart();
+				framebuffer = sceGuSwapBuffers();
                 if (s2ch.fav.select >= s2ch.fav.start + lineEnd)
                 {
                     s2ch.fav.start = s2ch.fav.select - lineEnd + 1;
@@ -236,14 +244,6 @@ int psp2chFavorite(void)
                 {
                     update = -1;
                 }
-				pgCopy(s2ch.viewX, 0);
-				pgCopyMenuBar();
-				sceDisplayWaitVblankStart();
-				framebuffer = sceGuSwapBuffers();
-				pgCopy(s2ch.viewX, 0);
-				pgCopyMenuBar();
-				sceDisplayWaitVblankStart();
-				framebuffer = sceGuSwapBuffers();
             }
             else
             {

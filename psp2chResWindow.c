@@ -266,6 +266,7 @@ void psp2chResAnchor(int anc)
                     preLine = -2;
                     return;
                 }
+				change = 1;
             }
 			if (change)
 			{

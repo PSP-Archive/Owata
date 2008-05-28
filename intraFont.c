@@ -883,9 +883,9 @@ float intraFontPrintUCS2(intraFont *font, float x, float y, const unsigned short
 	sceKernelDcacheWritebackAll();
 	if (!(font->options & INTRAFONT_ACTIVE)) intraFontActivate(font);
 	
-	sceGuDisable(GU_DEPTH_TEST);
+	//sceGuDisable(GU_DEPTH_TEST);
 	sceGuDrawArray(GU_SPRITES, GU_TEXTURE_32BITF|GU_COLOR_8888|GU_VERTEX_32BITF|GU_TRANSFORM_2D, (n_glyphs+n_sglyphs)<<1, 0, v);
-	sceGuEnable(GU_DEPTH_TEST);
+	//sceGuEnable(GU_DEPTH_TEST);
 	
 	return left+width;
 }

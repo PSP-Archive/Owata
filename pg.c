@@ -251,7 +251,7 @@ unsigned short* pgGetVramAddr(unsigned long x,unsigned long y, int w)
 /*****************************
 左上座標x1,y1、幅、高さw,h、色colorで四角形を塗りつぶす
 *****************************/
-void pgFillvram(int color, int x1, int y1, int w, int h, int wide)
+void pgFillvram(unsigned short color, int x1, int y1, int w, int h, int wide)
 {
 	unsigned short *vptr0;		 //pointer to vram
 	unsigned short *vptr;
@@ -644,23 +644,23 @@ void pgWindowFrame(int x1, int y1, int x2, int y2)
 	}
 	vptr0 = (unsigned int*)(framebuffer + 0x04000000) + y1 * BUF_WIDTH;
 	for (j = x1; j < x2; j++) {
-		vptr0[j] = RGB(0x99, 0x99, 0x99);
+		vptr0[j] = RGB8888(0x99, 0x99, 0x99, 0xFF);
 	}
 	vptr0 += BUF_WIDTH;
-	vptr0[x1+0] = RGB(0x99, 0x99, 0x99);
+	vptr0[x1+0] = RGB8888(0x99, 0x99, 0x99, 0xFF);
 	for (j = x1+1; j < x2-1; j++) {
-		vptr0[j] = RGB(0x33, 0x33, 0x33);
+		vptr0[j] = RGB8888(0x33, 0x33, 0x33, 0xFF);
 	}
-	vptr0[x2-1] = RGB(0x99, 0x99, 0x99);
+	vptr0[x2-1] = RGB8888(0x99, 0x99, 0x99, 0xFF);
 	for (i = y1+2; i < y2-1; i++) {
 		vptr0 += BUF_WIDTH;
-		vptr0[x1+0] = RGB(0x99, 0x99, 0x99);
-		vptr0[x1+1] = RGB(0x33, 0x33, 0x33);
-		vptr0[x2-1] = RGB(0x99, 0x99, 0x99);
+		vptr0[x1+0] = RGB8888(0x99, 0x99, 0x99, 0xFF);
+		vptr0[x1+1] = RGB8888(0x33, 0x33, 0x33, 0xFF);
+		vptr0[x2-1] = RGB8888(0x99, 0x99, 0x99, 0xFF);
 	}
 	vptr0 += BUF_WIDTH;
 	for (j = x1; j < x2; j++) {
-		vptr0[j] = RGB(0x99, 0x99, 0x99);
+		vptr0[j] = RGB8888(0x99, 0x99, 0x99, 0xFF);
 	}
 }
 
