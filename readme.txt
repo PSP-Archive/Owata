@@ -26,6 +26,9 @@ CFW‚ÌƒŠƒJƒoƒŠ[ƒƒjƒ…[‚©‚çGAMEƒtƒHƒ‹ƒ_‚ª3.xxƒJ[ƒlƒ‹‚Å“®ì‚·‚é‚æ‚¤‚ÉÝ’è‚µ‚Ä‰º‚
 colorƒtƒHƒ‹ƒ_“à‚É•¡”‚ÌÝ’èƒtƒ@ƒCƒ‹‚ð’u‚­‚ÆSTARTƒƒjƒ…[‚Å•ÏX‚Å‚«‚Ü‚·B
 "color.ini"ƒtƒ@ƒCƒ‹‚ª‹N“®Žž‚É“Ç‚Ýž‚Ü‚ê‚éƒJƒ‰[Ý’èƒtƒ@ƒCƒ‹‚É‚È‚è‚Ü‚·B
 ‘¼‚Ìƒtƒ@ƒCƒ‹‚Í”CˆÓ‚Ìƒtƒ@ƒCƒ‹–¼‚ÅOK‚Å‚·iŠg’£Žq‚à‰½‚Å‚à‚¢‚¢‚Å‚·A‚È‚­‚Ä‚à‰ÂjB
+*
+ƒo[ƒWƒ‡ƒ“0.7.2‚©‚çƒJƒ‰[Ý’èƒtƒ@ƒCƒ‹‚ÌŽd—l‚ª•Ï‚í‚è‚Ü‚µ‚½B
+0xFFBBGGRR(32bits) => 0xABGR(16bits)
 
 œŽ©•ª‚ÅƒtƒHƒ“ƒg‚ð’Ç‰Á‚·‚éê‡
 ƒtƒHƒ“ƒgƒtƒ@ƒCƒ‹‚ÍƒVƒ“ƒOƒ‹ƒoƒCƒg—p‚Æƒ}ƒ‹ƒ`ƒoƒCƒg—p‚Ì2Ží—Þ•K—v‚Å‚·B
@@ -162,10 +165,12 @@ sofiya”L‚³‚ñ:libCat‚ÅƒlƒbƒgŠÖ˜A‚Ì•s‹ï‡‚ª‰ðÁ‚Å‚«‚Ü‚µ‚½B
 
 =======================================================================
 œXV—š—ð
-2008/04/  ver0.7.2
+2008/06/  ver0.7.2
 EBMP‰æ‘œi24ƒrƒbƒgA32ƒrƒbƒgA”ñˆ³kj‚É‘Î‰žB
 E–îˆóˆÚ“®‚ÌØ‚è‘Ö‚¦‚ðƒVƒtƒgƒL[+ƒy[ƒWƒXƒNƒ[ƒ‹ƒL[‚É•ÏXB
 EGIF‰æ‘œ‚É‘Î‰žB
+EVRAM’¼Ú‘‚«ž‚Ý‚©‚çlibpspgu‚ðŽg‚Á‚½ˆ—‚É•ÏXB
+Ecolor.ini‚ÌŽd—l•ÏXB
 2008/04/07  ver0.7.1
 E‰æ–Ê•‚ÅÜ‚è•Ô‚³‚È‚¢ƒ‚[ƒhiƒƒCƒhj’Ç‰ÁB
 EƒƒCƒhƒ‚[ƒh‚Å‚ÍƒAƒiƒƒOƒpƒbƒh‚Å‰¡ƒXƒNƒ[ƒ‹B

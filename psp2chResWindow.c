@@ -385,6 +385,7 @@ void psp2chIdAnchor(int anc)
                     preLine = -2;
                     return;
                 }
+				change = 1;
             }
 			if (change)
 			{

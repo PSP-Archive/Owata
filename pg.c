@@ -27,7 +27,7 @@ RECT titleDstRectV; // psp2chInit(psp2ch.c)Ç≈èâä˙âª
 static unsigned char *fontA, *fontJ;
 static int size_fontA, size_fontJ;
 
-unsigned int __attribute__((aligned(16))) list[512*512];
+unsigned int   __attribute__((aligned(16))) list[512*512];
 unsigned short __attribute__((aligned(16))) winPixels[BUF_WIDTH*BUF_HEIGHT*2];
 unsigned short __attribute__((aligned(16))) pixels[BUF_WIDTH*BUF_HEIGHT*2];
 unsigned short __attribute__((aligned(16))) barPixels[BUF_WIDTH*32*2];

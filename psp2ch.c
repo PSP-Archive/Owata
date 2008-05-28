@@ -203,10 +203,40 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd, int shift, int* change)
     {
         rMenu = 0;
     }
-    if (s2ch.pad.Buttons != s2ch.oldPad.Buttons || keyRepeat || padUp || padDown)
+	start = line->start;
+	select = line->select;
+	if (padUp)
+	{
+        line->select--;
+		if (line->start)
+		{
+			line->start--;
+		}
+		else
+		{
+            if (line->select < 0)
+            {
+                line->select = 0;
+            }
+		}
+	}
+	else if (padDown)
+	{
+        line->select++;
+		if (line->start <= (line->count - lineEnd))
+		{
+			line->start++;
+		}
+		else
+		{
+            if (line->select >= line->count)
+            {
+                line->select = line->count -1;
+            }
+		}
+	}
+    if (s2ch.pad.Buttons != s2ch.oldPad.Buttons || keyRepeat)
     {
-		start = line->start;
-		select = line->select;
         if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
             keyStart = 1;
@@ -217,7 +247,7 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd, int shift, int* change)
         }
         keyTime = clock();
         keyRepeat = 0;
-        if((s2ch.pad.Buttons & s2ch.listH.up && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.listV.up && s2ch.tateFlag) || padUp)
+        if((s2ch.pad.Buttons & s2ch.listH.up && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.listV.up && s2ch.tateFlag))
         {
             line->select--;
             if (line->select < 0)
@@ -229,7 +259,7 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd, int shift, int* change)
                 line->start = line->select;
             }
         }
-        if((s2ch.pad.Buttons & s2ch.listH.down && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.listV.down && s2ch.tateFlag) || padDown)
+        if((s2ch.pad.Buttons & s2ch.listH.down && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.listV.down && s2ch.tateFlag))
         {
             line->select++;
             if (line->select >= line->count)
@@ -277,7 +307,7 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd, int shift, int* change)
                 line->select = line->count -1;
             }
         }
-        if((s2ch.pad.Buttons & s2ch.listH.top && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.listV.top && s2ch.tateFlag) || padUp)
+        if((s2ch.pad.Buttons & s2ch.listH.top && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.listV.top && s2ch.tateFlag))
         {
             if (rMenu && !padUp)
             {
@@ -285,7 +315,7 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd, int shift, int* change)
                 line->select = 0;
             }
         }
-        if((s2ch.pad.Buttons & s2ch.listH.end && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.listV.end && s2ch.tateFlag) || padDown)
+        if((s2ch.pad.Buttons & s2ch.listH.end && !s2ch.tateFlag) || (s2ch.pad.Buttons & s2ch.listV.end && s2ch.tateFlag))
         {
             if (rMenu && !padDown)
             {
@@ -297,10 +327,6 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd, int shift, int* change)
                 line->select = line->count - 1;
             }
         }
-		if (start != line->start || select != line->select)
-		{
-			*change = 1;
-		}
     }
     else
     {
@@ -319,6 +345,10 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd, int shift, int* change)
             }
         }
     }
+	if (start != line->start || select != line->select)
+	{
+		*change = 1;
+	}
     return rMenu;
 }
 

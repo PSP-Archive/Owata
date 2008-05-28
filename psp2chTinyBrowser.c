@@ -213,6 +213,7 @@ int psp2chTinyBrowser(char* path)
                     sceIoRemove(path);
                     break;
                 }
+				change = 1;
             }
 			if (change)
 			{
