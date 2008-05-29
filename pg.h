@@ -17,7 +17,6 @@
 #define ZBUF_SIZE (BUF_WIDTH * BUF_HEIGHT)
 #define RGB(r,g,b) (0xF000|(((b>>4) & 0xF)<<8)|(((g>>4) & 0xF)<<4)|((r>>4) & 0xF))
 //#define RGB(r,g,b) (0x8000|(((b>>3) & 0x1F)<<10)|(((g>>3) & 0x1F)<<5)|((r>>3) & 0x1F))
-#define RGB8888(r,g,b,a) ((a)<<24|(b)<<16|(g)<<8|(r))
 #define WHITE RGB(255,255,255)
 #define BLACK RGB(0,0,0)
 #define RED RGB(255,0,0)

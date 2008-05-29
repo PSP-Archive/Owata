@@ -571,10 +571,11 @@ void blt(void *src, TEX *tex, int sw, int sh, int dw, int dh)
 	sceGuStart(GU_DIRECT, list);
 	sceGuDrawBufferList(GU_PSM_8888, framebuffer, BUF_WIDTH);
 	sceGuScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
-	sceGuClearColor(RGB8888(128,128,128,255));
+	sceGuClearColor(GU_RGBA(128,128,128,255));
     sceGuClear(GU_COLOR_BUFFER_BIT);
 	sceGuTexMode(GU_PSM_8888, 0, 0, GU_FALSE);
 	sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGBA);
+	sceGuTexWrap(GU_CLAMP, GU_CLAMP);
 	if (sw == dw)
 		sceGuTexFilter(GU_NEAREST, GU_NEAREST);
 	else
@@ -626,7 +627,7 @@ void blt(void *src, TEX *tex, int sw, int sh, int dw, int dh)
 		vertices[1].u = SLICE_SIZE;
 		vertices[1].v = sh;
 		vertices[1].x = (j + SLICE_SIZE) * dw / sw;
-		vertices[1].y = dy * i + sh * dw / sw;
+		vertices[1].y = dh;
 		sceGuDrawArray(GU_SPRITES, GU_TEXTURE_16BIT | GU_COLOR_4444 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, NULL, vertices);
 	}
 	if (j < sw)
@@ -640,7 +641,7 @@ void blt(void *src, TEX *tex, int sw, int sh, int dw, int dh)
 		vertices[1].u = sw - j;
 		vertices[1].v = sh;
 		vertices[1].x = dw;
-		vertices[1].y = dy * i + sh * dw / sw;
+		vertices[1].y = dh;
 		sceGuDrawArray(GU_SPRITES, GU_TEXTURE_16BIT | GU_COLOR_4444 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, NULL, vertices);
 	}
 	sceGuFinish();
@@ -831,8 +832,8 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
         }
 		sx = thumb * startX;
 		sy = thumb * startY;
-		tex.w = width;
-		tex.h = height;
+		tex.w = BUF_WIDTH;
+		tex.h = BUF_HEIGHT;
 		tex.tb = width;
 		blt(img[0]+sx+sy*width, &tex, width - sx, height - sy, width2 - startX, height2 - startY);
         if (menu)

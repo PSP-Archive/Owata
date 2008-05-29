@@ -837,8 +837,11 @@ int psp2chResCursorMove(int totalLine, int lineEnd, int* cursorX, int* cursorY, 
 				s2ch.res.start = totalLine - lineEnd;
 			}
 		}
+		// レスを描画
 		psp2chDrawRes(s2ch.res.start);
+		// カーソルモードに対応したアンカー情報をセット
 		psp2chResSetAnchorList(lineEnd, cursorPosition);
+		// 上下キーでアンカー移動
 		if (cursorMode && (!rMenu || positionFlag))
 		{
 			line = *cursorY / LINE_PITCH + s2ch.res.start;
@@ -1743,7 +1746,9 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
 		return fd;
 	}
 	sceIoWrite(fd, net.head.Last_Modified, strlen(net.head.Last_Modified));
+    sceIoWrite(fd, "\n", 1);
 	sceIoWrite(fd, net.head.ETag, strlen(net.head.ETag));
+    sceIoWrite(fd, "\n", 1);
 	sprintf(buf, "%d\n%d\n%d\n", range, startRes, startLine);
 	sceIoWrite(fd, buf, strlen(buf));
 	sceIoClose(fd);

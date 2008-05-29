@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <malloc.h>
+#include <string.h>
 #include "psp2ch.h"
 #include "pg.h"
 #include "psp2chTinyBrowser.h"
@@ -18,7 +19,7 @@ extern unsigned int* printBuf; // pg.c
 /**************
 HTML表示
 ***************/
-int psp2chTinyBrowser(char* path)
+int psp2chTinyBrowser(char* path, char* mime)
 {
     SceUID fd;
     SceIoStat st;
@@ -28,7 +29,7 @@ int psp2chTinyBrowser(char* path)
     S_SCROLLBAR bar;
     int startX, startY, scrX, scrY, lineEnd, barW, count;
     char menu[128];
-    char* p;
+    char *p, *ext;
     char** line;
     char* codeStr[] = {"SJIS", "EUC", "UTF-8"};
     int code = 0;
@@ -93,7 +94,26 @@ int psp2chTinyBrowser(char* path)
         bar.w = RES_BAR_WIDTH;
         bar.h = RES_A_HEIGHT;
     }
-    psp2chRenderHtml(txt, bck, code);
+	if (mime == NULL)
+	{
+		mime = "text/html";
+		ext = strrchr(path, '.');
+		if (ext)
+		{
+			if (strstr(ext, "htm") == NULL)
+			{
+				mime = "text/plain";
+			}
+		}
+	}
+	if (stricmp(mime, "text/html") == 0)
+	{
+	    psp2chRenderHtml(txt, bck, code);
+	}
+	else
+	{
+		strcpy(txt, bck);
+	}
 /*
     fd = sceIoOpen("log.txt", PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
     if (fd >= 0)
@@ -137,6 +157,9 @@ int psp2chTinyBrowser(char* path)
     html.start = 0;
     html.select = 0;
     printBuf = winPixels;
+	psp2chDrawHtml(line[html.start], html, code);
+	sprintf(menu, "　○ : コード(%s)　　× : 戻る　　□ : 削除", codeStr[code]);
+	pgPrintMenuBar(menu);
     while (s2ch.running)
     {
         if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))

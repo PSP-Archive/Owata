@@ -90,10 +90,6 @@ int psp2chThread(int retSel)
     static int ret = 0;
     int lineEnd, rMenu, change, res;
 
-    if (ret == 0)
-    {
-        ret = retSel;
-    }
     if (s2ch.tateFlag)
     {
         lineEnd = DRAW_LINE_V;
@@ -101,6 +97,11 @@ int psp2chThread(int retSel)
     else
     {
         lineEnd = DRAW_LINE_H;
+    }
+    if (ret == 0)
+    {
+        ret = retSel;
+	    psp2chDrawThread();
     }
     if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
     {
@@ -513,7 +514,9 @@ int psp2chGetSubject(int ita)
         return fd;
     }
     sceIoWrite(fd, net.head.Last_Modified, strlen(net.head.Last_Modified));
+    sceIoWrite(fd, "\n", 1);
     sceIoWrite(fd, net.head.ETag, strlen(net.head.ETag));
+    sceIoWrite(fd, "\n", 1);
     sceIoWrite(fd, net.body, net.length);
     sceIoClose(fd);
     free(net.body);

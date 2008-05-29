@@ -368,14 +368,14 @@ int psp2chGetHttpHeaders(int mySocket, S_NET* net, char* cookie)
         i++;
         if (in == '\n')
         {
-            incomingBuffer[i] = 0;
             if (incomingBuffer[0] == '\n')  // End of headers
             {
                 break;
             }
+            incomingBuffer[i - 1] = 0;
             if (strstr(incomingBuffer, "Content-Length:"))
             {
-                sscanf(incomingBuffer, "Content-Length: %d\n", &contentLength);
+                sscanf(incomingBuffer, "Content-Length: %d", &contentLength);
                 net->head.Content_Length = contentLength;
             }
             else if (strstr(incomingBuffer, "Content-Type:"))

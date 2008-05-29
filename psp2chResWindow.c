@@ -222,6 +222,7 @@ void psp2chResAnchor(int anc)
     anchor.select = 0;
     printBuf = winPixels;
     drawLine = anchor.select;
+	psp2chDrawResAnchor(a, anchor, 3);
     pgPrintMenuBar("　× : 戻る　　　");
     while (s2ch.running)
     {
@@ -348,6 +349,7 @@ void psp2chIdAnchor(int anc)
     anchor.select = 0;
     printBuf = winPixels;
     drawLine = anchor.select;
+	psp2chDrawResAnchor(a, anchor, 3);
     pgPrintMenuBar("　× : 戻る　　　");
     while (s2ch.running)
     {
@@ -482,7 +484,7 @@ int psp2chUrlAnchor(int anchor, int offset)
         }
         else
         {
-            psp2chTinyBrowser(path);
+            psp2chTinyBrowser(path, NULL);
         }
         return 0;
     }
@@ -546,7 +548,7 @@ int psp2chUrlAnchor(int anchor, int offset)
     }
     else
     {
-        psp2chTinyBrowser(path);
+		psp2chTinyBrowser(path, net.head.Content_Type);
     }
     return 0;
 }
@@ -594,6 +596,11 @@ int psp2chImepita(int anchor, int offset)
             sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
             return 0;
         }
+		if (psp2chImageViewBmp(file) == 0)
+		{
+			sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+			return 0;
+		}
         return -1;
     }
     ret = psp2chGet(s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path, "", cookie, &net);
@@ -656,6 +663,11 @@ int psp2chImepita(int anchor, int offset)
         return 0;
     }
     if (psp2chImageViewGif(file) == 0)
+    {
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        return 0;
+    }
+    if (psp2chImageViewBmp(file) == 0)
     {
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         return 0;
