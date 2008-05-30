@@ -338,7 +338,7 @@ int psp2chCursorSet(S_2CH_SCREEN* line, int lineEnd, int shift, int* change)
         }
         else
         {
-            if (clock() - keyTime > 5000)
+            if (clock() - keyTime > 1000)
             {
                 keyRepeat = 1;
             }

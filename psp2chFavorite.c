@@ -98,116 +98,92 @@ int psp2chFavorite(void)
     int lineEnd, rMenu;
     int i, res, change = 0;
 
-    if (s2ch.favList == NULL)
-    {
-        psp2chLoadFavorite();
-    }
-    if (s2ch.favItaList == NULL)
-    {
-        psp2chLoadFavoriteIta();
-    }
-    if (s2ch.favList == NULL && s2ch.favItaList == NULL)
-    {
-        s2ch.sel = 2;
-        return -1;
-    }
-    if (focus < 0)
-    {
-        if (s2ch.favList && s2ch.cfg.favSelect == 0)
-        {
-            focus = s2ch.cfg.favSelect;
-        }
-        else if (s2ch.favItaList && s2ch.cfg.favSelect == 1)
-        {
-            focus = s2ch.cfg.favSelect;
-        }
-        else
-        {
-            focus = 1;
-        }
-    }
-    if (s2ch.tateFlag)
-    {
-        lineEnd = DRAW_LINE_V;
-    }
-    else
-    {
-        lineEnd = DRAW_LINE_H;
-    }
     if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
     {
-        if (s2ch.tateFlag)
-        {
+		if (s2ch.favList == NULL)
+		{
+			psp2chLoadFavorite();
+		}
+		if (s2ch.favItaList == NULL)
+		{
+			psp2chLoadFavoriteIta();
+		}
+		if (s2ch.favList == NULL && s2ch.favItaList == NULL)
+		{
+			s2ch.sel = 2;
+			return -1;
+		}
+		if (focus < 0)
+		{
+			if (s2ch.favList && s2ch.cfg.favSelect == 0)
+			{
+				focus = s2ch.cfg.favSelect;
+			}
+			else if (s2ch.favItaList && s2ch.cfg.favSelect == 1)
+			{
+				focus = s2ch.cfg.favSelect;
+			}
+			else
+			{
+				focus = 1;
+			}
+		}
+		if (s2ch.tateFlag)
+		{
+			lineEnd = DRAW_LINE_V;
             if (focus)
             {
                 rMenu = psp2chCursorSet(&s2ch.favIta, lineEnd, s2ch.favV.shift, &change);
+				if (rMenu)
+				{
+                    menuStr = s2ch.menuFavItaV.sub;
+				}
+				else
+				{
+                    menuStr = s2ch.menuFavItaV.main;
+				}
             }
             else
             {
                 rMenu = psp2chCursorSet(&s2ch.fav, lineEnd, s2ch.favV.shift, &change);
+				if (rMenu)
+				{
+                    menuStr = s2ch.menuFavV.sub;
+				}
+				else
+				{
+                    menuStr = s2ch.menuFavV.main;
+				}
             }
-        }
-        else
-        {
+		}
+		else
+		{
+			lineEnd = DRAW_LINE_H;
             if (focus)
             {
                 rMenu = psp2chCursorSet(&s2ch.favIta, lineEnd, s2ch.favH.shift, &change);
+				if (rMenu)
+				{
+                    menuStr = s2ch.menuFavItaH.sub;
+				}
+				else
+				{
+                    menuStr = s2ch.menuFavItaH.main;
+				}
             }
             else
             {
                 rMenu = psp2chCursorSet(&s2ch.fav, lineEnd, s2ch.favH.shift, &change);
-            }
-        }
-        if (rMenu)
-        {
-            if (s2ch.tateFlag)
-            {
-                if (focus)
-                {
-                    menuStr = s2ch.menuFavItaV.sub;
-                }
-                else
-                {
-                    menuStr = s2ch.menuFavV.sub;
-                }
-            }
-            else
-            {
-                if (focus)
-                {
-                    menuStr = s2ch.menuFavItaH.sub;
-                }
-                else
-                {
+				if (rMenu)
+				{
                     menuStr = s2ch.menuFavH.sub;
-                }
-            }
-        }
-        else
-        {
-            if (s2ch.tateFlag)
-            {
-                if (focus)
-                {
-                    menuStr = s2ch.menuFavItaV.main;
-                }
-                else
-                {
-                    menuStr = s2ch.menuFavV.main;
-                }
-            }
-            else
-            {
-                if (focus)
-                {
-                    menuStr = s2ch.menuFavItaH.main;
-                }
-                else
-                {
+				}
+				else
+				{
                     menuStr = s2ch.menuFavH.main;
-                }
+				}
             }
-        }
+		}
         // ˆêŠ‡Žæ“¾ˆ—(1ƒXƒŒ‚²‚Æ‚É•`‰æ)
         if (update >= 0)
         {
@@ -215,6 +191,7 @@ int psp2chFavorite(void)
             {
                 s2ch.fav.select = update;
 				psp2chDrawFavorite();
+				pgWaitVn(20);
 				pgCopy(s2ch.viewX, 0);
 				pgCopyMenuBar();
 				sceDisplayWaitVblankStart();
@@ -380,6 +357,7 @@ int psp2chFavorite(void)
 			{
 				psp2chDrawFavorite();
 			}
+			pgWaitVn(5);
 		}
         pgCopy(s2ch.viewX, 0);
         pgCopyMenuBar();

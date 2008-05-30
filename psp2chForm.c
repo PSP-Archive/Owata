@@ -103,7 +103,6 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
         psp2chErrorDialog("POST error");
         return ret;
     }
-    free(net.body);
     net.body = encode;
     switch(net.status)
     {
@@ -129,7 +128,6 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
         case 200: // OK
             break;
         default:
-            free(net.body);
             psp2chErrorDialog("Status code %d", ret);
             return -1;
     }
@@ -161,7 +159,6 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
             break;
         }
     }
-    free(net.body);
     pgPrintMenuBar("画面は切り替わりません　○で入力画面に　×でレス表\示に戻ります");
     while (s2ch.running)
     {

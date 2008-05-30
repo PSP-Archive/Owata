@@ -94,28 +94,28 @@ int psp2chIta(void)
     int lineEnd, rMenu;
 	int change = 0;
 
-    if (s2ch.itaList == NULL)
-    {
-        ret = psp2chItaList();
-        if (ret < 0)
-        {
-            s2ch.sel = 0;
-            return ret;
-        }
-        end = s2ch.ita.count;
-        s2ch.viewX = 0;
-        s2ch.viewY = 0;
-    }
-    if (s2ch.tateFlag)
-    {
-        lineEnd = DRAW_LINE_V;
-    }
-    else
-    {
-        lineEnd = DRAW_LINE_H;
-    }
     if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
     {
+		if (s2ch.itaList == NULL)
+		{
+			ret = psp2chItaList();
+			if (ret < 0)
+			{
+				s2ch.sel = 0;
+				return ret;
+			}
+			end = s2ch.ita.count;
+			s2ch.viewX = 0;
+			s2ch.viewY = 0;
+		}
+		if (s2ch.tateFlag)
+		{
+			lineEnd = DRAW_LINE_V;
+		}
+		else
+		{
+			lineEnd = DRAW_LINE_H;
+		}
         if (focus)
         {
             if (s2ch.category.select < (s2ch.category.count - 1))
@@ -240,7 +240,6 @@ int psp2chIta(void)
                     {
                         if (psp2chThreadList(s2ch.ita.select) < 0)
                         {
-                            s2ch.sel = 0;
                             return -1;
                         }
                         s2ch.thread.start = 0;

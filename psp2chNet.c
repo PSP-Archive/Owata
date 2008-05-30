@@ -368,6 +368,7 @@ int psp2chRequest(const char* host, const char* path, const char* requestText, S
 		sceCtrlPeekBufferPositive(&s2ch.pad, 1);
 		if (s2ch.pad.Buttons & PSP_CTRL_CROSS)
 		{
+			s2ch.oldPad = s2ch.pad;
 			connectSleep = 1;
 			sceKernelTerminateThread(connectThread);
 			sceKernelStartThread(connectThread, 0, NULL);
@@ -409,6 +410,7 @@ int psp2chResponse(const char* host, const char* path, S_NET* net)
 		sceCtrlPeekBufferPositive(&s2ch.pad, 1);
 		if (s2ch.pad.Buttons & PSP_CTRL_CROSS)
 		{
+			s2ch.oldPad = s2ch.pad;
 			recvSleep = 1;
 			sceKernelTerminateThread(recvThread);
 			sceKernelStartThread(recvThread, 0, NULL);

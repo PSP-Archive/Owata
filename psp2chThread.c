@@ -90,40 +90,40 @@ int psp2chThread(int retSel)
     static int ret = 0;
     int lineEnd, rMenu, change, res;
 
-    if (s2ch.tateFlag)
-    {
-        lineEnd = DRAW_LINE_V;
-        rMenu = psp2chCursorSet(&s2ch.thread, lineEnd, s2ch.thV.shift, &change);
-		if (rMenu)
-		{
-            menuStr = s2ch.menuThreadV.sub;
-		}
-		else
-		{
-            menuStr = s2ch.menuThreadV.main;
-		}
-    }
-    else
-    {
-        lineEnd = DRAW_LINE_H;
-        rMenu = psp2chCursorSet(&s2ch.thread, lineEnd, s2ch.thH.shift, &change);
-		if (rMenu)
-		{
-            menuStr = s2ch.menuThreadH.sub;
-		}
-		else
-		{
-            menuStr = s2ch.menuThreadH.main;
-		}
-    }
-    if (ret == 0)
-    {
-        ret = retSel;
-	    psp2chDrawThread();
-		pgPrintMenuBar(menuStr);
-    }
     if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
     {
+		if (s2ch.tateFlag)
+		{
+			lineEnd = DRAW_LINE_V;
+			rMenu = psp2chCursorSet(&s2ch.thread, lineEnd, s2ch.thV.shift, &change);
+			if (rMenu)
+			{
+				menuStr = s2ch.menuThreadV.sub;
+			}
+			else
+			{
+				menuStr = s2ch.menuThreadV.main;
+			}
+		}
+		else
+		{
+			lineEnd = DRAW_LINE_H;
+			rMenu = psp2chCursorSet(&s2ch.thread, lineEnd, s2ch.thH.shift, &change);
+			if (rMenu)
+			{
+				menuStr = s2ch.menuThreadH.sub;
+			}
+			else
+			{
+				menuStr = s2ch.menuThreadH.main;
+			}
+		}
+		if (ret == 0)
+		{
+			ret = retSel;
+			psp2chDrawThread();
+			pgPrintMenuBar(menuStr);
+		}
         if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
             s2ch.oldPad = s2ch.pad;
@@ -357,6 +357,7 @@ int psp2chThreadList(int ita)
     free(buf);
     tmpCount = s2ch.thread.count;
     pgPrintMenuBar("éÊìæçœÇ›ÉXÉåÉbÉhÇÃåüçıíÜ");
+	pgWaitVn(10);
     pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
