@@ -305,14 +305,12 @@ int psp2chSearchList(void)
         case 200: // OK
             break;
         default:
-            free(net.body);
             psp2chErrorDialog("HTTP error\nhost %s\nStatus code %d", findHost, ret);
             return -1;
     }
     s2ch.findList = (S_2CH_FAVORITE*)realloc(s2ch.findList, sizeof(S_2CH_FAVORITE) * FIND_MAX_COUNT);
     if (s2ch.findList == NULL)
     {
-        free(net.body);
         psp2chErrorDialog("memorry error");
         return -1;
     }
@@ -390,7 +388,6 @@ int psp2chSearchList(void)
             break;
         }
     }
-    free(net.body);
     return 0;
 }
 

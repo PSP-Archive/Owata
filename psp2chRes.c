@@ -184,10 +184,12 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
 	if (s2ch.tateFlag)
 	{
 		lineEnd = DRAW_LINE_V;
+		menuStr = s2ch.menuResV.main;
 	}
 	else
 	{
 		lineEnd = DRAW_LINE_H;
+		menuStr = s2ch.menuResH.main;
 	}
 	if (s2ch.resList == NULL)
 	{
@@ -199,6 +201,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
 		totalLine = psp2chResSetLine(&bar);
 		s2ch.viewX = 0;
 		s2ch.viewY = 0;
+		pgPrintMenuBar(menuStr);
 	}
 	if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
 	{
@@ -1700,7 +1703,6 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
 			/*
 			psp2chErrorDialog(TEXT_10);
 			*/
-			free(net.body);
 			pgPrintMenuBar("‚±‚ÌƒXƒŒ‚ÍDAT—Ž‚¿‚µ‚½‚æ‚¤‚Å‚·");
 			pgWaitVn(10);
 			pgCopyMenuBar();
@@ -1710,17 +1712,14 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
 			return 1;
 			break;
 		case 304: // Not modified
-			free(net.body);
 			return 1;
 		default:
-			free(net.body);
 			psp2chErrorDialog("HTTP error\nhost %s path %s\nStatus code %d", host, path, ret);
 			return -1;
 	}
 	// abone check
 	if (range && (net.body[0] !='\n'))
 	{
-		free(net.body);
 		psp2chErrorDialog(TEXT_4);
 		return -1;
 	}
@@ -1729,13 +1728,11 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
 	fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777);
 	if (fd < 0)
 	{
-		free(net.body);
 		psp2chErrorDialog("File open error\n%s", path);
 		return fd;
 	}
 	sceIoWrite(fd, p, len);
 	range += len;
-	free(net.body);
 	sceIoClose(fd);
 	// save dat.idx
 	sprintf(path, "%s/%s/%s/%d.idx", s2ch.cwDir, s2ch.logDir, title, dat);

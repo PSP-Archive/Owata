@@ -18,7 +18,124 @@
 extern S_2CH s2ch;
 extern char* ver;
 
+static int connectThread = -1;
+static int connectSleep = 1;
+static int recvThread = -1;
+static int recvSleep = 1;
+static int recvSize = 0;
+static char *recvBuf, *recvHeader, *recvBody;
+static int mySocket;
+static struct sockaddr_in sain;
 const char* userAgent = "Monazilla/1.00 (Compatible; PSP; ja) owata(^o^)";
+
+/*****************************
+接続スレッド
+*****************************/
+int psp2chConnectThread(SceSize args, void *argp)
+{
+	int ret;
+
+	while(1)
+	{
+		if (connectSleep)
+		{
+			sceKernelSleepThread();
+		}
+		ret = connect(mySocket, (struct sockaddr *)&sain, sizeof(sain) );
+		if (ret < 0) {
+			psp2chErrorDialog("Connect errror");
+		}
+		connectSleep = 2;
+	}
+	return 0;
+}
+
+/*****************************
+受信スレッド
+*****************************/
+int psp2chRecvThread(SceSize args, void *argp)
+{
+	char buf[256];
+	int size;
+
+	while(1)
+	{
+		if (recvSleep)
+		{
+			sceKernelSleepThread();
+		}
+		recvSize = 0;
+		while ((size = recv(mySocket, buf, sizeof(buf), 0)) > 0)
+		{
+			recvBuf = (char*)realloc(recvBuf, recvSize + size);
+			if (recvBuf == NULL)
+			{
+				psp2chCloseSocket();
+				psp2chErrorDialog("memory error\nnet.body");
+				recvSize = 0;
+				break;
+			}
+			memcpy(recvBuf + recvSize, buf, size);
+			recvSize += size;
+		}
+		recvBuf = (char*)realloc(recvBuf, recvSize + 1);
+		if (recvBuf != NULL)
+		{
+			recvBuf[recvSize] = '\0';
+		}
+		recvSleep = 2;
+	}
+	return 0;
+}
+
+/*****************************
+ネットモジュールのロード
+初期化
+*****************************/
+int psp2chNetInit(void)
+{
+    int ret;
+
+    ret = sceUtilityLoadNetModule(PSP_NET_MODULE_COMMON);
+    if (ret < 0)
+    {
+        psp2chErrorDialog("Load module common errror");
+        return ret;
+    }
+    ret = sceUtilityLoadNetModule(PSP_NET_MODULE_INET);
+    if (ret < 0)
+    {
+        psp2chErrorDialog("Load module inet errror");
+        return ret;
+    }
+    ret = Cat_NetworkInit();
+    if (ret < 0)
+    {
+        psp2chErrorDialog("Cat_NetworkInit errror");
+        return ret;
+    }
+	connectThread = sceKernelCreateThread("connect_thread", (SceKernelThreadEntry)&psp2chConnectThread, 0x12, 0x8000, 0, NULL);
+	if(connectThread < 0) {
+		return -1;
+	}
+	sceKernelStartThread(connectThread, 0, NULL);
+	recvThread = sceKernelCreateThread("recv_thread", (SceKernelThreadEntry)&psp2chRecvThread, 0x18, 0x8000, 0, NULL);
+	if(recvThread < 0) {
+		return -1;
+	}
+	sceKernelStartThread(recvThread, 0, NULL);
+	return 0;
+}
+
+/*****************************
+終了処理
+*****************************/
+void psp2chNetTerm(void)
+{
+	sceKernelDeleteThread(connectThread);
+	sceKernelDeleteThread(recvThread);
+    Cat_NetworkTerm();
+}
 
 /*****************************
 アクセスポイントへ接続してソケット作成
@@ -28,7 +145,7 @@ psp2chRequest()とpsp2chPost()から呼ばれます。
 *****************************/
 int psp2chOpenSocket(void)
 {
-    int mySocket, ret;
+    int ret;
 
     ret = psp2chApConnect();
     sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
@@ -46,7 +163,7 @@ int psp2chOpenSocket(void)
 /*****************************
 ソケットを閉じる
 *****************************/
-int psp2chCloseSocket(int mySocket)
+int psp2chCloseSocket(void)
 {
     shutdown(mySocket, SHUT_RDWR);
     return close(mySocket);
@@ -112,14 +229,12 @@ psp2chRequest();でリクエストヘッダ送信
 *****************************/
 int psp2chGet(const char* host, const char* path, const char* header, char* cook, S_NET* net)
 {
-    int mySocket;
     char requestText[512];
     char *p;
 
-    mySocket = psp2chOpenSocket();
-    if (mySocket < 0)
+    if (psp2chOpenSocket() < 0)
     {
-        return mySocket;
+        return -1;
     }
     p = strrchr(path, '#');
     if (p)
@@ -136,24 +251,26 @@ int psp2chGet(const char* host, const char* path, const char* header, char* cook
     );
     memset(net, 0, sizeof(S_NET));
     // リクエスト送信
-    if (psp2chRequest(mySocket, host, path, requestText, net) < 0)
+    if (psp2chRequest(host, path, requestText, net) < 0)
+    {
+        return -1;
+    }
+    // レスポンス 受信
+    if (psp2chResponse(host, path, net) < 0)
     {
         return -1;
     }
     // Status code 受信
-    if ((net->status = psp2chGetStatusLine(mySocket)) <= 0)
+    if ((net->status = psp2chGetStatusLine()) <= 0)
     {
         return -1;
     }
     // Response Header 受信
-    psp2chGetHttpHeaders(mySocket, net, cook);
+    psp2chGetHttpHeaders(net, cook);
     // Response Body 受信
-    if (psp2chResponse(mySocket, host, path, net) < 0)
-    {
-        return -1;
-    }
+    psp2chGetHttpBody(net);
     // Close
-    psp2chCloseSocket(mySocket);
+    psp2chCloseSocket();
     return 0;
 }
 
@@ -167,14 +284,12 @@ psp2chRequest();でリクエストヘッダ送信
 *****************************/
 int psp2chPost(char* host, char* dir, int dat, char* cook, S_NET* net)
 {
-    int mySocket;
     char requestText[512];
     char *path = "test/bbs.cgi";
 
-    mySocket = psp2chOpenSocket();
-    if (mySocket < 0)
+    if (psp2chOpenSocket() < 0)
     {
-        return mySocket;
+        return -1;
     }
     sprintf(requestText,
         "POST /%s HTTP/1.1\r\n"
@@ -187,26 +302,28 @@ int psp2chPost(char* host, char* dir, int dat, char* cook, S_NET* net)
         , path, host, userAgent, ver, host, dir, dat, cook, strlen(net->body)
     );
     // リクエスト送信
-    if (psp2chRequest(mySocket, host, path, requestText, net) < 0)
+    if (psp2chRequest(host, path, requestText, net) < 0)
     {
         return -1;
     }
     // 本文送信
     send(mySocket, net->body, strlen(net->body), 0 );
+    // レスポンス 受信
+    if (psp2chResponse(host, path, net) < 0)
+    {
+        return -1;
+    }
     // Status code 受信
-    if ((net->status = psp2chGetStatusLine(mySocket)) <= 0)
+    if ((net->status = psp2chGetStatusLine()) <= 0)
     {
         return -1;
     }
     // Response Header 受信
-    psp2chGetHttpHeaders(mySocket, net, cook);
+    psp2chGetHttpHeaders(net, cook);
     // Response Body 受信
-    if (psp2chResponse(mySocket, host, path, net) < 0)
-    {
-        return -1;
-    }
+    psp2chGetHttpBody(net);
     // Close
-    psp2chCloseSocket(mySocket);
+    psp2chCloseSocket();
     return 0;
 }
 
@@ -214,11 +331,10 @@ int psp2chPost(char* host, char* dir, int dat, char* cook, S_NET* net)
 アドレス解決してリクエストヘッダを送信します
 成功時には0を返します
 *****************************/
-int psp2chRequest(int mySocket, const char* host, const char* path, const char* requestText, S_NET* net)
+int psp2chRequest(const char* host, const char* path, const char* requestText, S_NET* net)
 {
     int ret;
     char buf[512];
-    struct sockaddr_in sain;
     struct in_addr addr;
 
     ret = psp2chResolve(host, &addr);
@@ -241,10 +357,23 @@ int psp2chRequest(int mySocket, const char* host, const char* path, const char* 
 	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
-    ret = connect(mySocket,(struct sockaddr *)&sain, sizeof(sain) );
-    if (ret < 0) {
-        psp2chErrorDialog("Connect errror");
-        return ret;
+	connectSleep = 0;
+	sceKernelWakeupThread(connectThread);
+    while (1)
+    {
+		if (connectSleep == 2)
+		{
+			break;
+		}
+		sceCtrlPeekBufferPositive(&s2ch.pad, 1);
+		if (s2ch.pad.Buttons & PSP_CTRL_CROSS)
+		{
+			connectSleep = 1;
+			sceKernelTerminateThread(connectThread);
+			sceKernelStartThread(connectThread, 0, NULL);
+			return -1;
+		}
+		sceKernelDelayThread(1000);
     }
     pgPrintMenuBar("接続しました");
 	pgWaitVn(10);
@@ -257,12 +386,11 @@ int psp2chRequest(int mySocket, const char* host, const char* path, const char* 
 }
 
 /*****************************
-Response body を受信
+Response を受信
 *****************************/
-int psp2chResponse(int mySocket, const char* host, const char* path, S_NET* net)
+int psp2chResponse(const char* host, const char* path, S_NET* net)
 {
     char buf[512];
-    int ret, size;
 
     sprintf(buf, "http://%s/%s からデータを転送しています...", host, path);
     pgPrintMenuBar(buf);
@@ -270,35 +398,53 @@ int psp2chResponse(int mySocket, const char* host, const char* path, S_NET* net)
 	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
-    size = 0;
-    net->body = NULL;
-    while ((ret = recv(mySocket, buf, sizeof(buf), 0)) > 0)
+	recvSleep = 0;
+	sceKernelWakeupThread(recvThread);
+    while (1)
     {
-        net->body = (char*)realloc(net->body, size + ret);
-        if (net->body == NULL)
-        {
-            psp2chCloseSocket(mySocket);
-            psp2chErrorDialog("memory error\nnet.body");
-            return -1;
-        }
-        memcpy(net->body + size, buf, ret);
-        size += ret;
+		if (recvSleep == 2)
+		{
+			break;
+		}
+		sceCtrlPeekBufferPositive(&s2ch.pad, 1);
+		if (s2ch.pad.Buttons & PSP_CTRL_CROSS)
+		{
+			recvSleep = 1;
+			sceKernelTerminateThread(recvThread);
+			sceKernelStartThread(recvThread, 0, NULL);
+			recvSize = 0;
+			free(recvBuf);
+			recvBuf = NULL;
+			break;
+		}
+		sceKernelDelayThread(1000);
     }
-    net->body = (char*)realloc(net->body, size + 1);
-    if (net->body == NULL)
-    {
-        psp2chCloseSocket(mySocket);
-        psp2chErrorDialog("memory error\nnet.body");
-        return -1;
-    }
-    net->length = size;
-    net->body[size] = '\0';
-    sprintf(buf, "完了");
+	if (recvBuf == NULL)
+	{
+		return -1;
+	}
+    sprintf(buf, "完了(%dBytes)", recvSize);
     pgPrintMenuBar(buf);
+	recvHeader = strstr(recvBuf, "\r\n");
+	if (recvHeader == NULL)
+	{
+		return -1;
+	}
+	*recvHeader = '\0';
+	recvHeader += 2;
+	recvBody = strstr(recvHeader, "\r\n\r\n");
+	if (recvBody == NULL)
+	{
+		return -1;
+	}
+	recvBody += 2;
+	*recvBody = '\0';
+	recvBody += 2;
 	pgWaitVn(10);
 	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
+	pgWaitVn(10);
     return 0;
 }
 
@@ -308,33 +454,17 @@ int psp2chResponse(int mySocket, const char* host, const char* path, S_NET* net)
 HTTP/1.1 200 OK
 なら200を返す
 *****************************/
-int psp2chGetStatusLine(int mySocket)
+int psp2chGetStatusLine(void)
 {
-    char in;
-    char incomingBuffer[256];
-    int i = 0;
     int verMajor, verMinor, code;
     char phrase[256];
 
-     do
-     {
-        if (recv( mySocket, &in, 1, 0 ) == 0)
-        {
-            return -1;
-        }
-        incomingBuffer[i] = in;
-        if (++i > 255)
-        {
-            return -1;
-        }
-    } while (in != '\n');
-    incomingBuffer[i] = '\0';
-    pgPrintMenuBar(incomingBuffer);
+    pgPrintMenuBar(recvBuf);
 	pgWaitVn(10);
 	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
-    sscanf(incomingBuffer, "HTTP/%d.%d %d %s\r\n", &verMajor, &verMinor, &code, phrase);
+    sscanf(recvBuf, "HTTP/%d.%d %d %s\r\n", &verMajor, &verMinor, &code, phrase);
     return code;
 }
 
@@ -350,63 +480,60 @@ cookie[]にSet-Cookieの内容が追加されます。
 Content-Lengthがintで返されます
 Content-Lengthを返さない場合もあるので注意（CGI等）
 *****************************/
-int psp2chGetHttpHeaders(int mySocket, S_NET* net, char* cookie)
+int psp2chGetHttpHeaders(S_NET* net, char* cookie)
 {
-    int i = 0;
-    char in;
-    char incomingBuffer[256];
     int contentLength = 0;
-    char *p;
+    char *line, *p, *q;
 
-    while(recv(mySocket, &in, 1, 0) > 0)  // if recv returns 0, the socket has been closed.
+	line = recvHeader;
+    while(*line)  // if recv returns 0, the socket has been closed.
     {
-        if (in == '\r')
+		q = strstr(line, "\r\n");
+		if (q == NULL)
+		{
+			return -1;
+		}
+		*q = '\0';
+        if (strstr(line, "Content-Length:"))
         {
-            continue;
+            sscanf(line, "Content-Length: %d", &contentLength);
+            net->head.Content_Length = contentLength;
         }
-        incomingBuffer[i] = in;
-        i++;
-        if (in == '\n')
+        else if (strstr(line, "Content-Type:"))
         {
-            if (incomingBuffer[0] == '\n')  // End of headers
-            {
-                break;
-            }
-            incomingBuffer[i - 1] = 0;
-            if (strstr(incomingBuffer, "Content-Length:"))
-            {
-                sscanf(incomingBuffer, "Content-Length: %d", &contentLength);
-                net->head.Content_Length = contentLength;
-            }
-            else if (strstr(incomingBuffer, "Content-Type:"))
-            {
-                strcpy(net->head.Content_Type, &incomingBuffer[14]);
-            }
-            else if (strstr(incomingBuffer, "Last-Modified:"))
-            {
-                strcpy(net->head.Last_Modified, &incomingBuffer[15]);
-            }
-            else if (strstr(incomingBuffer, "ETag:"))
-            {
-                strcpy(net->head.ETag, &incomingBuffer[6]);
-            }
-            else if (cookie && strstr(incomingBuffer, "Set-Cookie:"))
-            {
-                p = strchr(incomingBuffer, ';');
-                *p = '\0';
-                if (cookie[0])
-                {
-                    strcat(cookie, "; ");
-                }
-                strcat(cookie, &incomingBuffer[12]);
-            }
-#ifdef DEBUG
-            pspDebugScreenPrintf("%s", incomingBuffer);
-#endif
-            i = 0;
+            strcpy(net->head.Content_Type, &line[14]);
         }
+        else if (strstr(line, "Last-Modified:"))
+        {
+            strcpy(net->head.Last_Modified, &line[15]);
+        }
+        else if (strstr(line, "ETag:"))
+        {
+            strcpy(net->head.ETag, &line[6]);
+        }
+        else if (cookie && strstr(line, "Set-Cookie:"))
+        {
+            p = strchr(line, ';');
+            *p = '\0';
+            if (cookie[0])
+            {
+                strcat(cookie, "; ");
+            }
+            strcat(cookie, &line[12]);
+        }
+		line = q + 2;
     }
     return contentLength;
+}
+
+/*****************************
+ソケットからレスポンス本体を読み込む
+*****************************/
+int psp2chGetHttpBody(S_NET* net)
+{
+    net->body = recvBody;
+    net->length = strlen(recvBody);
+	return 0;
 }
 
 static void draw_callback( void* pvUserData )

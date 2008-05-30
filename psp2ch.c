@@ -12,13 +12,12 @@
 #include "psp2chFavorite.h"
 #include "psp2chSearch.h"
 #include "psp2chMenu.h"
+#include "psp2chNet.h"
 #include "psp2chIni.h"
 #include "utf8.h"
 #include "pg.h"
 #include "cp932.h"
 #include "intraFont.h"
-#include "libCat/Cat_Network.h"
-#include "libCat/Cat_Resolver.h"
 
 extern unsigned int list[512*512]; // pg.c
 extern intraFont* jpn0; // pg.c
@@ -401,26 +400,10 @@ int psp2chPadSet(int scrollX)
 ************************************/
 int psp2chInit(void)
 {
-    int ret;
-
-    ret = sceUtilityLoadNetModule(PSP_NET_MODULE_COMMON);
-    if (ret < 0)
-    {
-        psp2chErrorDialog("Load module common errror");
-        return ret;
-    }
-    ret = sceUtilityLoadNetModule(PSP_NET_MODULE_INET);
-    if (ret < 0)
-    {
-        psp2chErrorDialog("Load module inet errror");
-        return ret;
-    }
-    ret = Cat_NetworkInit();
-    if (ret < 0)
-    {
-        psp2chErrorDialog("Cat_NetworkInit errror");
-        return ret;
-    }
+	if (psp2chNetInit() < 0)
+	{
+		return -1;
+	}
     s2ch.logDir = "log";
     s2ch.fontDir = "font";
     s2ch.colorDir = "color";
@@ -518,7 +501,7 @@ int psp2chInit(void)
 **************************/
 int psp2chTerm(void)
 {
-    Cat_NetworkTerm();
+	psp2chNetTerm();
     return 0;
 }
 

@@ -93,48 +93,37 @@ int psp2chThread(int retSel)
     if (s2ch.tateFlag)
     {
         lineEnd = DRAW_LINE_V;
+        rMenu = psp2chCursorSet(&s2ch.thread, lineEnd, s2ch.thV.shift, &change);
+		if (rMenu)
+		{
+            menuStr = s2ch.menuThreadV.sub;
+		}
+		else
+		{
+            menuStr = s2ch.menuThreadV.main;
+		}
     }
     else
     {
         lineEnd = DRAW_LINE_H;
+        rMenu = psp2chCursorSet(&s2ch.thread, lineEnd, s2ch.thH.shift, &change);
+		if (rMenu)
+		{
+            menuStr = s2ch.menuThreadH.sub;
+		}
+		else
+		{
+            menuStr = s2ch.menuThreadH.main;
+		}
     }
     if (ret == 0)
     {
         ret = retSel;
 	    psp2chDrawThread();
+		pgPrintMenuBar(menuStr);
     }
     if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
     {
-        if (s2ch.tateFlag)
-        {
-            rMenu = psp2chCursorSet(&s2ch.thread, lineEnd, s2ch.thV.shift, &change);
-        }
-        else
-        {
-            rMenu = psp2chCursorSet(&s2ch.thread, lineEnd, s2ch.thH.shift, &change);
-        }
-        if (rMenu)
-        {
-            if (s2ch.tateFlag)
-            {
-                menuStr = s2ch.menuThreadV.sub;
-            }
-            else
-            {
-                menuStr = s2ch.menuThreadH.sub;
-            }
-        }
-        else
-        {
-            if (s2ch.tateFlag)
-            {
-                menuStr = s2ch.menuThreadV.main;
-            }
-            else
-            {
-                menuStr = s2ch.menuThreadH.main;
-            }
-        }
         if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
             s2ch.oldPad = s2ch.pad;
@@ -485,7 +474,6 @@ int psp2chGetSubject(int ita)
         case 200: // OK
             break;
         case 301: // Moved Permanently
-            free(net.body);
             memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
             s2ch.mh.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT | PSP_UTILITY_MSGDIALOG_OPTION_YESNO_BUTTONS;
             strcpy(s2ch.mh.message, TEXT_7);
@@ -497,10 +485,8 @@ int psp2chGetSubject(int ita)
             }
             return -1;
         case 304: // Not modified
-            free(net.body);
             return 0;
         default:
-            free(net.body);
             psp2chErrorDialog("HTTP error\nhost %s path %s\nStatus code %d", s2ch.itaList[ita].host, path, ret);
             return -1;
     }
@@ -509,7 +495,6 @@ int psp2chGetSubject(int ita)
     fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
     if (fd < 0)
     {
-        free(net.body);
         psp2chErrorDialog("File open error\n%s", path);
         return fd;
     }
@@ -519,7 +504,6 @@ int psp2chGetSubject(int ita)
     sceIoWrite(fd, "\n", 1);
     sceIoWrite(fd, net.body, net.length);
     sceIoClose(fd);
-    free(net.body);
     return 0;
 }
 

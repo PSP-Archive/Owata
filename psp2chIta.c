@@ -116,7 +116,6 @@ int psp2chIta(void)
     }
     if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
     {
-
         if (focus)
         {
             if (s2ch.category.select < (s2ch.category.count - 1))
@@ -501,7 +500,6 @@ int psp2chGetMenu(void)
     {
         if (sceIoMkdir(buf, 0777) < 0)
         {
-            free(net.body);
             psp2chErrorDialog("Make dir error\n%s", buf);
             return -1;
         }
@@ -515,7 +513,6 @@ int psp2chGetMenu(void)
     fd = sceIoOpen(buf, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
     if (fd < 0)
     {
-        free(net.body);
         psp2chErrorDialog("File open error\n%s", buf);
         return fd;
     }
@@ -578,7 +575,6 @@ int psp2chGetMenu(void)
         }
     }
     sceIoClose(fd);
-    free(net.body);
     return 0;
 }
 
