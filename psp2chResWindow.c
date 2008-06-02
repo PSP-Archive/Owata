@@ -502,14 +502,12 @@ int psp2chUrlAnchor(int anchor, int offset)
         psp2chErrorDialog("HTTP error\nhost %s path %s\nStatus code %d", s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path, ret);
         pgWaitVn(60);
         */
-        free(net.body);
         return -1;
     }
     // save
     fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
     if (fd < 0)
     {
-        free(net.body);
         psp2chErrorDialog("File open error\n%s", path);
         return fd;
     }
@@ -524,7 +522,6 @@ int psp2chUrlAnchor(int anchor, int offset)
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
     sceIoWrite(fd, net.body, net.length);
-    free(net.body);
     sceIoClose(fd);
     if (stricmp(ext, ".jpg") == 0)
     {
@@ -608,7 +605,6 @@ int psp2chImepita(int anchor, int offset)
     {
         return ret;
     }
-    free(net.body);
     switch(net.status)
     {
     case 200: // OK
@@ -628,14 +624,12 @@ int psp2chImepita(int anchor, int offset)
     case 200: // OK
         break;
     default:
-        free(net.body);
         return -1;
     }
     // save
     fd = sceIoOpen(file, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
     if (fd < 0)
     {
-        free(net.body);
         psp2chErrorDialog("File open error\n%s", file);
         return fd;
     }
@@ -650,7 +644,6 @@ int psp2chImepita(int anchor, int offset)
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
     sceIoWrite(fd, net.body, net.length);
-    free(net.body);
     sceIoClose(fd);
     if (psp2chImageViewJpeg(file) == 0)
     {
