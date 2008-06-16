@@ -372,6 +372,8 @@ void psp2chStart(void);
 int psp2chOwata(void);
 int psp2chCursorSet(S_2CH_SCREEN* line,  int lineEnd, int shift, int* change);
 int psp2chPadSet(int scrollX);
+void psp2chSetFontParam(void);
+void psp2chSetBarParam(void);
 int psp2chInit(void);
 int psp2chTerm(void);
 void psp2chGets(char* title, char* text, int num, int lines);

@@ -569,37 +569,7 @@ void psp2chMenuFont(void)
                 {
                     psp2chMenuFontSet(menu.select);
                     pgExtraFontInit();
-                    switch(s2ch.font.pitch)
-                    {
-                    case 10:
-                        s2ch.font.lineH = 26;
-                        s2ch.font.lineV = 46;
-                        break;
-                    case 11:
-                        s2ch.font.lineH = 24;
-                        s2ch.font.lineV = 42;
-                        break;
-                    case 12:
-                        s2ch.font.lineH = 22;
-                        s2ch.font.lineV = 38;
-                        break;
-                    case 13:
-                        s2ch.font.lineH = 20;
-                        s2ch.font.lineV = 35;
-                        break;
-                    case 14:
-                        s2ch.font.lineH = 18;
-                        s2ch.font.lineV = 32;
-                        break;
-                    case 15:
-                        s2ch.font.lineH = 17;
-                        s2ch.font.lineV = 30;
-                        break;
-                    case 16:
-                        s2ch.font.lineH = 16;
-                        s2ch.font.lineV = 28;
-                        break;
-                    }
+					psp2chSetFontParam();
                     scrY = LINE_PITCH * lineEnd;
                     printBuf = pixels;
                     pgCopy(s2ch.viewX, s2ch.viewY);
@@ -610,6 +580,8 @@ void psp2chMenuFont(void)
                 }
                 else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinH.esc) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.menuWinV.esc))
                 {
+					psp2chSetFontParam();
+					psp2chSetBarParam();
                     break;
                 }
             }

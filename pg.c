@@ -39,7 +39,20 @@ intraFont* jpn0;
 #define O 0
 #define B RGB(0,0,0)
 #define W RGB(255,255,255)
-unsigned short __attribute__((aligned(16))) cursorImg[32*32] = {
+unsigned short __attribute__((aligned(16))) cursorImg[32*45] = {
+	O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
+	O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
+	O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
+	O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
+	O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
+	O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
+	O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
+	O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
+	O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
+	O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
+	O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
+	O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
+	O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
 	B,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
 	B,B,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
 	B,W,B,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
@@ -104,6 +117,9 @@ void pgEntitiesSet(void)
 	entity[11].str = "&darr;";entity[11].len = 5;entity[11].byte = 2;entity[11].c1 = 0x81;entity[11].c2 = 0xAB;
 }
 
+/*****************************
+外部フォントファイルを読み込む
+*****************************/
 int pgExtraFontInit(void)
 {
 	SceUID fd;
@@ -724,20 +740,24 @@ void pgPadCursor(int x, int y)
 {
 	RECT src_rect, dst_rect;
 	
-	src_rect.left = 0;
-	src_rect.top = 0;
-	src_rect.right = cur.w;
-	src_rect.bottom = cur.h;
 	if (s2ch.tateFlag)
 	{
-		dst_rect.left = SCR_WIDTH - y - cur.h;
+		src_rect.left = 0;
+		src_rect.top = 0;
+		src_rect.right = cur.w;
+		src_rect.bottom = cur.h;
+		dst_rect.left = SCR_WIDTH - y - cur.h + 13;
 		dst_rect.top = x;
-		dst_rect.right = SCR_WIDTH - y;
+		dst_rect.right = SCR_WIDTH - y + 13;
 		dst_rect.bottom = x + cur.w;
 		pgCopyRectRotate(cursorImg, &cur, &src_rect, &dst_rect);
 	}
 	else
 	{
+		src_rect.left = 0;
+		src_rect.top = 13;
+		src_rect.right = cur.w;
+		src_rect.bottom = 13+cur.h;
 		dst_rect.left = x;
 		dst_rect.top = y;
 		dst_rect.right = x + cur.w;

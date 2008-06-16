@@ -395,6 +395,80 @@ int psp2chPadSet(int scrollX)
 }
 
 /***********************************
+フォントのパラメータをセット
+************************************/
+void psp2chSetFontParam(void)
+{
+    switch(s2ch.font.pitch)
+    {
+    case 10:
+        s2ch.font.lineH = 26;
+        s2ch.font.lineV = 46;
+        break;
+    case 11:
+        s2ch.font.lineH = 24;
+        s2ch.font.lineV = 42;
+        break;
+    case 12:
+        s2ch.font.lineH = 22;
+        s2ch.font.lineV = 38;
+        break;
+    case 13:
+        s2ch.font.lineH = 20;
+        s2ch.font.lineV = 35;
+        break;
+    case 14:
+        s2ch.font.lineH = 18;
+        s2ch.font.lineV = 32;
+        break;
+    case 15:
+        s2ch.font.lineH = 17;
+        s2ch.font.lineV = 30;
+        break;
+    case 16:
+        s2ch.font.lineH = 16;
+        s2ch.font.lineV = 28;
+        break;
+    }
+}
+
+/***********************************
+フォントのパラメータをセット
+************************************/
+void psp2chSetBarParam(void)
+{
+	barSrcRectH.left = 0;
+	barSrcRectH.top = 0;
+	barSrcRectH.right = SCR_WIDTH;
+	barSrcRectH.bottom = FONT_HEIGHT;
+
+	barSrcRectV.left = 0;
+	barSrcRectV.top = 0;
+	barSrcRectV.right = SCR_HEIGHT;
+	barSrcRectV.bottom = FONT_HEIGHT + LINE_PITCH;
+
+	menuDstRectH.left = 0;
+	menuDstRectH.top = SCR_HEIGHT - FONT_HEIGHT;
+	menuDstRectH.right = SCR_WIDTH;
+	menuDstRectH.bottom = SCR_HEIGHT;
+
+	menuDstRectV.left = 0;
+	menuDstRectV.top = 0;
+	menuDstRectV.right = FONT_HEIGHT + LINE_PITCH;
+	menuDstRectV.bottom = SCR_HEIGHT;
+
+	titleDstRectH.left = 0;
+	titleDstRectH.top = 0;
+	titleDstRectH.right = SCR_WIDTH;
+	titleDstRectH.bottom = FONT_HEIGHT;
+
+	titleDstRectV.left = SCR_WIDTH - (FONT_HEIGHT + LINE_PITCH);
+	titleDstRectV.top = 0;
+	titleDstRectV.right = SCR_WIDTH;
+	titleDstRectV.bottom = SCR_HEIGHT;
+}
+
+/***********************************
 ネットモジュールのロード
 初期化
 ************************************/
@@ -433,66 +507,8 @@ int psp2chInit(void)
     s2ch.favItaList = NULL;
     s2ch.threadList = NULL;
     s2ch.resList = NULL;
-    switch(s2ch.font.pitch)
-    {
-    case 10:
-        s2ch.font.lineH = 26;
-        s2ch.font.lineV = 46;
-        break;
-    case 11:
-        s2ch.font.lineH = 24;
-        s2ch.font.lineV = 42;
-        break;
-    case 12:
-        s2ch.font.lineH = 22;
-        s2ch.font.lineV = 38;
-        break;
-    case 13:
-        s2ch.font.lineH = 20;
-        s2ch.font.lineV = 35;
-        break;
-    case 14:
-        s2ch.font.lineH = 18;
-        s2ch.font.lineV = 32;
-        break;
-    case 15:
-        s2ch.font.lineH = 17;
-        s2ch.font.lineV = 30;
-        break;
-    case 16:
-        s2ch.font.lineH = 16;
-        s2ch.font.lineV = 28;
-        break;
-    }
-	barSrcRectH.left = 0;
-	barSrcRectH.top = 0;
-	barSrcRectH.right = SCR_WIDTH;
-	barSrcRectH.bottom = FONT_HEIGHT;
-
-	barSrcRectV.left = 0;
-	barSrcRectV.top = 0;
-	barSrcRectV.right = SCR_HEIGHT;
-	barSrcRectV.bottom = FONT_HEIGHT + LINE_PITCH;
-
-	menuDstRectH.left = 0;
-	menuDstRectH.top = SCR_HEIGHT - FONT_HEIGHT;
-	menuDstRectH.right = SCR_WIDTH;
-	menuDstRectH.bottom = SCR_HEIGHT;
-
-	menuDstRectV.left = 0;
-	menuDstRectV.top = 0;
-	menuDstRectV.right = FONT_HEIGHT + LINE_PITCH;
-	menuDstRectV.bottom = SCR_HEIGHT;
-
-	titleDstRectH.left = 0;
-	titleDstRectH.top = 0;
-	titleDstRectH.right = SCR_WIDTH;
-	titleDstRectH.bottom = FONT_HEIGHT;
-
-	titleDstRectV.left = SCR_WIDTH - (FONT_HEIGHT + LINE_PITCH);
-	titleDstRectV.top = 0;
-	titleDstRectV.right = SCR_WIDTH;
-	titleDstRectV.bottom = SCR_HEIGHT;
+	psp2chSetFontParam();
+	psp2chSetBarParam();
     return 0;
 }
 
