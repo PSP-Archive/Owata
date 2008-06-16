@@ -28,8 +28,8 @@ static unsigned char *fontA, *fontJ;
 static int size_fontA, size_fontJ;
 
 unsigned int   __attribute__((aligned(16))) list[512*512];
-unsigned short __attribute__((aligned(16))) winPixels[BUF_WIDTH*BUF_HEIGHT*2];
 unsigned short __attribute__((aligned(16))) pixels[BUF_WIDTH*BUF_HEIGHT*2];
+unsigned short __attribute__((aligned(16))) winPixels[BUF_WIDTH*BUF_HEIGHT*2];
 unsigned short __attribute__((aligned(16))) barPixels[BUF_WIDTH*32*2];
 unsigned short __attribute__((aligned(16))) titlePixels[BUF_WIDTH*32*2];
 unsigned short* printBuf;
@@ -728,16 +728,20 @@ void pgPadCursor(int x, int y)
 	src_rect.top = 0;
 	src_rect.right = cur.w;
 	src_rect.bottom = cur.h;
-	dst_rect.left = x;
-	dst_rect.top = y;
-	dst_rect.right = x + cur.w;
-	dst_rect.bottom = y + cur.h;
 	if (s2ch.tateFlag)
 	{
+		dst_rect.left = SCR_WIDTH - y - cur.h;
+		dst_rect.top = x;
+		dst_rect.right = SCR_WIDTH - y;
+		dst_rect.bottom = x + cur.w;
 		pgCopyRectRotate(cursorImg, &cur, &src_rect, &dst_rect);
 	}
 	else
 	{
+		dst_rect.left = x;
+		dst_rect.top = y;
+		dst_rect.right = x + cur.w;
+		dst_rect.bottom = y + cur.h;
 		pgCopyRect(cursorImg, &cur, &src_rect, &dst_rect);
 	}
 }
