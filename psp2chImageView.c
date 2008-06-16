@@ -24,7 +24,7 @@ int psp2chImageViewJpeg(char* fname)
     FILE* infile;
     JSAMPARRAY img;
     JSAMPROW buf, imgbuf, tmp;
-    int width, bufWidth;
+    int width;
     int height;
     int i;
     struct jpeg_decompress_struct cinfo;
@@ -50,8 +50,6 @@ int psp2chImageViewJpeg(char* fname)
     jpeg_read_header(&cinfo, TRUE);
     jpeg_start_decompress(&cinfo);
     width = cinfo.output_width;
-    // バッファの幅を16バイトアラインに
-    bufWidth = width + ((16 - (width & 0x0F)) & 0x0F);
     height = cinfo.output_height;
     img = (JSAMPARRAY)malloc(sizeof(JSAMPROW) * height);
     if (!img)
@@ -59,14 +57,14 @@ int psp2chImageViewJpeg(char* fname)
         fclose(infile);
         return -1;
     }
-    imgbuf = (JSAMPROW)calloc(sizeof(JSAMPLE), 4 * bufWidth * height);
+    imgbuf = (JSAMPROW)calloc(sizeof(JSAMPLE), 4 * width * height);
     if (!imgbuf)
     {
         free(img);
         fclose(infile);
         return -1;
     }
-    buf = (JSAMPROW)calloc(sizeof(JSAMPLE), 3 * bufWidth);
+    buf = (JSAMPROW)calloc(sizeof(JSAMPLE), 3 * width);
     if (!buf)
     {
         free(imgbuf);
@@ -77,7 +75,7 @@ int psp2chImageViewJpeg(char* fname)
     tmp = imgbuf;
     for (i = 0; i < height; i++ )
     {
-        img[i] = &tmp[i * bufWidth * 4];
+        img[i] = &tmp[i * width * 4];
     }
     // RGBカラーをRGBAに
     if (cinfo.out_color_components == 3)
@@ -138,7 +136,7 @@ int psp2chImageViewPng(char* fname)
     png_structp png_ptr;
     png_infop info_ptr;
     png_infop end_info;
-    unsigned long width, height, bufWidth;
+    unsigned long width, height;
     int bit_depth, color_type, interlace_type;
     png_bytepp img;
     png_bytep imgbuf;
@@ -170,8 +168,6 @@ int psp2chImageViewPng(char* fname)
     png_set_sig_bytes(png_ptr, 8);
     png_read_info(png_ptr, info_ptr);
     png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, &interlace_type, NULL, NULL);
-    // バッファの幅を16バイトアラインに
-    bufWidth = width + ((16 - (width & 0x0F)) & 0x0F);
     //パレット系->RGB系に拡張
     if (color_type == PNG_COLOR_TYPE_PALETTE ||
         (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8) ||
@@ -201,7 +197,7 @@ int psp2chImageViewPng(char* fname)
         fclose(infile);
         return -1;
     }
-    imgbuf = (png_bytep)malloc(png_get_rowbytes(png_ptr, info_ptr) * bufWidth);
+    imgbuf = (png_bytep)malloc(png_get_rowbytes(png_ptr, info_ptr) * width);
     if (!imgbuf)
     {
         free(img);
@@ -210,7 +206,7 @@ int psp2chImageViewPng(char* fname)
     }
     for (i = 0; i < height; i++)
     {
-        img[i] = &imgbuf[i * bufWidth * 4];
+        img[i] = &imgbuf[i * width * 4];
     }
     png_read_image(png_ptr, img);
     png_read_end(png_ptr, end_info);
@@ -229,7 +225,7 @@ BMPファイルを読み込んで32ビットRGBAに変換
 int psp2chImageViewBmp(char* fname)
 {
     FILE* infile;
-    int i, j, y, bufWidth, height, len;
+    int i, j, y, height, len;
     BITMAPFILEHEADER bf;
     BITMAPINFOHEADER bi;
     unsigned char **img, *imgbuf, *buf, *tmp;
@@ -269,15 +265,13 @@ int psp2chImageViewBmp(char* fname)
     {
         height = bi.biHeight;
     }
-    // バッファの幅を16バイトアラインに
-    bufWidth = bi.biWidth + ((16 - (bi.biWidth & 0x0F)) & 0x0F);
     img = (unsigned char**)malloc(sizeof(unsigned char*) * height);
     if (!img)
     {
         fclose(infile);
         return -1;
     }
-    imgbuf = (unsigned char*)calloc(sizeof(unsigned char), 4 * bufWidth * height);
+    imgbuf = (unsigned char*)calloc(sizeof(unsigned char), 4 * bi.biWidth * height);
     if (!imgbuf)
     {
         free(img);
@@ -297,7 +291,7 @@ int psp2chImageViewBmp(char* fname)
     tmp = imgbuf;
     for (i = 0; i < height; i++ )
     {
-        img[i] = &tmp[i * bufWidth * 4];
+        img[i] = &tmp[i * bi.biWidth * 4];
     }
     fseek(infile, bf.bfOffBits, SEEK_SET);
     // 24ビットBMPをRGBAに

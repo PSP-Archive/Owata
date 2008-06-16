@@ -399,6 +399,7 @@ int psp2chResponse(const char* host, const char* path, S_NET* net)
 	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
+	// 受信スレッドを起こす
 	recvSleep = 0;
 	sceKernelWakeupThread(recvThread);
     while (1)
@@ -427,13 +428,17 @@ int psp2chResponse(const char* host, const char* path, S_NET* net)
 	}
     sprintf(buf, "完了(%dBytes)", recvSize);
     pgPrintMenuBar(buf);
+	// 1行目のステータスラインで区切る
 	recvHeader = strstr(recvBuf, "\r\n");
 	if (recvHeader == NULL)
 	{
 		return -1;
 	}
 	*recvHeader = '\0';
+	recvSize -= strlen(recvBuf);
+	recvSize -= 2;
 	recvHeader += 2;
+	// ヘッダとボディの間の空行で区切る
 	recvBody = strstr(recvHeader, "\r\n\r\n");
 	if (recvBody == NULL)
 	{
@@ -441,6 +446,9 @@ int psp2chResponse(const char* host, const char* path, S_NET* net)
 	}
 	recvBody += 2;
 	*recvBody = '\0';
+	recvSize -= strlen(recvHeader);
+    net->length = recvSize;
+	recvSize -= 2;
 	recvBody += 2;
 	pgWaitVn(10);
 	pgCopyMenuBar();
@@ -534,7 +542,6 @@ int psp2chGetHttpHeaders(S_NET* net, char* cookie)
 int psp2chGetHttpBody(S_NET* net)
 {
     net->body = recvBody;
-    net->length = strlen(recvBody);
 	return 0;
 }
 
