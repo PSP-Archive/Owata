@@ -853,7 +853,7 @@ int psp2chResCursorMove(int totalLine, int lineEnd, int* cursorX, int* cursorY, 
 				i = 0;
 				while (s2ch.anchorList[i].line >= 0)
 				{
-					if (s2ch.anchorList[i].line == line && s2ch.anchorList[i].x1 + 5 >= *cursorX)
+					if (s2ch.anchorList[i].line == line && s2ch.anchorList[i].x2 > *cursorX)
 					{
 						break;
 					}
@@ -1208,11 +1208,11 @@ void psp2chResSetAnchorList(int lineEnd, int cursorPosition)
 		{
 			for (j = 0; j < 40; j++)
 			{
-				if (s2ch.numAnchor[j].line == i)
+				if (s2ch.numAnchor[j].line == i && s2ch.numAnchor[j].x2 > s2ch.viewX)
 				{
 					s2ch.anchorList[k].line = i;
-					s2ch.anchorList[k].x1 = s2ch.numAnchor[j].x1;
-					s2ch.anchorList[k].x2 = s2ch.numAnchor[j].x2;
+					s2ch.anchorList[k].x1 = s2ch.numAnchor[j].x1 - s2ch.viewX;
+					s2ch.anchorList[k].x2 = s2ch.numAnchor[j].x2 - s2ch.viewX;
 					s2ch.anchorList[k].type = 0;
 					s2ch.anchorList[k].id = j;
 					k++;
@@ -1228,11 +1228,11 @@ void psp2chResSetAnchorList(int lineEnd, int cursorPosition)
 		{
 			for (j = 0; j < 50; j++)
 			{
-				if (s2ch.resAnchor[j].line == i)
+				if (s2ch.resAnchor[j].line == i && s2ch.resAnchor[j].x2 > s2ch.viewX)
 				{
 					list[k].line = i;
-					list[k].x1 = s2ch.resAnchor[j].x1;
-					list[k].x2 = s2ch.resAnchor[j].x2;
+					list[k].x1 = s2ch.resAnchor[j].x1 - s2ch.viewX;
+					list[k].x2 = s2ch.resAnchor[j].x2 - s2ch.viewX;
 					list[k].type = 2;
 					list[k].id = j;
 					k++;
@@ -1240,11 +1240,11 @@ void psp2chResSetAnchorList(int lineEnd, int cursorPosition)
 			}
 			for (j = 0; j < 50; j++)
 			{
-				if (s2ch.urlAnchor[j].line == i)
+				if (s2ch.urlAnchor[j].line == i && s2ch.urlAnchor[j].x2 > s2ch.viewX)
 				{
 					list[k].line = i;
-					list[k].x1 = s2ch.urlAnchor[j].x1;
-					list[k].x2 = s2ch.urlAnchor[j].x2;
+					list[k].x1 = s2ch.urlAnchor[j].x1 - s2ch.viewX;
+					list[k].x2 = s2ch.urlAnchor[j].x2 - s2ch.viewX;
 					list[k].type = 3;
 					list[k].id = j;
 					k++;
@@ -1289,11 +1289,11 @@ void psp2chResSetAnchorList(int lineEnd, int cursorPosition)
 		{
 			for (j = 0; j < 40; j++)
 			{
-				if (s2ch.idAnchor[j].line == i)
+				if (s2ch.idAnchor[j].line == i && s2ch.idAnchor[j].x2 > s2ch.viewX)
 				{
 					s2ch.anchorList[k].line = i;
-					s2ch.anchorList[k].x1 = s2ch.idAnchor[j].x1;
-					s2ch.anchorList[k].x2 = s2ch.idAnchor[j].x2;
+					s2ch.anchorList[k].x1 = s2ch.idAnchor[j].x1 - s2ch.viewX;
+					s2ch.anchorList[k].x2 = s2ch.idAnchor[j].x2 - s2ch.viewX;
 					s2ch.anchorList[k].type = 1;
 					s2ch.anchorList[k].id = j;
 					k++;
