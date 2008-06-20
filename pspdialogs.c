@@ -112,9 +112,9 @@ void pspShowOSK(OSK_HELPER *oskhelper, u8 language)
     memset(&data, 0, sizeof(data));
     data.unk_00 = 1;           // 1=kanji
     data.unk_04 = 0;
-    data.language = 0;         // key glyphs: 0-1=hiragana, 2+=western
+    data.language = PSP_UTILITY_OSK_LANGUAGE_DEFAULT;
     data.unk_12 = 0;
-    data.unk_16 = 0;           //12;    //0;
+    data.inputtype = PSP_UTILITY_OSK_INPUTTYPE_ALL;
     data.lines = oskhelper->lines;
     data.unk_24 = 0;
     data.desc = oskhelper->title;
@@ -134,7 +134,7 @@ void pspShowOSK(OSK_HELPER *oskhelper, u8 language)
     osk.base.accessThread = 0x13;
     osk.base.fontThread = 0x12;
     osk.base.soundThread = 0x10;
-    osk.unk_48 = 1;
+    osk.datacount = 1;
     osk.data = &data;
 
     sceUtilityOskInitStart(&osk);
