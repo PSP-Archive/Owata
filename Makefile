@@ -20,6 +20,6 @@ EXTRA_TARGETS = EBOOT.PBP
 PSP_EBOOT_TITLE = 人生ｵﾜﾀ＼(^o^)／
 PSP_EBOOT_ICON = icon.png
 
-PSPSDK=/D/devkitPro/devkitPSP/psp/sdk
+PSPSDK=$(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
 
