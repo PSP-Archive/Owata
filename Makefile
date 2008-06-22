@@ -1,9 +1,8 @@
 TARGET = owata
-OBJS = src/cp932.o src/intraFont.o src/main.o src/pg.o src/psp2ch.o src/psp2chFavorite.o src/psp2chForm.o \
-src/psp2chIni.o src/psp2chIta.o src/psp2chMenu.o src/psp2chNet.o src/psp2chRes.o src/psp2chResWindow.o \
-src/psp2chSearch.o src/psp2chThread.o src/pspdialogs.o src/psphtmlviewer.o \
-src/libCat/Cat_Network.o src/libCat/Cat_Resolver.o \
-src/giflib/dgif_lib.o src/giflib/gif_err.o src/giflib/gifalloc.o
+OBJS = cp932.o intraFont.o main.o pg.o psp2ch.o psp2chFavorite.o psp2chForm.o \
+psp2chIni.o psp2chIta.o psp2chMenu.o psp2chNet.o psp2chRes.o psp2chResWindow.o \
+psp2chSearch.o psp2chThread.o pspdialogs.o psphtmlviewer.o \
+libCat/Cat_Network.o libCat/Cat_Resolver.o
 
 INCDIR =
 CFLAGS = -Wall -O2
