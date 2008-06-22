@@ -1,12 +1,12 @@
 TARGET = owata
-OBJS = cp932.o intraFont.o main.o pg.o psp2ch.o psp2chFavorite.o psp2chForm.o \
-psp2chImageView.o psp2chIni.o psp2chIta.o psp2chMenu.o psp2chNet.o psp2chRes.o \
-psp2chResWindow.o psp2chSearch.o psp2chThread.o psp2chTinyBrowser.o pspdialogs.o \
-libCat/Cat_Network.o libCat/Cat_Resolver.o \
-giflib/dgif_lib.o giflib/gif_err.o giflib/gifalloc.o
+OBJS = src/cp932.o src/intraFont.o src/main.o src/pg.o src/psp2ch.o src/psp2chFavorite.o src/psp2chForm.o \
+src/psp2chIni.o src/psp2chIta.o src/psp2chMenu.o src/psp2chNet.o src/psp2chRes.o src/psp2chResWindow.o \
+src/psp2chSearch.o src/psp2chThread.o src/pspdialogs.o src/psphtmlviewer.o \
+src/libCat/Cat_Network.o src/libCat/Cat_Resolver.o \
+src/giflib/dgif_lib.o src/giflib/gif_err.o src/giflib/gifalloc.o
 
 INCDIR =
-CFLAGS = -G0 -Wall -O2
+CFLAGS = -Wall -O2
 CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti
 ASFLAGS = $(CFLAGS)
 
@@ -14,12 +14,12 @@ LIBDIR =
 LDFLAGS =
 BUILD_PRX = 1
 PSP_FW_VERSION=352
-LIBS= -lpsppower -lpspgu -lpspwlan -ljpeg -lpng -lz -lm
+LIBS= -lpsppower -lpspgu -lpspssl -lpsphttp -lpspwlan -ljpeg -lpng -lz -lm
 
 EXTRA_TARGETS = EBOOT.PBP
 PSP_EBOOT_TITLE = 人生ｵﾜﾀ＼(^o^)／
 PSP_EBOOT_ICON = icon.png
 
-PSPSDK=$(shell psp-config --pspsdk-path)
+PSPSDK=/D/devkitPro/devkitPSP/psp/sdk
 include $(PSPSDK)/lib/build.mak
 

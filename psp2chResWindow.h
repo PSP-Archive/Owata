@@ -8,6 +8,5 @@
 void psp2chResAnchor(int anchor);
 void psp2chIdAnchor(int anchor);
 int psp2chUrlAnchor(int anchor, int offset);
-int psp2chImepita(int anchor, int offset);
 
 #endif
