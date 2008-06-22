@@ -10,6 +10,8 @@
 #include <pspnet_inet.h>
 #include <pspnet_apctl.h>
 #include <pspnet_resolver.h>
+#include <psphttp.h>
+#include <pspssl.h>
 #include <pspwlan.h>
 #include <string.h>
 #include <stdlib.h>
@@ -37,26 +39,68 @@ Cat_NetworkInit()
 
     if(gfInitialized == 0) {
 
-        rc = sceNetInit( 256*1024, 0x12, 0, 0x12, 0 );
+        //rc = sceNetInit( 256*1024, 0x12, 0, 0x12, 0 );
+        rc = sceNetInit(0x20000, 0x20, 0x1000, 0x20, 0x1000);
         if(rc < 0) {
             rc = sceNetInit( 256*1024, 0x12, 0x1000, 0x12, 0x1000 );
         }
         if(rc < 0) {
-            return rc;
+            return -1;
         }
 
         rc = sceNetInetInit();
         if(rc < 0) {
             sceNetTerm();
-            return rc;
+            return -2;
         }
 
-        rc = sceNetApctlInit( 0x8000, 0x13 );
+        //rc = sceNetApctlInit( 0x8000, 0x13 );
+        rc = sceNetApctlInit(0x1400, 0x42);
         if(rc < 0) {
             sceNetInetTerm();
             sceNetTerm();
-            return rc;
+            return -3;
         }
+		
+		rc = sceSslInit(0x28000);
+		if (rc < 0)
+		{
+            sceNetInetTerm();
+            sceNetTerm();
+            return -4;
+		}
+
+		rc = sceHttpInit(0x25800);
+		if (rc < 0)
+		{
+            sceNetInetTerm();
+            sceNetTerm();
+            return -5;
+		}
+
+		rc = sceHttpsInit(0, 0, 0, 0);
+		if (rc < 0)
+		{
+            sceNetInetTerm();
+            sceNetTerm();
+            return -6;
+		}
+
+		rc = sceHttpsLoadDefaultCert(0, 0);
+		if (rc < 0)
+		{
+            sceNetInetTerm();
+            sceNetTerm();
+            return -7;
+		}
+
+		rc = sceHttpLoadSystemCookie();
+		if (rc < 0)
+		{
+            sceNetInetTerm();
+            sceNetTerm();
+            return -8;
+		}
         gfInitialized = 1;
     }
 
@@ -72,9 +116,13 @@ Cat_NetworkTerm()
         while(Cat_NetworkIsConnect()) {
             sceKernelDelayThreadCB( 100 * 1000 );
         }
-        sceNetApctlTerm();
-        sceNetInetTerm();
-        sceNetTerm();
+		sceHttpSaveSystemCookie();
+		sceHttpsEnd();
+		sceHttpEnd();
+		sceSslEnd();
+		sceNetApctlTerm();
+		sceNetInetTerm();
+		sceNetTerm();
 
         gfInitialized = 0;
     }

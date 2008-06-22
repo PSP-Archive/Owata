@@ -28,7 +28,7 @@ extern RECT menuDstRectV; // pg.c
 extern RECT titleDstRectH; // pg.c
 extern RECT titleDstRectV; // pg.c
 
-char* ver = "0.7.2";
+char* ver = "0.8.0";
 S_2CH s2ch;
 char keyWords[128];
 

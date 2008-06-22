@@ -108,10 +108,34 @@ int psp2chNetInit(void)
         psp2chErrorDialog("Load module inet errror");
         return ret;
     }
+    ret = sceUtilityLoadNetModule(PSP_NET_MODULE_PARSEURI);
+    if (ret < 0)
+    {
+        psp2chErrorDialog("Load module parseuri errror");
+        return ret;
+    }
+    ret = sceUtilityLoadNetModule(PSP_NET_MODULE_PARSEHTTP);
+    if (ret < 0)
+    {
+        psp2chErrorDialog("Load module parsehttp errror");
+        return ret;
+    }
+    ret = sceUtilityLoadNetModule(PSP_NET_MODULE_HTTP);
+    if (ret < 0)
+    {
+        psp2chErrorDialog("Load module http errror");
+        return ret;
+    }
+    ret = sceUtilityLoadNetModule(PSP_NET_MODULE_SSL);
+    if (ret < 0)
+    {
+        psp2chErrorDialog("Load module ssl errror");
+        return ret;
+    }
     ret = Cat_NetworkInit();
     if (ret < 0)
     {
-        psp2chErrorDialog("Cat_NetworkInit errror");
+        psp2chErrorDialog("Cat_NetworkInit errror\n%d", ret);
         return ret;
     }
 	connectThread = sceKernelCreateThread("connect_thread", (SceKernelThreadEntry)&psp2chConnectThread, 0x12, 0x8000, 0, NULL);
@@ -135,6 +159,12 @@ void psp2chNetTerm(void)
 	sceKernelDeleteThread(connectThread);
 	sceKernelDeleteThread(recvThread);
     Cat_NetworkTerm();
+	sceUtilityUnloadNetModule(PSP_NET_MODULE_SSL);
+	sceUtilityUnloadNetModule(PSP_NET_MODULE_HTTP);
+	sceUtilityUnloadNetModule(PSP_NET_MODULE_PARSEHTTP);
+	sceUtilityUnloadNetModule(PSP_NET_MODULE_PARSEURI);
+	sceUtilityUnloadNetModule(PSP_NET_MODULE_INET);
+	sceUtilityUnloadNetModule(PSP_NET_MODULE_COMMON);
 }
 
 /*****************************
@@ -447,8 +477,8 @@ int psp2chResponse(const char* host, const char* path, S_NET* net)
 	recvBody += 2;
 	*recvBody = '\0';
 	recvSize -= strlen(recvHeader);
-    net->length = recvSize;
 	recvSize -= 2;
+    net->length = recvSize;
 	recvBody += 2;
 	pgWaitVn(10);
 	pgCopyMenuBar();
