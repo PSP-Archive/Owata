@@ -357,7 +357,7 @@ int psp2chFavorite(void)
 			{
 				psp2chDrawFavorite();
 			}
-			pgWaitVn(5);
+			//pgWaitVn(10);
 		}
         pgCopy(s2ch.viewX, 0);
         pgCopyMenuBar();

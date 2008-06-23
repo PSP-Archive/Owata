@@ -13,7 +13,7 @@ LIBDIR =
 LDFLAGS =
 BUILD_PRX = 1
 PSP_FW_VERSION=352
-LIBS= -lpsppower -lpspgu -lpspssl -lpsphttp -lpspwlan -ljpeg -lpng -lz -lm
+LIBS= -lpsppower -lpspgu -lpspssl -lpsphttp -lpspwlan -lm
 
 EXTRA_TARGETS = EBOOT.PBP
 PSP_EBOOT_TITLE = 人生ｵﾜﾀ＼(^o^)／

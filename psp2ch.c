@@ -98,6 +98,10 @@ void psp2chStart(void)
 		s2ch.pgCursorX = 450;
 		s2ch.pgCursorY = 260;
 		pgPrint(ver, BLUE, WHITE, SCR_WIDTH);
+		pgWaitVn(10);
+        pgCopy(0, 0);
+        sceDisplayWaitVblankStart();
+        framebuffer = sceGuSwapBuffers();
 		start = 1;
 	}
     if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
@@ -124,9 +128,6 @@ void psp2chStart(void)
                 return;
             }
         }
-        pgCopy(0, 0);
-        sceDisplayWaitVblankStart();
-        framebuffer = sceGuSwapBuffers();
     }
 }
 
@@ -652,10 +653,11 @@ int psp2chInputDialog(const unsigned short* text1, char* text2)
                     break;
                 }
             }
-            pgEditBox(WHITE, 140, 85, 340, 100);
+            pgEditBox(WHITE, 140, 85, 340, 101);
             s2ch.pgCursorX = 142;
             s2ch.pgCursorY =  87;
             pgPrint(keyWords, BLACK, WHITE, 340);
+			pgWaitVn(10);
 			pgCopy(0, 0);
             sceGuStart(GU_DIRECT, list);
 			sceGuScissor(70, 60, 410, 81);

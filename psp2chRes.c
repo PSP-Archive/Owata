@@ -416,6 +416,9 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
 				// 自動アンカーで書き込む
 				if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.resForm) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.resForm))
 				{
+					pgFillvram(s2ch.resColor.bg, 0, 0, SCR_WIDTH, BUF_HEIGHT, 1);
+					pgWaitVn(10);
+					pgCopy(0, 0);
 					psp2chResSend(host, dir, title, dat, &totalLine, &bar, numMenu);
 				}
 				// 戻る
@@ -468,11 +471,17 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
 						s2ch.viewX = 0;
 						s2ch.viewY = 0;
 						s2ch.sel = ret;
+						pgFillvram(s2ch.resColor.bg, 0, 0, SCR_WIDTH, BUF_HEIGHT, 1);
+						pgWaitVn(10);
+						pgCopy(0, 0);
 						return ret;
 					}
 					// 書き込み
 					else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.form) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.form))
 					{
+						pgFillvram(0xF000, 0, 0, SCR_WIDTH, BUF_HEIGHT, 1);
+						pgWaitVn(10);
+						pgCopy(0, 0);
 						psp2chResSend(host, dir, title, dat, &totalLine, &bar, -1);
 					}
 					// 更新
