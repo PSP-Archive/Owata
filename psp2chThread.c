@@ -134,7 +134,7 @@ int psp2chThread(int retSel)
             // STARTƒ{ƒ^ƒ“
             else if(s2ch.pad.Buttons & PSP_CTRL_START)
             {
-                psp2chMenu();
+                psp2chMenu(NULL);
             }
             else if (rMenu)
             {

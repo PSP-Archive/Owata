@@ -26,6 +26,9 @@ RECT titleDstRectH; // psp2chInit(psp2ch.c)で初期化
 RECT titleDstRectV; // psp2chInit(psp2ch.c)で初期化
 static unsigned char *fontA, *fontJ;
 static int size_fontA, size_fontJ;
+#define MAX_ENTITIES 12
+static struct entityTag entity[MAX_ENTITIES];
+static S_PUTCHAR sChar;
 
 unsigned int   __attribute__((aligned(16))) list[512*512];
 unsigned short __attribute__((aligned(16))) pixels[BUF_WIDTH*BUF_HEIGHT*2];
@@ -36,10 +39,11 @@ unsigned short* printBuf;
 void* framebuffer;
 intraFont* jpn0;
 
+unsigned short __attribute__((aligned(16))) cursorImg[32*45];
 #define O 0
-#define B RGB(0,0,0)
-#define W RGB(255,255,255)
-unsigned short __attribute__((aligned(16))) cursorImg[32*45] = {
+#define B 1
+#define W 2
+unsigned short cursorFont[32*45] = {
 	O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
 	O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
 	O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
@@ -90,17 +94,29 @@ unsigned short __attribute__((aligned(16))) cursorImg[32*45] = {
 #undef B
 #undef W
 
-struct entityTag
+/*************************
+カーソルのフォントからビットマップ画像を作る
+**************************/
+void pgCursorColorSet(void)
 {
-	char* str;
-	int len;
-	int byte;
-	char c1;
-	char c2;
-};
+	int i;
+	for (i = 0; i < 32*45; i++)
+	{
+		if (cursorFont[i] == 1)
+		{
+			cursorImg[i] = s2ch.cursorColor.arrow1;
+		}
+		else if (cursorFont[i] == 2)
+		{
+			cursorImg[i] = s2ch.cursorColor.arrow2;
+		}
+		else
+		{
+			cursorImg[i] = 0;
+		}
+	}
+}
 
-#define MAX_ENTITIES 12
-struct entityTag entity[MAX_ENTITIES];
 void pgEntitiesSet(void)
 {
 	entity[0].str  = "&amp;"; entity[0].len  = 4;entity[0].byte  = 1;entity[0].c1  = '&'; entity[0].c2	= 0;
@@ -228,9 +244,8 @@ void pgFontLoad(void)
 	}
 	pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
 	pgPrintMonaWait();
-    pgWaitVn(10);
+    pgWaitVn(20);
 	pgCopy(0, 0);
-    pgWaitVn(10);
     sceDisplayWaitVblankStart();
 	framebuffer = sceGuSwapBuffers();
 	jpn0 = intraFontLoad("flash0:/font/jpn0.pgf",0);
@@ -400,9 +415,9 @@ void pgCopyRectRotate(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect)
 /*--------------------------------------------------------
 	指定した矩形範囲を塗りつぶし
 --------------------------------------------------------*/
-void pgFillRect(unsigned long color, RECT *rect)
+void pgFillRect(unsigned short color, RECT *rect)
 {
-	int r, g, b, a;
+	unsigned int r, g, b, a, c;
 	// RGBA4444 => RGBA8888へ
 	r = color & 0x0F;
 	g = (color >> 4) & 0x0F;
@@ -412,10 +427,10 @@ void pgFillRect(unsigned long color, RECT *rect)
 	g = (g << 4) | g;
 	b = (b << 4) | b;
 	a = (a << 4) | a;
-	color = GU_RGBA(r,g,b,a);
+	c = GU_RGBA(r,g,b,a);
 	sceGuStart(GU_DIRECT, list);
 	sceGuScissor(rect->left, rect->top, rect->right, rect->bottom);
-	sceGuClearColor(color);
+	sceGuClearColor(c);
 	sceGuClear(GU_COLOR_BUFFER_BIT);
 	sceGuFinish();
 	sceGuSync(0, GU_SYNC_FINISH);
@@ -686,7 +701,7 @@ void pgWindowFrame(int x1, int y1, int x2, int y2)
 /*****************************
 スクロールバー表示
 *****************************/
-void pgScrollbar(S_SCROLLBAR bar, S_2CH_BAR_COLOR c)
+void pgScrollbar(S_SCROLLBAR* bar, S_2CH_BAR_COLOR c)
 {
 	unsigned short *temp;
 	int sliderH, sliderY;
@@ -696,37 +711,37 @@ void pgScrollbar(S_SCROLLBAR bar, S_2CH_BAR_COLOR c)
 	// winPixelsの余ってる部分を使用
 	printBuf = winPixels + BUF_WIDTH * 2 -32;
 
-	sliderH = bar.view*bar.h/bar.total;
-	sliderY = bar.start*bar.h/bar.total+bar.y;
+	sliderH = bar->view * bar->h / bar->total;
+	sliderY = bar->start * bar->h / bar->total + bar->y;
 	if (sliderH < 2) {
 		sliderH = 2;
 	}
-	if (sliderY >= (bar.y+bar.h-1)) {
-		sliderY = bar.y+bar.h-2;
+	if (sliderY >= (bar->y + bar->h - 1)) {
+		sliderY = bar->y + bar->h - 2;
 	}
 	if (s2ch.tateFlag)
 	{
-		rect.left = SCR_WIDTH - bar.y - bar.h;
-		rect.top = bar.x;
-		rect.right = SCR_WIDTH - bar.y;
-		rect.bottom = bar.x + bar.w;
+		rect.left = SCR_WIDTH - bar->y - bar->h;
+		rect.top = bar->x;
+		rect.right = SCR_WIDTH - bar->y;
+		rect.bottom = bar->x + bar->w;
 		pgFillRect(c.bg, &rect);
 		rect.left = SCR_WIDTH - sliderY - sliderH;
-		rect.top = bar.x + 1;
+		rect.top = bar->x + 1;
 		rect.right = SCR_WIDTH - sliderY;
-		rect.bottom = bar.x + bar.w;
+		rect.bottom = bar->x + bar->w;
 		pgFillRect(c.slider, &rect);
 	}
 	else
 	{
-		rect.left = bar.x;
-		rect.top = bar.y;
-		rect.right = bar.x + bar.w;
-		rect.bottom = bar.y + bar.h;
+		rect.left = bar->x;
+		rect.top = bar->y;
+		rect.right = bar->x + bar->w;
+		rect.bottom = bar->y + bar->h;
 		pgFillRect(c.bg, &rect);
-		rect.left = bar.x + 1;
+		rect.left = bar->x + 1;
 		rect.top = sliderY;
-		rect.right = bar.x + bar.w;
+		rect.right = bar->x + bar->w;
 		rect.bottom = sliderY + sliderH;
 		pgFillRect(c.slider, &rect);
 	}
@@ -886,16 +901,16 @@ void pgPrintNumber(int num, int color,int bgcolor)
 1文字をフォントから読み込んでwidth内で表示可能なら表示して0を返す
 widthを超える場合は表示しないで1を返す
 *****************************/
-int pgPutChar(unsigned char *cfont,int ch,unsigned short color,unsigned short bgcolor, int width)
+int pgPutChar(void)
 {
 	unsigned short *vptr0;		 //pointer to vram
 	unsigned short *vptr;		 //pointer to vram
 	unsigned short *font;
 	int cx, cy, i, b;
 
-	font = (unsigned short*)(cfont + (ch<<5));
+	font = (unsigned short*)(sChar.cfont + (sChar.ch<<5));
 	cx = *font++;
-	if ((s2ch.pgCursorX + cx) >= width) {
+	if ((s2ch.pgCursorX + cx) >= sChar.width) {
 		return 1;
 	}
 	s2ch.pgCursorY &= 0x01FF;
@@ -906,9 +921,9 @@ int pgPutChar(unsigned char *cfont,int ch,unsigned short color,unsigned short bg
 		b = 0x8000;
 		for (i = 0; i < cx; i++) {
 			if (*font & b) {
-				*vptr=color;
+				*vptr=sChar.color;
 			} else {
-				*vptr=bgcolor;
+				*vptr=sChar.bgcolor;
 			}
 			vptr++;
 			b >>= 1;
@@ -922,7 +937,7 @@ int pgPutChar(unsigned char *cfont,int ch,unsigned short color,unsigned short bg
 	return 0;
 }
 
-int pgPutCharA(const unsigned char c,unsigned short color,unsigned short bgcolor, int width)
+int pgPutCharA(const unsigned char c)
 {
 	unsigned long index;
 
@@ -939,10 +954,12 @@ int pgPutCharA(const unsigned char c,unsigned short color,unsigned short bgcolor
 	if ((index << 5) >= size_fontA) {
 		index = '?' - 0x20;
 	}
-	return pgPutChar(fontA, index, color, bgcolor, width);
+	sChar.ch = index;
+	sChar.cfont = fontA;
+	return pgPutChar();
 }
 
-int pgPutCharW(unsigned char hi,unsigned char lo,unsigned short color,unsigned short bgcolor, int width)
+int pgPutCharW(unsigned char hi,unsigned char lo)
 {
 	unsigned long index;
 
@@ -967,10 +984,12 @@ int pgPutCharW(unsigned char hi,unsigned char lo,unsigned short color,unsigned s
 	if ((index << 5) >= size_fontJ) {
 		index = 8; // '？'
 	}
-	return pgPutChar(fontJ, index, color, bgcolor, width);
+	sChar.ch = index;
+	sChar.cfont = fontJ;
+	return pgPutChar();
 }
 
-int pgPutCharW2(unsigned char hi,unsigned char lo,unsigned short color,unsigned short bgcolor, int width, int code)
+int pgPutCharW2(unsigned char hi,unsigned char lo, int code)
 {
 	unsigned long index;
 
@@ -995,7 +1014,7 @@ int pgPutCharW2(unsigned char hi,unsigned char lo,unsigned short color,unsigned 
 	case 1:
 		if (hi == 0x8E)
 		{
-			return pgPutCharA(lo, color, bgcolor, width);
+			return pgPutCharA(lo);
 		}
 		hi &= 0x7F;
 		lo &= 0x7F;
@@ -1012,13 +1031,15 @@ int pgPutCharW2(unsigned char hi,unsigned char lo,unsigned short color,unsigned 
 	if ((index << 5) >= size_fontJ) {
 		index = 8; // '？'
 	}
-	return pgPutChar(fontJ, index, color, bgcolor, width);
+	sChar.ch = index;
+	sChar.cfont = fontA;
+	return pgPutChar();
 }
 
 /*****************************
 実体参照を変換
 *****************************/
-int pgSpecialChars(char** string,unsigned short color,unsigned short bgcolor, int width)
+int pgSpecialChars(char** string)
 {
 	int i, val;
 	char* str;
@@ -1051,14 +1072,14 @@ int pgSpecialChars(char** string,unsigned short color,unsigned short bgcolor, in
 			lo = val >> 8;
 			hi = val & 0xFF;
 			if (lo) {
-				return pgPutCharW(hi, lo, color, bgcolor, width);
+				return pgPutCharW(hi, lo);
 			}
 			else if (hi) {
-				return pgPutCharA(hi, color, bgcolor, width);
+				return pgPutCharA(hi);
 			}
 			// 変換できない文字
 			else {
-				return pgPutCharA('?', color, bgcolor, width);
+				return pgPutCharA('?');
 			}
 		}
 	}
@@ -1067,15 +1088,15 @@ int pgSpecialChars(char** string,unsigned short color,unsigned short bgcolor, in
 			if (strstr(*string, entity[i].str) == *string) {
 				(*string) += entity[i].len;
 				if (entity[i].byte == 1) {
-					return pgPutCharA(entity[i].c1, color, bgcolor, width);
+					return pgPutCharA(entity[i].c1);
 				}
 				else {
-					return pgPutCharW(entity[i].c1, entity[i].c2, color, bgcolor, width);
+					return pgPutCharW(entity[i].c1, entity[i].c2);
 				}
 			}
 		}
 	}
-	return pgPutCharA('&', color, bgcolor, width);
+	return pgPutCharA('&');
 }
 
 /*****************************
@@ -1087,10 +1108,13 @@ char* pgPrint(char *str,unsigned short color,unsigned short bgcolor, int width)
 	unsigned char ch = 0,bef = 0;
 	int ret = 0;
 
+	sChar.color = color;
+	sChar.bgcolor = bgcolor;
+	sChar.width = width;
 	while(*str) {
 		ch = (unsigned char)*str;
 		if (bef!=0) {
-			ret = pgPutCharW(bef, ch, color, bgcolor, width);
+			ret = pgPutCharW(bef, ch);
 			if (ret) { // 改行部の位置を返す
 				return --str;
 			}
@@ -1100,14 +1124,14 @@ char* pgPrint(char *str,unsigned short color,unsigned short bgcolor, int width)
 				bef = ch;
 			} else {
 				if (ch == '&') {
-					ret = pgSpecialChars((char**)(&str), color, bgcolor, width);
+					ret = pgSpecialChars((char**)(&str));
 				}
 				else if (ch == '\n') {
 					ret = 1;
 					str++;
 				}
 				else {
-					ret = pgPutCharA(ch, color, bgcolor, width);
+					ret = pgPutCharA(ch);
 				}
 				if (ret) {
 					return str;
@@ -1154,22 +1178,23 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR *c, int startX, int width,int drawL
 	static int anchorOn = 0;
 	unsigned char ch = 0,bef = 0;
 	int ret = 0;
-	unsigned short tcolor;
 	char *p;
 	int i, j, start, end;
 
+	sChar.bgcolor = c->bg;
+	sChar.width = width;
 	if (anchorOn)
 	{
-		tcolor = c->link;
+		sChar.color = c->link;
 	}
 	else
 	{
-		tcolor = c->text;
+		sChar.color = c->text;
 	}
 	while(*str) {
 		ch = (unsigned char)*str;
 		if (bef!=0) {
-			ret = pgPutCharW(bef, ch, tcolor, c->bg, width);
+			ret = pgPutCharW(bef, ch);
 			if (ret) {
 				return --str;
 			}
@@ -1184,16 +1209,16 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR *c, int startX, int width,int drawL
 					urlEnd();
 				}
 				anchorOn = 0;
-				tcolor = c->text;
+				sChar.color = c->text;
 			} else {
 				if (ch >= 0xa0 && ch < 0xe0) {
 					anchorOn = 0;
-					tcolor = c->text;
+					sChar.color = c->text;
 				}
 				else if (anchorOn == 2) {
 					if ((ch < '0' || ch > '9') && ch != '-' && ch != ',' && ch !='<') {
 						anchorOn = 0;
-						tcolor = c->text;
+						sChar.color = c->text;
 						resEnd();
 					}
 				}
@@ -1203,7 +1228,7 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR *c, int startX, int width,int drawL
 					}
 					else {
 						anchorOn = 0;
-						tcolor = c->text;
+						sChar.color = c->text;
 						urlEnd();
 					}
 				}
@@ -1211,7 +1236,7 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR *c, int startX, int width,int drawL
 				if (strstr(str, "http://") == str) {
 					s2ch.urlAnchor[s2ch.urlAnchorCount].x1 = s2ch.pgCursorX;
 					s2ch.urlAnchor[s2ch.urlAnchorCount].line = drawLine;
-					tcolor = c->link;
+					sChar.color = c->link;
 				}
 				else if (strstr(str, "ttp://") == str) {
 					if (s2ch.urlAnchor[s2ch.urlAnchorCount].x1 == 0) {
@@ -1247,7 +1272,7 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR *c, int startX, int width,int drawL
 							s2ch.urlAnchor[s2ch.urlAnchorCount].path[j] = '\0';
 						}
 						anchorOn = 1;
-						tcolor = c->link;
+						sChar.color = c->link;
 					}
 				}
 
@@ -1259,7 +1284,7 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR *c, int startX, int width,int drawL
 						urlEnd();
 					}
 					anchorOn = 0;
-					tcolor = c->text;
+					sChar.color = c->text;
 					if (strstr(str, "<br>") == str) {
 						str +=4;
 						return str;
@@ -1275,7 +1300,7 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR *c, int startX, int width,int drawL
 						if ((strstr((str + 4), "&gt;") == (str + 4)) && *(str + 8) >= '0' && *(str + 8) <= '9') {
 							s2ch.resAnchor[s2ch.resAnchorCount].x1 = s2ch.pgCursorX;
 							s2ch.resAnchor[s2ch.resAnchorCount].line = drawLine;
-							tcolor = c->link;
+							sChar.color = c->link;
 						}
 						else if (*(str + 4) >= '0' && *(str + 4) <= '9') {
 							if (s2ch.resAnchor[s2ch.resAnchorCount].x1 == 0) {
@@ -1322,22 +1347,22 @@ char* pgPrintHtml(char *str, S_2CH_RES_COLOR *c, int startX, int width,int drawL
 							}
 							s2ch.resAnchor[s2ch.resAnchorCount].resCount = j;
 							anchorOn = 2;
-							tcolor = c->link;
+							sChar.color = c->link;
 						}
 					}
-					ret = pgSpecialChars((char**)(&str), tcolor, c->bg, width);
+					ret = pgSpecialChars((char**)(&str));
 				}
 				else if (ch == ' ' || ch == '\n') {
 					while (ch == ' ' || ch == '\n') {
 						ch = *(++str);
 					}
 					anchorOn = 0;
-					tcolor = c->text;
+					sChar.color = c->text;
 					str--;
-					ret = pgPutCharA(' ', tcolor, c->bg, width);
+					ret = pgPutCharA(' ');
 				}
 				else {
-					ret = pgPutCharA(ch, tcolor, c->bg, width);
+					ret = pgPutCharA(ch);
 				}
 				if (ret) {
 					if (anchorOn == 2) {

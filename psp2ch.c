@@ -20,6 +20,9 @@
 #include "intraFont.h"
 
 extern unsigned int list[512*512]; // pg.c
+extern unsigned short pixels[BUF_WIDTH*BUF_HEIGHT*2];
+extern unsigned short winPixels[BUF_WIDTH*BUF_HEIGHT*2];
+extern unsigned short* printBuf;
 extern intraFont* jpn0; // pg.c
 extern RECT barSrcRectH; // pg.c
 extern RECT barSrcRectV; // pg.c
@@ -145,9 +148,8 @@ int psp2chOwata(void)
     {
         s2ch.tateFlag = 0;
         pgPrintOwata();
-        pgWaitVn(10);
+        pgWaitVn(20);
         pgCopy(0, 0);
-        pgWaitVn(10);
         sceDisplayWaitVblankStart();
         framebuffer = sceGuSwapBuffers();
         pgWaitVn(10);
@@ -510,6 +512,7 @@ int psp2chInit(void)
     s2ch.resList = NULL;
 	psp2chSetFontParam();
 	psp2chSetBarParam();
+	pgCursorColorSet();
     return 0;
 }
 
@@ -631,6 +634,10 @@ int psp2chInputDialog(const unsigned short* text1, char* text2)
     temp = s2ch.tateFlag;
     s2ch.tateFlag = 0;
     keyWords[0] = '\0';
+	printBuf = winPixels;
+	pgFillvram(0x8000, 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
+    pgEditBox(WHITE, 140, 85, 340, 101);
+	intraFontSetStyle(jpn0, 1.0f, 0xFF00FFFF, 0, INTRAFONT_ALIGN_CENTER);
     pgPrintMenuBar("　○ : 入力　　　× : 戻る　　　□ : 決定");
     while (s2ch.running)
     {
@@ -646,6 +653,7 @@ int psp2chInputDialog(const unsigned short* text1, char* text2)
                 else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
                 {
                     s2ch.tateFlag = temp;
+					printBuf = pixels;
                     return -1;
                 }
                 else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
@@ -653,26 +661,28 @@ int psp2chInputDialog(const unsigned short* text1, char* text2)
                     break;
                 }
             }
-            pgEditBox(WHITE, 140, 85, 340, 101);
-            s2ch.pgCursorX = 142;
-            s2ch.pgCursorY =  87;
-            pgPrint(keyWords, BLACK, WHITE, 340);
-			pgWaitVn(10);
-			pgCopy(0, 0);
-            sceGuStart(GU_DIRECT, list);
-			sceGuScissor(70, 60, 410, 81);
-			sceGuClearColor(0xFFFF0000);
-			sceGuClear(GU_COLOR_BUFFER_BIT);
-            intraFontSetStyle(jpn0, 1.0f, 0xFF00FFFF, 0, INTRAFONT_ALIGN_CENTER);
-            intraFontPrintUCS2(jpn0, 240, 77, text1);
-            sceGuFinish();
-            sceGuSync(0,0);
-			pgCopyMenuBar();
-			sceDisplayWaitVblankStart();
-			framebuffer = sceGuSwapBuffers();
         }
+		printBuf = pixels;
+		s2ch.tateFlag = temp;
+		pgCopy(s2ch.viewX, 0);
+		s2ch.tateFlag = 0;
+		printBuf = winPixels;
+		pgEditBox(WHITE, 140, 85, 340, 101);
+		s2ch.pgCursorX = 142;
+		s2ch.pgCursorY =  87;
+		pgPrint(keyWords, BLACK, WHITE, 340);
+		pgWaitVn(10);
+		pgCopy(0, 0);
+		sceGuStart(GU_DIRECT, list);
+		intraFontPrintUCS2(jpn0, 240, 77, text1);
+		sceGuFinish();
+		sceGuSync(0,0);
+		pgCopyMenuBar();
+		sceDisplayWaitVblankStart();
+		framebuffer = sceGuSwapBuffers();
     }
     s2ch.tateFlag = temp;
+	printBuf = pixels;
     return 0;
 }
 

@@ -71,6 +71,9 @@ void psp2chSearchSetMenuString(void)
             sBtnV[index1], sBtnV[index2], sBtnV[index3]);
 }
 
+/*********************
+2ちゃんねる検索
+**********************/
 int psp2chSearch(int retSel)
 {
     static char* menuStr = "";
@@ -87,6 +90,7 @@ int psp2chSearch(int retSel)
         ret = retSel;
         s2ch.find.start = 0;
         s2ch.find.select = 0;
+	    psp2chDrawSearch();
     }
     if (s2ch.tateFlag)
     {
@@ -191,6 +195,10 @@ int psp2chSearch(int retSel)
     return 0;
 }
 
+/**********************
+文字列のエンコード変換
+Shift JISからEUC-JPへ
+**********************/
 void psp2chSjisToEuc(char* dst, char* src)
 {
     unsigned char hi, lo;
@@ -232,6 +240,10 @@ void psp2chSjisToEuc(char* dst, char* src)
     *dst = '\0';
 }
 
+/**********************
+文字列のエンコード変換
+EUC-JPからShift JISへ
+**********************/
 void psp2chEucToSjis(char* dst, char* src)
 {
     unsigned char hi, lo;
@@ -276,6 +288,10 @@ void psp2chEucToSjis(char* dst, char* src)
     *dst = '\0';
 }
 
+/**********************
+検索キーワードをURLエンコードしてQUERY STRINGとしてGET送信
+受信したhtmlを解析してリスト(s2ch.findList)に登録
+**********************/
 #define FIND_MAX_COUNT (50)
 int psp2chSearchList(void)
 {
@@ -392,6 +408,7 @@ int psp2chSearchList(void)
 }
 
 /**********************
+検索結果の一覧を表示
 **********************/
 void psp2chDrawSearch(void)
 {

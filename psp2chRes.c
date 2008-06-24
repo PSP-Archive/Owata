@@ -323,7 +323,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
 			else if(s2ch.pad.Buttons & PSP_CTRL_START)
 			{
 				psp2chResLineSet(&i, &j);
-				psp2chMenu();
+				psp2chMenu(&bar);
 				totalLine = psp2chResSetLine(&bar);
 				psp2chResLineGet(i, j);
 				preLine = -2;
@@ -535,6 +535,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
 		// 横スクロール
 		if (wide)
 		{
+			// cursorMode時は常に左右スクロール　それ以外はカーソルが画面端にあるときだけスクロール
 			if (cursorMode || cursorX == 0 || cursorX == bar.x)
 			{
 				s2ch.viewX = psp2chPadSet(s2ch.viewX);
@@ -543,7 +544,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
 		s2ch.viewY = s2ch.res.start * LINE_PITCH;
 		pgCopy(s2ch.viewX, s2ch.viewY);
 		bar.start = s2ch.viewY;
-		pgScrollbar(bar, s2ch.resBarColor);
+		pgScrollbar(&bar, s2ch.resBarColor);
 		pgCopyMenuBar();
 		if (rMenu)
 		{
@@ -1639,7 +1640,7 @@ int psp2chResList(char* host, char* dir, char* title, int dat)
 }
 
 /*****************************
-datファイルにアクセスして保存
+2ちゃんねるサーバのdatファイルにアクセスして保存
 戻り値 0:データ取得, 1:更新なし, <0:error
 *****************************/
 int psp2chGetDat(char* host, char* dir, char* title, int dat)
@@ -2131,7 +2132,7 @@ int psp2chDrawResHeader(int re, int* skip, int line, int lineEnd, int startX, in
 }
 
 /*****************************
-レスの本文部分の表示
+レスの本文の表示
 *****************************/
 int psp2chDrawResText(int res, int* skip, int line, int lineEnd, int startX, int endX, S_2CH_RES_COLOR c, int* drawLine)
 {

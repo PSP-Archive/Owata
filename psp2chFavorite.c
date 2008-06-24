@@ -240,7 +240,7 @@ int psp2chFavorite(void)
             // STARTƒ{ƒ^ƒ“
             else if(s2ch.pad.Buttons & PSP_CTRL_START)
             {
-                psp2chMenu();
+                psp2chMenu(NULL);
             }
             else if (rMenu)
             {
@@ -342,7 +342,6 @@ int psp2chFavorite(void)
                     }
                 }
             }
-			pgPrintMenuBar(menuStr);
 			change = 1;
         }
 		res = psp2chPadSet(s2ch.viewX);
@@ -357,7 +356,7 @@ int psp2chFavorite(void)
 			{
 				psp2chDrawFavorite();
 			}
-			//pgWaitVn(10);
+			pgPrintMenuBar(menuStr);
 		}
         pgCopy(s2ch.viewX, 0);
         pgCopyMenuBar();

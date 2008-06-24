@@ -51,6 +51,24 @@ typedef struct tex
 	int tb;
 } TEX;
 
+struct entityTag
+{
+	char* str;
+	int len;
+	int byte;
+	char c1;
+	char c2;
+};
+
+typedef struct {
+	unsigned char *cfont;
+	int ch;
+	unsigned short color;
+	unsigned short bgcolor;
+	int width;
+} S_PUTCHAR;
+
+void pgCursorColorSet(void);
 int pgExtraFontInit(void);
 void pgSetupGu(void);
 void pgCopyRect(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect);
@@ -61,22 +79,22 @@ void pgWaitV();
 void pgWaitVn(unsigned long count);
 unsigned short* pgGetVramAddr(unsigned long x,unsigned long y, int w);
 void pgFillvram(unsigned short color, int x1, int y1, int w, int h, int wide);
-void pgFillRect(unsigned long color, RECT *rect);
+void pgFillRect(unsigned short color, RECT *rect);
 void pgPrintTitleBar(char* ita, char* title);
 void pgCopyTitleBar(void);
 void pgPrintMenuBar(char* str);
 void pgCopyMenuBar(void);
 void pgEditBox(int color, int x1, int y1, int x2, int y2);
 void pgWindowFrame(int x1, int y1, int x2, int y2);
-void pgScrollbar(S_SCROLLBAR bar, S_2CH_BAR_COLOR c);
+void pgScrollbar(S_SCROLLBAR* bar, S_2CH_BAR_COLOR c);
 void pgPadCursor(int x, int y);
 void pgCopyWindow(int offset, int x, int y, int w, int h);
 void pgCopy(int offsetX, int offsetY);
 void pgPrintNumber(int num, int color,int bgcolor);
-int pgPutCharA(const unsigned char c,unsigned short color,unsigned short bgcolor, int width);
-int pgPutCharW(unsigned char hi,unsigned char lo,unsigned short color,unsigned short bgcolor, int width);
-int pgPutCharW2(unsigned char hi,unsigned char lo,unsigned short color,unsigned short bgcolor, int width, int code);
-int pgSpecialChars(char** string,unsigned short color,unsigned short bgcolor, int width);
+int pgPutCharA(const unsigned char c);
+int pgPutCharW(unsigned char hi,unsigned char lo);
+int pgPutCharW2(unsigned char hi,unsigned char lo, int code);
+int pgSpecialChars(char** string);
 char* pgPrint(char *str, unsigned short color, unsigned short bgcolor, int width);
 char* pgPrintHtml(char *str,S_2CH_RES_COLOR *c, int startX, int width,int drawLine);
 int pgCountCharA(const unsigned char c, int width);
