@@ -901,14 +901,29 @@ void pgPrintNumber(int num, int color,int bgcolor)
 1文字をフォントから読み込んでwidth内で表示可能なら表示して0を返す
 widthを超える場合は表示しないで1を返す
 *****************************/
-int pgPutChar(void)
+// 1バイト文字(ASCII, 半角カナ
+int pgPutCharA(const unsigned char c)
 {
+	unsigned long index;
 	unsigned short *vptr0;		 //pointer to vram
 	unsigned short *vptr;		 //pointer to vram
 	unsigned short *font;
 	int cx, cy, i, b;
 
-	font = (unsigned short*)(sChar.cfont + (sChar.ch<<5));
+	index = c;
+	if (c < 0x20) {
+		return 0;
+	} else if (c < 0x80) {
+		index -= 0x20;
+	} else if (c > 0xa0) {
+		index -= 0x41;
+	} else {
+		return 0;
+	}
+	if ((index << 5) >= size_fontA) {
+		index = '?' - 0x20;
+	}
+	font = (unsigned short*)(fontA + (index<<5));
 	cx = *font++;
 	if ((s2ch.pgCursorX + cx) >= sChar.width) {
 		return 1;
@@ -936,32 +951,14 @@ int pgPutChar(void)
 	}
 	return 0;
 }
-
-int pgPutCharA(const unsigned char c)
-{
-	unsigned long index;
-
-	index = c;
-	if (c < 0x20) {
-		return 0;
-	} else if (c < 0x80) {
-		index -= 0x20;
-	} else if (c > 0xa0) {
-		index -= 0x41;
-	} else {
-		return 0;
-	}
-	if ((index << 5) >= size_fontA) {
-		index = '?' - 0x20;
-	}
-	sChar.ch = index;
-	sChar.cfont = fontA;
-	return pgPutChar();
-}
-
+// 2バイト文字
 int pgPutCharW(unsigned char hi,unsigned char lo)
 {
 	unsigned long index;
+	unsigned short *vptr0;
+	unsigned short *vptr;
+	unsigned short *font;
+	int cx, cy, i, b;
 
 	// sjis2jis
 	hi -= (hi <= 0x9f) ? 0x71 : 0xb1;
@@ -984,56 +981,34 @@ int pgPutCharW(unsigned char hi,unsigned char lo)
 	if ((index << 5) >= size_fontJ) {
 		index = 8; // '？'
 	}
-	sChar.ch = index;
-	sChar.cfont = fontJ;
-	return pgPutChar();
-}
 
-int pgPutCharW2(unsigned char hi,unsigned char lo, int code)
-{
-	unsigned long index;
-
-	switch (code)
-	{
-	// sjis2jis
-	case 0:
-		hi -= (hi <= 0x9f) ? 0x71 : 0xb1;
-		hi <<= 1;
-		hi++;
-		if (lo > 0x7f)
-			lo--;
-		if (lo >= 0x9e) {
-			lo -= 0x7d;
-			hi++;
-		}
-		else {
-			lo -= 0x1f;
-		}
-		break;
-	// euc2jis
-	case 1:
-		if (hi == 0x8E)
-		{
-			return pgPutCharA(lo);
-		}
-		hi &= 0x7F;
-		lo &= 0x7F;
-		break;
-	// jis
-	case 2:
-		break;
+	font = (unsigned short*)(fontJ + (index<<5));
+	cx = *font++;
+	if ((s2ch.pgCursorX + cx) >= sChar.width) {
+		return 1;
 	}
-	// hi : 0x21-0x7e, lo : 0x21-0x7e
-	hi -= 0x21;
-	lo -= 0x21;
-	index = hi * (0x7e - 0x20);
-	index += lo;
-	if ((index << 5) >= size_fontJ) {
-		index = 8; // '？'
+	s2ch.pgCursorY &= 0x01FF;
+	vptr0 = pgGetVramAddr(s2ch.pgCursorX, s2ch.pgCursorY, 2);
+	s2ch.pgCursorX += cx;
+	for (cy = 0; cy < FONT_HEIGHT; cy++) {
+		vptr = vptr0;
+		b = 0x8000;
+		for (i = 0; i < cx; i++) {
+			if (*font & b) {
+				*vptr=sChar.color;
+			} else {
+				*vptr=sChar.bgcolor;
+			}
+			vptr++;
+			b >>= 1;
+		}
+		vptr0 += BUF_WIDTH * 2;
+		if (vptr0 >= printBuf + ZBUF_SIZE * 2) {
+			vptr0 -= ZBUF_SIZE * 2;
+		}
+		font++;
 	}
-	sChar.ch = index;
-	sChar.cfont = fontA;
-	return pgPutChar();
+	return 0;
 }
 
 /*****************************
@@ -1433,57 +1408,6 @@ int pgCountCharW(unsigned char hi,unsigned char lo, int width)
 	}
 	else {
 		lo -= 0x1f;
-	}
-	// hi : 0x21-0x7e, lo : 0x21-0x7e
-	hi -= 0x21;
-	lo -= 0x21;
-	index = hi * (0x7e - 0x20);
-	index += lo;
-	if ((index<<5) >= size_fontJ) {
-		index = 8; // '？'
-	}
-	font = (unsigned short*)(fontJ + (index<<5));
-	if ((s2ch.pgCursorX + *font) >= width) {
-		return 1;
-	}
-	s2ch.pgCursorX += *font;
-	return 0;
-}
-
-int pgCountCharW2(unsigned char hi,unsigned char lo, int width, int code)
-{
-	unsigned long index;
-	unsigned short *font;
-
-	switch (code)
-	{
-	// sjis2jis
-	case 0:
-		hi -= (hi <= 0x9f) ? 0x71 : 0xb1;
-		hi <<= 1;
-		hi++;
-		if (lo > 0x7f)
-			lo--;
-		if (lo >= 0x9e) {
-			lo -= 0x7d;
-			hi++;
-		}
-		else {
-			lo -= 0x1f;
-		}
-		break;
-	// euc2jis
-	case 1:
-		if (hi == 0x8E)
-		{
-			return pgCountCharA(lo, width);
-		}
-		hi &= 0x7F;
-		lo &= 0x7F;
-		break;
-	// utf82jis
-	case 2:
-		break;
 	}
 	// hi : 0x21-0x7e, lo : 0x21-0x7e
 	hi -= 0x21;

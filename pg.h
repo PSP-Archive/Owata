@@ -61,8 +61,6 @@ struct entityTag
 };
 
 typedef struct {
-	unsigned char *cfont;
-	int ch;
 	unsigned short color;
 	unsigned short bgcolor;
 	int width;
@@ -93,13 +91,11 @@ void pgCopy(int offsetX, int offsetY);
 void pgPrintNumber(int num, int color,int bgcolor);
 int pgPutCharA(const unsigned char c);
 int pgPutCharW(unsigned char hi,unsigned char lo);
-int pgPutCharW2(unsigned char hi,unsigned char lo, int code);
 int pgSpecialChars(char** string);
 char* pgPrint(char *str, unsigned short color, unsigned short bgcolor, int width);
 char* pgPrintHtml(char *str,S_2CH_RES_COLOR *c, int startX, int width,int drawLine);
 int pgCountCharA(const unsigned char c, int width);
 int pgCountCharW(unsigned char hi,unsigned char lo, int width);
-int pgCountCharW2(unsigned char hi,unsigned char lo, int width, int code);
 int pgCountSpecialChars(char** string, int width);
 char* pgCountHtml(char *str, int width, int specialchar);
 void pgHome(void);
