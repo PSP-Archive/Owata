@@ -288,7 +288,7 @@ void pgFillvram(unsigned short color, int x1, int y1, int w, int h, int wide)
 	unsigned short *vptr;
 	unsigned long i, j;
 
-	vptr0 = pgGetVramAddr(0, y1 & 0x01FF, wide) + x1;
+	vptr0 = pgGetVramAddr(x1, y1 & 0x01FF, wide);
 	for (i = 0; i < h;) {
 		vptr = vptr0;;
 		for (j = 0; j < w; j++) {

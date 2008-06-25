@@ -481,6 +481,13 @@ int psp2chGetMenu(void)
     char itadir[32];
     char *p, *q, *line;
 
+	psp2chApConnect();
+	pgCopy(0, 0);
+    sceDisplayWaitVblankStart();
+    framebuffer = sceGuSwapBuffers();
+	pgCopy(0, 0);
+    sceDisplayWaitVblankStart();
+    framebuffer = sceGuSwapBuffers();
     ret = psp2chGet(menuHost, path, "", NULL, &net);
     if (ret < 0)
     {

@@ -416,9 +416,6 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
 				// 自動アンカーで書き込む
 				if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.resForm) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.resForm))
 				{
-					pgFillvram(s2ch.resColor.bg, 0, 0, SCR_WIDTH, BUF_HEIGHT, 1);
-					pgWaitVn(10);
-					pgCopy(0, 0);
 					psp2chResSend(host, dir, title, dat, &totalLine, &bar, numMenu);
 				}
 				// 戻る
@@ -479,9 +476,6 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
 					// 書き込み
 					else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.form) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.form))
 					{
-						pgFillvram(0xF000, 0, 0, SCR_WIDTH, BUF_HEIGHT, 1);
-						pgWaitVn(10);
-						pgCopy(0, 0);
 						psp2chResSend(host, dir, title, dat, &totalLine, &bar, -1);
 					}
 					// 更新
@@ -564,11 +558,8 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
 void psp2chResSend(char* host, char* dir, char* title, int dat, int *totalLine, S_SCROLLBAR *bar, int numMenu)
 {
 	static char* message = NULL;
-	int tmp;
 	char path[256];
 
-	tmp = s2ch.tateFlag;
-	s2ch.tateFlag = 0;
 	if (message == NULL)
 	{
 		message = (char*)calloc(1, 2048);
@@ -592,7 +583,6 @@ void psp2chResSend(char* host, char* dir, char* title, int dat, int *totalLine, 
 		s2ch.res.start++;
 		*totalLine = psp2chResSetLine(bar);
 	}
-	s2ch.tateFlag = tmp;
 	preLine = -2;
 }
 
@@ -1694,6 +1684,13 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
 		sprintf(buf, "If-Modified-Since: %s\r\nIf-None-Match: %s\r\nRange: bytes=%d-\r\n", lastModified, eTag, range - 1);
 	}
 	sprintf(path, "%s/dat/%d.dat", dir, dat);
+	psp2chApConnect();
+	pgCopy(s2ch.viewX, s2ch.viewY);
+    sceDisplayWaitVblankStart();
+    framebuffer = sceGuSwapBuffers();
+	pgCopy(s2ch.viewX, s2ch.viewY);
+    sceDisplayWaitVblankStart();
+    framebuffer = sceGuSwapBuffers();
 	ret = psp2chGet(host, path, buf, NULL, &net);
 	if (ret < 0)
 	{

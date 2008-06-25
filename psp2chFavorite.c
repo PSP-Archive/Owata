@@ -12,6 +12,7 @@
 #include "psp2chRes.h"
 #include "psp2chFavorite.h"
 #include "psp2chMenu.h"
+#include "psp2chNet.h"
 #include "utf8.h"
 #include "pg.h"
 #include "intraFont.h"
@@ -189,6 +190,7 @@ int psp2chFavorite(void)
         {
             if (update < s2ch.fav.count)
             {
+				psp2chApConnect();
                 s2ch.fav.select = update;
 				psp2chDrawFavorite();
 				pgWaitVn(20);

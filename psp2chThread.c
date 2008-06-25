@@ -465,6 +465,13 @@ int psp2chGetSubject(int ita)
         sprintf(buf, "If-Modified-Since: %s\r\nIf-None-Match: %s\r\n", lastModified, eTag);
     }
     sprintf(path, "%s/subject.txt", s2ch.itaList[ita].dir);
+	psp2chApConnect();
+	pgCopy(s2ch.viewX, s2ch.viewY);
+    sceDisplayWaitVblankStart();
+    framebuffer = sceGuSwapBuffers();
+	pgCopy(s2ch.viewX, s2ch.viewY);
+    sceDisplayWaitVblankStart();
+    framebuffer = sceGuSwapBuffers();
     ret = psp2chGet(s2ch.itaList[ita].host, path, buf, NULL, &net);
     if (ret < 0)
     {

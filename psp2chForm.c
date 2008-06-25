@@ -9,7 +9,13 @@
 #include "psp2chNet.h"
 #include "utf8.h"
 
+#define FORM_BG_COLOR 0x8000
+#define BOX_BG_COLOR 0xA000
+
 extern S_2CH s2ch; // psp2ch.c
+extern unsigned short pixels[BUF_WIDTH*BUF_HEIGHT*2];
+extern unsigned short winPixels[BUF_WIDTH*BUF_HEIGHT*2];
+extern unsigned short* printBuf;
 
 /*********************
 src文字列をURLエンコードしてdst文字列に格納　
@@ -47,7 +53,7 @@ void psp2chUrlEncode(char* dst, char* src)
 /*********************
 レス書き込み
 *********************/
-int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, char* message)
+int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, char* message, int tmp)
 {
     S_NET net;
     int ret, x, y;
@@ -71,11 +77,24 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
         psp2chErrorDialog("memorry error\n");
         return -1;
     }
+	psp2chApConnect();
     // 送信しますかダイアログで画面消えてるので再描画
+	printBuf = pixels;
+	s2ch.tateFlag = tmp;
+	pgCopy(s2ch.viewX, s2ch.viewY);
+	printBuf = winPixels;
+	s2ch.tateFlag = 0;
     pgCopy(0, 0);
+	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
+	printBuf = pixels;
+	s2ch.tateFlag = tmp;
+	pgCopy(s2ch.viewX, s2ch.viewY);
+	printBuf = winPixels;
+	s2ch.tateFlag = 0;
     pgCopy(0, 0);
+	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
     // URLエンコードしてformデータ作成
@@ -141,10 +160,10 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
     }
 #endif
     S_2CH_RES_COLOR c;
-    c.text = BLACK;
-    c.bg = WHITE;
+    c.text = WHITE;
+    c.bg = FORM_BG_COLOR;
     c.link = BLUE;
-    pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
+    pgFillvram(FORM_BG_COLOR, 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
     s2ch.pgCursorX = 0;
     s2ch.pgCursorY = 0;
     str = strstr(net.body, "</html");
@@ -162,6 +181,11 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
     pgPrintMenuBar("画面は切り替わりません　○で入力画面に　×でレス表\示に戻ります");
     while (s2ch.running)
     {
+		printBuf = pixels;
+		s2ch.tateFlag = tmp;
+		pgCopy(s2ch.viewX, s2ch.viewY);
+		printBuf = winPixels;
+		s2ch.tateFlag = 0;
         pgCopy(0,0);
 		pgCopyMenuBar();
         sceDisplayWaitVblankStart();
@@ -196,7 +220,11 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
     char buf[256];
     char  *str, *p, *menuStr = "　○ : 入力　　　× : 戻る　　　△ : 送信";
     int changeFlag = 0;
+	int tmp;
 
+	tmp = s2ch.tateFlag;
+	s2ch.tateFlag = 0;
+	printBuf = winPixels;
     focus = 0;
 	prefocus = -1;
     if (mail[0] == '\0' && name[0] == '\0')
@@ -225,6 +253,11 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
         sage = 1;
     }
     pgPrintMenuBar(menuStr);
+	pgFillvram(FORM_BG_COLOR, 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
+	pgFillvram(s2ch.formColor.title_bg, 0, 0, SCR_WIDTH, 15, 2);
+	s2ch.pgCursorX = 10;
+	s2ch.pgCursorY = 1;
+	pgPrint(subject, s2ch.formColor.title, s2ch.formColor.title_bg, SCR_WIDTH);
     while (s2ch.running)
     {
         if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
@@ -296,13 +329,18 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
                     sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
                     if (s2ch.mh.buttonPressed == PSP_UTILITY_MSGDIALOG_RESULT_YES)
                     {
-                        ret = psp2chFormResPost(host, dir, dat, name, mail, message);
+                        ret = psp2chFormResPost(host, dir, dat, name, mail, message, tmp);
                         if (ret == 2)
                         {
                             break;
                         }
                     }
 					pgPrintMenuBar(menuStr);
+					pgFillvram(FORM_BG_COLOR, 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
+					pgFillvram(s2ch.formColor.title_bg, 0, 0, SCR_WIDTH, 15, 2);
+					s2ch.pgCursorX = 10;
+					s2ch.pgCursorY = 1;
+					pgPrint(subject, s2ch.formColor.title, s2ch.formColor.title_bg, SCR_WIDTH);
 					prefocus = -1;
                 }
                 else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
@@ -315,39 +353,34 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
 				if (focus != prefocus)
 				{
 					prefocus = focus;
-					pgFillvram(RGB(0xCC, 0xFF, 0xCC), 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
-					pgFillvram(s2ch.formColor.title_bg, 0, 0, SCR_WIDTH, 15, 2);
-					s2ch.pgCursorX = 10;
-					s2ch.pgCursorY = 1;
-					pgPrint(subject, s2ch.formColor.title, s2ch.formColor.title_bg, SCR_WIDTH);
 					s2ch.pgCursorX = 10;
 					s2ch.pgCursorY = 30;
-					pgPrint("　名前：", GRAY, RGB(0xCC, 0xFF, 0xCC), 58);
+					pgPrint("　名前：", GRAY, FORM_BG_COLOR, 58);
 					s2ch.pgCursorX = 60;
-					pgEditBox(GRAY, 58, 28, 400, 44);
-					pgPrint(name, BLACK, GRAY, 400);
+					pgEditBox(BOX_BG_COLOR, 58, 28, 400, 44);
+					pgPrint(name, WHITE, BOX_BG_COLOR, 400);
 					s2ch.pgCursorX = 10;
 					s2ch.pgCursorY = 60;
-					pgPrint("メール：", GRAY, RGB(0xCC, 0xFF, 0xCC), 58);
+					pgPrint("メール：", GRAY, FORM_BG_COLOR, 58);
 					s2ch.pgCursorX = 60;
-					pgEditBox(GRAY, 58, 58, 300, 74);
-					pgPrint(mail, BLACK, GRAY, 400);
+					pgEditBox(BOX_BG_COLOR, 58, 58, 300, 74);
+					pgPrint(mail, WHITE, BOX_BG_COLOR, 400);
 					s2ch.pgCursorX = 310;
 					s2ch.pgCursorY = 60;
 					if (sage)
 					{
-						pgPrint("●", GRAY, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
+						pgPrint("●", GRAY, FORM_BG_COLOR, SCR_WIDTH);
 					}
 					else
 					{
-						pgPrint("○", GRAY, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
+						pgPrint("○", GRAY, FORM_BG_COLOR, SCR_WIDTH);
 					}
-					pgPrint("sage (← →キーで切替)", GRAY, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
+					pgPrint("sage (← →キーで切替)", GRAY, FORM_BG_COLOR, SCR_WIDTH);
 					s2ch.pgCursorX = 10;
 					s2ch.pgCursorY = 90;
-					pgEditBox(GRAY, 8, 88, 470, 250);
+					pgEditBox(BOX_BG_COLOR, 8, 88, 470, 250);
 					str = message;
-					while ((str = pgPrint(str, BLACK, GRAY, 470)))
+					while ((str = pgPrint(str, WHITE, BOX_BG_COLOR, 470)))
 					{
 						s2ch.pgCursorX = 10;
 						s2ch.pgCursorY += LINE_PITCH;
@@ -361,7 +394,7 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
 					case 0:
 						s2ch.pgCursorX = 10;
 						s2ch.pgCursorY = 30;
-						pgPrint("　名前：", BLACK, RGB(0xCC, 0xFF, 0xCC), 58);
+						pgPrint("　名前：", WHITE, FORM_BG_COLOR, 58);
 						s2ch.pgCursorX = 60;
 						pgEditBox(WHITE, 58, 28, 400, 44);
 						pgPrint(name, BLACK, WHITE, 400);
@@ -369,7 +402,7 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
 					case 1:
 						s2ch.pgCursorX = 10;
 						s2ch.pgCursorY = 60;
-						pgPrint("メール：", BLACK, RGB(0xCC, 0xFF, 0xCC), 58);
+						pgPrint("メール：", WHITE, FORM_BG_COLOR, 58);
 						s2ch.pgCursorX = 60;
 						pgEditBox(WHITE, 58, 58, 300, 74);
 						pgPrint(mail, BLACK, WHITE, 300);
@@ -377,13 +410,13 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
 						s2ch.pgCursorY = 60;
 						if (sage)
 						{
-							pgPrint("●", BLACK, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
+							pgPrint("●", WHITE, FORM_BG_COLOR, SCR_WIDTH);
 						}
 						else
 						{
-							pgPrint("○", BLACK, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
+							pgPrint("○", WHITE, FORM_BG_COLOR, SCR_WIDTH);
 						}
-						pgPrint("sage (← →キーで切替)", BLACK, RGB(0xCC, 0xFF, 0xCC), SCR_WIDTH);
+						pgPrint("sage (← →キーで切替)", WHITE, FORM_BG_COLOR, SCR_WIDTH);
 						break;
 					case 2:
 						s2ch.pgCursorX = 10;
@@ -401,9 +434,15 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
 						}
 						break;
 					}
+					pgWaitVn(10);
 				}
             }
         }
+		printBuf = pixels;
+		s2ch.tateFlag = tmp;
+		pgCopy(s2ch.viewX, s2ch.viewY);
+		printBuf = winPixels;
+		s2ch.tateFlag = 0;
         pgCopy(0, 0);
 		pgCopyMenuBar();
         sceDisplayWaitVblankStart();
@@ -420,6 +459,8 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
             sceIoClose(fd);
         }
     }
+	printBuf = pixels;
+	s2ch.tateFlag = tmp;
     return ret;
 }
 

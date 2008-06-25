@@ -42,7 +42,8 @@ int psp2chConnectThread(SceSize args, void *argp)
 			sceKernelSleepThread();
 		}
 		ret = connect(mySocket, (struct sockaddr *)&sain, sizeof(sain) );
-		if (ret < 0) {
+		if (ret < 0)
+		{
 			psp2chErrorDialog("Connect errror");
 		}
 		connectSleep = 2;
@@ -240,6 +241,7 @@ int psp2chResolve(const char* host, struct in_addr* addr)
     if(Cat_ResolverURL( host, addr ) < 0 )
     {
         pgPrintMenuBar("  Cat_ResolverURL error");
+        sceNetApctlDisconnect();
 		pgWaitVn(10);
 		pgCopyMenuBar();
         sceDisplayWaitVblankStart();
@@ -724,11 +726,5 @@ int psp2chApConnect(void)
         i = Cat_NetworkConnect( draw_callback, screen_update_callback, 0 );
         // 全部0なのかな？？？
     }
-	pgCopy(s2ch.viewX, s2ch.viewY);
-    sceDisplayWaitVblankStart();
-    framebuffer = sceGuSwapBuffers();
-	pgCopy(s2ch.viewX, s2ch.viewY);
-    sceDisplayWaitVblankStart();
-    framebuffer = sceGuSwapBuffers();
     return i;
 }

@@ -31,7 +31,7 @@ extern RECT menuDstRectV; // pg.c
 extern RECT titleDstRectH; // pg.c
 extern RECT titleDstRectV; // pg.c
 
-char* ver = "0.8.0";
+char* ver = "0.8.1";
 S_2CH s2ch;
 char keyWords[128];
 
@@ -665,8 +665,8 @@ int psp2chInputDialog(const unsigned short* text1, char* text2)
 		printBuf = pixels;
 		s2ch.tateFlag = temp;
 		pgCopy(s2ch.viewX, 0);
-		s2ch.tateFlag = 0;
 		printBuf = winPixels;
+		s2ch.tateFlag = 0;
 		pgEditBox(WHITE, 140, 85, 340, 101);
 		s2ch.pgCursorX = 142;
 		s2ch.pgCursorY =  87;
