@@ -43,7 +43,6 @@ void pspShowBrowser(char *url, char *dldir)
 
     if (sceKernelAllocateVpl(vpl, html.memsize, &html.memaddr, NULL) < 0)
 	{
-		sceKernelFreeVpl(vpl, html.memaddr);
 		sceKernelDeleteVpl(vpl);
 		return;
 	}

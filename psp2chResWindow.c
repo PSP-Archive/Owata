@@ -17,8 +17,6 @@ extern unsigned int pixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
 extern unsigned int winPixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
 extern unsigned int* printBuf; // pg.c
 
-static const char* cacheDir = "CACHE";
-
 /*****************************
 レスのウィンドウ表示
 lineFlag:0=変更なし; 1=下に1行追加; 2=上に1行追加; その他:全画面再描画
@@ -409,10 +407,9 @@ URL
 ***************/
 int psp2chUrlAnchor(int anchor, int offset)
 {
-    char url[256], dldir[256];
+    char url[256];
 
 	sprintf(url, "http://%s/%s", s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path);
-    sprintf(dldir, "%s/%s", s2ch.cwDir, cacheDir);
-	pspShowBrowser(url, dldir);
+	pspShowBrowser(url, NULL);
 	return 0;
 }

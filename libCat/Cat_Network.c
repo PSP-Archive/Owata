@@ -39,8 +39,8 @@ Cat_NetworkInit()
 
     if(gfInitialized == 0) {
 
-        //rc = sceNetInit( 256*1024, 0x12, 0, 0x12, 0 );
-        rc = sceNetInit(0x20000, 0x20, 0x1000, 0x20, 0x1000);
+        rc = sceNetInit( 256*1024, 0x12, 0, 0x12, 0 );
+        //rc = sceNetInit(0x20000, 0x20, 0x1000, 0x20, 0x1000);
         if(rc < 0) {
             rc = sceNetInit( 256*1024, 0x12, 0x1000, 0x12, 0x1000 );
         }
@@ -54,8 +54,7 @@ Cat_NetworkInit()
             return -2;
         }
 
-        //rc = sceNetApctlInit( 0x8000, 0x13 );
-        rc = sceNetApctlInit(0x1400, 0x42);
+        rc = sceNetApctlInit( 0x8000, 0x13 );
         if(rc < 0) {
             sceNetInetTerm();
             sceNetTerm();
