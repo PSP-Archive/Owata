@@ -407,7 +407,7 @@ URL
 ***************/
 int psp2chUrlAnchor(int anchor, int offset)
 {
-    char url[256];
+    char url[512];
 
 	sprintf(url, "http://%s/%s", s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path);
 	pspShowBrowser(url, NULL);

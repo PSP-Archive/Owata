@@ -39,7 +39,7 @@ void pspShowBrowser(char *url, char *dldir)
 	html.textsize = PSP_UTILITY_HTMLVIEWER_TEXTSIZE_NORMAL;
 	html.displaymode = PSP_UTILITY_HTMLVIEWER_DISPLAYMODE_SMART_FIT;
 	html.connectmode = PSP_UTILITY_HTMLVIEWER_CONNECTMODE_MANUAL_ALL;
-	html.disconnectmode = PSP_UTILITY_HTMLVIEWER_DISCONNECTMODE_ENABLE;
+	html.disconnectmode = PSP_UTILITY_HTMLVIEWER_DISCONNECTMODE_CONFIRM;
 
     if (sceKernelAllocateVpl(vpl, html.memsize, &html.memaddr, NULL) < 0)
 	{

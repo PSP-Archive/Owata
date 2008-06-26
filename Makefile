@@ -18,6 +18,7 @@ LIBS= -lpsppower -lpspgu -lpspssl -lpsphttp -lpspwlan -lm
 EXTRA_TARGETS = EBOOT.PBP
 PSP_EBOOT_TITLE = 人生ｵﾜﾀ＼(^o^)／
 PSP_EBOOT_ICON = icon.png
+PSP_EBOOT_ICON1 = owata.pmf
 
 PSPSDK=$(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
