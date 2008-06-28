@@ -687,7 +687,7 @@ void psp2chResResetAnchors(void)
 *****************************/
 int psp2chResCursorMove(int totalLine, int lineEnd, int* cursorX, int* cursorY, int limitY)
 {
-	static int keyStart = 0, keyRepeat = 0, rMenu = 0, cursorPosition = 1;
+	static int keyStart = 0, keyRepeat = 0, rMenu = 0, cursorPosition = 3;
 	static clock_t keyTime = 0;
 	int padUp = 0, padDown = 0;
 	int i, line, positionFlag = 0;
@@ -789,7 +789,7 @@ int psp2chResCursorMove(int totalLine, int lineEnd, int* cursorX, int* cursorY, 
 				cursorPosition--;
 				if (cursorPosition < 0)
 				{
-					cursorPosition = 2;
+					cursorPosition = 3;
 				}
 				positionFlag = 1;
 			}
@@ -807,7 +807,7 @@ int psp2chResCursorMove(int totalLine, int lineEnd, int* cursorX, int* cursorY, 
 			if (rMenu && cursorMode)
 			{
 				cursorPosition++;
-				if (cursorPosition > 2)
+				if (cursorPosition > 3)
 				{
 					cursorPosition = 0;
 				}
@@ -1196,7 +1196,7 @@ void psp2chResPadMove(int* cursorX, int* cursorY, int limitX, int limitY)
 void psp2chResSetAnchorList(int lineEnd, int cursorPosition)
 {
 	int i, j, k, end;
-	S_2CH_ANCHOR_LIST list[80], tmp;
+	S_2CH_ANCHOR_LIST list[180], tmp;
 
 	end = s2ch.res.start + lineEnd;
 	k = 0;
@@ -1303,6 +1303,90 @@ void psp2chResSetAnchorList(int lineEnd, int cursorPosition)
 		}
 		s2ch.anchorList[k].line = -1;
 		break;
+	// ëSïî
+	default:
+		for (i = s2ch.res.start; i < end; i++)
+		{
+			for (j = 0; j < 40; j++)
+			{
+				if (s2ch.numAnchor[j].line == i && s2ch.numAnchor[j].x2 > s2ch.viewX)
+				{
+					list[k].line = i;
+					list[k].x1 = s2ch.numAnchor[j].x1 - s2ch.viewX;
+					list[k].x2 = s2ch.numAnchor[j].x2 - s2ch.viewX;
+					list[k].type = 0;
+					list[k].id = j;
+					k++;
+				}
+			}
+			for (j = 0; j < 40; j++)
+			{
+				if (s2ch.idAnchor[j].line == i && s2ch.idAnchor[j].x2 > s2ch.viewX)
+				{
+					list[k].line = i;
+					list[k].x1 = s2ch.idAnchor[j].x1 - s2ch.viewX;
+					list[k].x2 = s2ch.idAnchor[j].x2 - s2ch.viewX;
+					list[k].type = 1;
+					list[k].id = j;
+					k++;
+				}
+			}
+			for (j = 0; j < 50; j++)
+			{
+				if (s2ch.resAnchor[j].line == i && s2ch.resAnchor[j].x2 > s2ch.viewX)
+				{
+					list[k].line = i;
+					list[k].x1 = s2ch.resAnchor[j].x1 - s2ch.viewX;
+					list[k].x2 = s2ch.resAnchor[j].x2 - s2ch.viewX;
+					list[k].type = 2;
+					list[k].id = j;
+					k++;
+				}
+			}
+			for (j = 0; j < 50; j++)
+			{
+				if (s2ch.urlAnchor[j].line == i && s2ch.urlAnchor[j].x2 > s2ch.viewX)
+				{
+					list[k].line = i;
+					list[k].x1 = s2ch.urlAnchor[j].x1 - s2ch.viewX;
+					list[k].x2 = s2ch.urlAnchor[j].x2 - s2ch.viewX;
+					list[k].type = 3;
+					list[k].id = j;
+					k++;
+				}
+			}
+			if (k >= 179)
+			{
+				break;
+			}
+		}
+		list[k].line = -1;
+		k++;
+		// sort
+		for (i = 0; i < k - 1; i++)
+		{
+			for (j = i; j < k; j++)
+			{
+				if ((list[i].line == list[j].line) && (list[i].x1 > list[j].x1))
+				{
+					tmp = list[i];
+					list[i] = list[j];
+					list[j] = tmp;
+				}
+			}
+		}
+		// èdï°çÌèú
+		j = 0;
+		for (i = 0; i < k - 1; i++)
+		{
+			if ((list[i].line == list[i + 1].line) && (list[i].x1 == list[i + 1].x1))
+			{
+				continue;
+			}
+			s2ch.anchorList[j] = list[i];
+			j++;
+		}
+		s2ch.anchorList[j].line = -1;
 	}
 }
 
