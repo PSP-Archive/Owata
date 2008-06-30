@@ -11,6 +11,7 @@
 
 #define FORM_BG_COLOR 0x8000
 #define BOX_BG_COLOR 0xA000
+#define BOX_TEXT_BG_COLOR 0xFDDD
 
 extern S_2CH s2ch; // psp2ch.c
 extern unsigned short pixels[BUF_WIDTH*BUF_HEIGHT*2];
@@ -77,7 +78,10 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
         psp2chErrorDialog("memorry error\n");
         return -1;
     }
-	psp2chApConnect();
+	if (psp2chApConnect() > 0)
+	{
+		return -1;
+	}
     // 送信しますかダイアログで画面消えてるので再描画
 	printBuf = pixels;
 	s2ch.tateFlag = tmp;
@@ -396,16 +400,16 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
 						s2ch.pgCursorY = 30;
 						pgPrint("　名前：", WHITE, FORM_BG_COLOR, 58);
 						s2ch.pgCursorX = 60;
-						pgEditBox(WHITE, 58, 28, 400, 44);
-						pgPrint(name, BLACK, WHITE, 400);
+						pgEditBox(BOX_TEXT_BG_COLOR, 58, 28, 400, 44);
+						pgPrint(name, BLACK, BOX_TEXT_BG_COLOR, 400);
 						break;
 					case 1:
 						s2ch.pgCursorX = 10;
 						s2ch.pgCursorY = 60;
 						pgPrint("メール：", WHITE, FORM_BG_COLOR, 58);
 						s2ch.pgCursorX = 60;
-						pgEditBox(WHITE, 58, 58, 300, 74);
-						pgPrint(mail, BLACK, WHITE, 300);
+						pgEditBox(BOX_TEXT_BG_COLOR, 58, 58, 300, 74);
+						pgPrint(mail, BLACK, BOX_TEXT_BG_COLOR, 300);
 						s2ch.pgCursorX = 310;
 						s2ch.pgCursorY = 60;
 						if (sage)
@@ -421,9 +425,9 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
 					case 2:
 						s2ch.pgCursorX = 10;
 						s2ch.pgCursorY = 90;
-						pgEditBox(WHITE, 8, 88, 470, 250);
+						pgEditBox(BOX_TEXT_BG_COLOR, 8, 88, 470, 250);
 						str = message;
-						while ((str = pgPrint(str, BLACK, WHITE, 470)))
+						while ((str = pgPrint(str, BLACK, BOX_TEXT_BG_COLOR, 470)))
 						{
 							s2ch.pgCursorX = 10;
 							s2ch.pgCursorY += LINE_PITCH;

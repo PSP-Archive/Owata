@@ -1768,7 +1768,10 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
 		sprintf(buf, "If-Modified-Since: %s\r\nIf-None-Match: %s\r\nRange: bytes=%d-\r\n", lastModified, eTag, range - 1);
 	}
 	sprintf(path, "%s/dat/%d.dat", dir, dat);
-	psp2chApConnect();
+	if (psp2chApConnect() > 0)
+	{
+		return -1;
+	}
 	pgCopy(s2ch.viewX, s2ch.viewY);
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
