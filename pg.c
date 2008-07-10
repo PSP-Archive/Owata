@@ -218,15 +218,6 @@ void pgSetupGu(void)
     sceGuDepthBuffer((void*)0x110000,BUF_WIDTH);
     sceGuOffset(2048 - (SCR_WIDTH/2), 2048 - (SCR_HEIGHT/2));
     sceGuViewport(2048, 2048, SCR_WIDTH, SCR_HEIGHT);
-    /*
-    sceGuFrontFace(GU_CW);
-    sceGuShadeModel(GU_SMOOTH);
-    sceGuDisable(GU_DEPTH_TEST);
-    sceGuDepthRange(65535, 0);
-    sceGuDepthFunc(GU_GEQUAL);
-    sceGuEnable(GU_CULL_FACE);
-    sceGuEnable(GU_CLIP_PLANES);
-    */
     sceGuEnable(GU_SCISSOR_TEST);
     sceGuScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
     sceGuEnable(GU_BLEND);
@@ -250,7 +241,6 @@ void pgFontLoad(void)
     }
     pgFillvram(WHITE, 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
     pgPrintMonaWait();
-    pgWaitVn(20);
     pgCopy(0, 0);
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
@@ -359,6 +349,7 @@ void pgCopyRect(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect)
         vertices[1].y = dst_rect->bottom;
         sceGuDrawArray(GU_SPRITES, GU_TEXTURE_16BIT | GU_COLOR_4444 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, NULL, vertices);
     }
+    sceKernelDcacheWritebackAll();
     sceGuFinish();
     sceGuSync(0, GU_SYNC_FINISH);
 }
@@ -414,6 +405,7 @@ void pgCopyRectRotate(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect)
         vertices[1].y = dst_rect->bottom;
         sceGuDrawArray(GU_SPRITES, GU_TEXTURE_16BIT | GU_COLOR_4444 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, NULL, vertices);
     }
+    sceKernelDcacheWritebackAll();
     sceGuFinish();
     sceGuSync(0, GU_SYNC_FINISH);
 }
@@ -496,7 +488,6 @@ void pgPrintTitleBar(char* ita, char* title)
         pgPrint(date, s2ch.formColor.title, s2ch.formColor.title_bg, SCR_WIDTH);
     }
     printBuf = temp;
-    pgWaitVn(6);
 }
 /*****************************
 タイトルバーを表示

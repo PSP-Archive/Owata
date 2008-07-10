@@ -80,34 +80,16 @@ int psp2chSearch(int retSel)
     static int ret = 0;
     int lineEnd, rMenu, change, res;
 
-    if (s2ch.findList == NULL)
-    {
-        if (psp2chSearchList() < 0)
-        {
-            s2ch.sel = retSel;
-            return 0;
-        }
-        ret = retSel;
-        s2ch.find.start = 0;
-        s2ch.find.select = 0;
-	    psp2chDrawSearch();
-    }
-    if (s2ch.tateFlag)
-    {
-        lineEnd = DRAW_LINE_V;
-    }
-    else
-    {
-        lineEnd = DRAW_LINE_H;
-    }
     if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
     {
         if (s2ch.tateFlag)
         {
+			lineEnd = DRAW_LINE_V;
             rMenu = psp2chCursorSet(&s2ch.find, lineEnd, s2ch.findV.shift, &change);
         }
         else
         {
+			lineEnd = DRAW_LINE_H;
             rMenu = psp2chCursorSet(&s2ch.find, lineEnd, s2ch.findH.shift, &change);
         }
         if (rMenu)
@@ -132,6 +114,19 @@ int psp2chSearch(int retSel)
                 menuStr = s2ch.menuSearchH.main;
             }
         }
+		if (s2ch.findList == NULL)
+		{
+			if (psp2chSearchList() < 0)
+			{
+				s2ch.sel = retSel;
+				return 0;
+			}
+			ret = retSel;
+			s2ch.find.start = 0;
+			s2ch.find.select = 0;
+			pgPrintMenuBar(menuStr);
+			change = 1;
+		}
         if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
             s2ch.oldPad = s2ch.pad;
@@ -186,11 +181,11 @@ int psp2chSearch(int retSel)
 		{
 			s2ch.viewX = res;
 	        psp2chDrawSearch();
+			pgCopy(s2ch.viewX, 0);
+			pgCopyMenuBar();
+			sceDisplayWaitVblankStart();
+			framebuffer = sceGuSwapBuffers();
 		}
-        pgCopy(s2ch.viewX, 0);
-        pgCopyMenuBar();
-        sceDisplayWaitVblankStart();
-        framebuffer = sceGuSwapBuffers();
     }
     return 0;
 }

@@ -300,11 +300,11 @@ int psp2chIta(void)
 				psp2chDrawCategory(s2ch.category.start, s2ch.category.select, s2ch.cateOnColor);
 				psp2chDrawIta(s2ch.ita.start, s2ch.ita.select, s2ch.cateOnColor);
 			}
+			pgCopy(0, 0);
+			pgCopyMenuBar();
+			sceDisplayWaitVblankStart();
+			framebuffer = sceGuSwapBuffers();
 		}
-        pgCopy(0, 0);
-        pgCopyMenuBar();
-        sceDisplayWaitVblankStart();
-        framebuffer = sceGuSwapBuffers();
     }
     return 0;
 }

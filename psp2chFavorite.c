@@ -359,11 +359,11 @@ int psp2chFavorite(void)
 				psp2chDrawFavorite();
 			}
 			pgPrintMenuBar(menuStr);
+			pgCopy(s2ch.viewX, 0);
+			pgCopyMenuBar();
+			sceDisplayWaitVblankStart();
+			framebuffer = sceGuSwapBuffers();
 		}
-        pgCopy(s2ch.viewX, 0);
-        pgCopyMenuBar();
-        sceDisplayWaitVblankStart();
-        framebuffer = sceGuSwapBuffers();
     }
     return 0;
 }

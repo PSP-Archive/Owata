@@ -269,14 +269,14 @@ void psp2chResAnchor(int anc)
 			if (change)
 			{
 	            psp2chDrawResAnchor(a, anchor, lineFlag);
+				pgCopyWindow(anchor.start * LINE_PITCH, startX, startY, scrX, scrY);
+				pgWindowFrame(startX, startY, startX + scrX + barW, startY + scrY);
+				bar.start = anchor.start * LINE_PITCH;
+				pgScrollbar(&bar, s2ch.resABarColor);
+				pgCopyMenuBar();
+				sceDisplayWaitVblankStart();
+				framebuffer = sceGuSwapBuffers();
 			}
-            pgCopyWindow(anchor.start * LINE_PITCH, startX, startY, scrX, scrY);
-            pgWindowFrame(startX, startY, startX + scrX + barW, startY + scrY);
-            bar.start = anchor.start * LINE_PITCH;
-            pgScrollbar(&bar, s2ch.resABarColor);
-            pgCopyMenuBar();
-            sceDisplayWaitVblankStart();
-            framebuffer = sceGuSwapBuffers();
         }
     }
     return;
