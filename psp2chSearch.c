@@ -306,6 +306,17 @@ int psp2chSearchList(void)
     psp2chSjisToEuc(euc, keyWords);
     psp2chUrlEncode(buf, euc);
     sprintf(query, "?STR=%s&COUNT=%d&OFFSET=%d", buf, count, offset);
+	pgCopy(s2ch.viewX, s2ch.viewY);
+	if (psp2chApConnect() > 0)
+	{
+		return -1;
+	}
+	pgCopy(s2ch.viewX, s2ch.viewY);
+    sceDisplayWaitVblankStart();
+    framebuffer = sceGuSwapBuffers();
+	pgCopy(s2ch.viewX, s2ch.viewY);
+    sceDisplayWaitVblankStart();
+    framebuffer = sceGuSwapBuffers();
     ret = psp2chGet(findHost, query, "", NULL, &net);
     if (ret < 0)
     {

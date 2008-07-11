@@ -481,6 +481,7 @@ int psp2chGetMenu(void)
     char itadir[32];
     char *p, *q, *line;
 
+	pgCopy(0, 0);
 	if (psp2chApConnect() > 0)
 	{
 		return -1;

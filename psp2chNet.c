@@ -382,6 +382,7 @@ int psp2chRequest(const char* host, const char* path, const char* requestText, S
     sain.sin_addr.s_addr = addr.s_addr;
     sprintf(buf, "  http://%s/%s に接続しています", host, path);
     pgPrintMenuBar(buf);
+	pgWaitVn(5);
 	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
@@ -405,6 +406,7 @@ int psp2chRequest(const char* host, const char* path, const char* requestText, S
 		sceKernelDelayThread(1000);
     }
     pgPrintMenuBar("接続しました");
+	pgWaitVn(5);
 	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
@@ -422,6 +424,7 @@ int psp2chResponse(const char* host, const char* path, S_NET* net)
 
     sprintf(buf, "http://%s/%s からデータを転送しています...", host, path);
     pgPrintMenuBar(buf);
+	pgWaitVn(5);
 	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
@@ -454,6 +457,7 @@ int psp2chResponse(const char* host, const char* path, S_NET* net)
 	}
     sprintf(buf, "完了(%dBytes)", recvSize);
     pgPrintMenuBar(buf);
+	pgWaitVn(5);
 	// 1行目のステータスラインで区切る
 	recvHeader = strstr(recvBuf, "\r\n");
 	if (recvHeader == NULL)
@@ -519,7 +523,7 @@ int psp2chGetHttpHeaders(S_NET* net, char* cookie)
     char *line, *p, *q;
 
 	line = recvHeader;
-    while(*line)  // if recv returns 0, the socket has been closed.
+    while(*line)
     {
 		q = strstr(line, "\r\n");
 		if (q == NULL)
@@ -527,6 +531,11 @@ int psp2chGetHttpHeaders(S_NET* net, char* cookie)
 			return -1;
 		}
 		*q = '\0';
+		pgPrintMenuBar(line);
+		pgWaitVn(10);
+		pgCopyMenuBar();
+		sceDisplayWaitVblankStart();
+		framebuffer = sceGuSwapBuffers();
         if (strstr(line, "Content-Length:"))
         {
             sscanf(line, "Content-Length: %d", &contentLength);

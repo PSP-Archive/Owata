@@ -311,6 +311,7 @@ void pgCopyRect(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect)
     sh = src_rect->bottom - src_rect->top;
     dh = dst_rect->bottom - dst_rect->top;
 
+    sceKernelDcacheWritebackAll();
     sceGuStart(GU_DIRECT, list);
     //sceGuDrawBufferList(GU_PSM_8888, framebuffer, BUF_WIDTH);
     sceGuScissor(dst_rect->left, dst_rect->top, dst_rect->right, dst_rect->bottom);
@@ -349,7 +350,6 @@ void pgCopyRect(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect)
         vertices[1].y = dst_rect->bottom;
         sceGuDrawArray(GU_SPRITES, GU_TEXTURE_16BIT | GU_COLOR_4444 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, NULL, vertices);
     }
-    sceKernelDcacheWritebackAll();
     sceGuFinish();
     sceGuSync(0, GU_SYNC_FINISH);
 }
@@ -367,6 +367,7 @@ void pgCopyRectRotate(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect)
     sh = src_rect->bottom - src_rect->top;
     dh = dst_rect->bottom - dst_rect->top;
 
+    sceKernelDcacheWritebackAll();
     sceGuStart(GU_DIRECT, list);
     //sceGuDrawBufferList(GU_PSM_8888, framebuffer, BUF_WIDTH);
     sceGuScissor(dst_rect->left, dst_rect->top, dst_rect->right, dst_rect->bottom);
@@ -405,7 +406,6 @@ void pgCopyRectRotate(void *src, TEX *tex, RECT *src_rect, RECT *dst_rect)
         vertices[1].y = dst_rect->bottom;
         sceGuDrawArray(GU_SPRITES, GU_TEXTURE_16BIT | GU_COLOR_4444 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, NULL, vertices);
     }
-    sceKernelDcacheWritebackAll();
     sceGuFinish();
     sceGuSync(0, GU_SYNC_FINISH);
 }

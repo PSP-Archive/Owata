@@ -190,6 +190,7 @@ int psp2chFavorite(void)
         {
             if (update < s2ch.fav.count)
             {
+				pgCopy(s2ch.viewX, 0);
 				psp2chApConnect();
                 s2ch.fav.select = update;
 				psp2chDrawFavorite();
