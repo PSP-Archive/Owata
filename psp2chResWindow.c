@@ -9,6 +9,7 @@
 #include "psp2chNet.h"
 #include "psp2chRes.h"
 #include "psp2chResWindow.h"
+#include "psp2chImageView.h"
 #include "psphtmlviewer.h"
 
 extern S_2CH s2ch; // psp2ch.c
