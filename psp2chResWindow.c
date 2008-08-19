@@ -18,6 +18,8 @@ extern unsigned int pixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
 extern unsigned int winPixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
 extern unsigned int* printBuf; // pg.c
 
+static const char* cacheDir = "CACHE";
+
 /*****************************
 レスのウィンドウ表示
 lineFlag:0=変更なし; 1=下に1行追加; 2=上に1行追加; その他:全画面再描画
@@ -408,9 +410,136 @@ URL
 ***************/
 int psp2chUrlAnchor(int anchor, int offset)
 {
-    char url[512];
+    SceUID fd;
+    int i, ret;
+    S_NET net;
+    char path[256], buf[256];
+    char ext[8], tmp[4];
+    unsigned char digest[16];
+    char *p;
 
-	sprintf(url, "http://%s/%s", s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path);
-	pspShowBrowser(url, NULL);
-	return 0;
+    sprintf(path, "%s/%s", s2ch.cwDir, cacheDir);
+    if ((fd = sceIoDopen(path)) < 0)
+    {
+        if (sceIoMkdir(path, 0777) < 0)
+        {
+            psp2chErrorDialog("Make dir error\n%s", path);
+            return -1;
+        }
+    }
+    else
+    {
+        sceIoDclose(fd);
+    }
+    p = strrchr(s2ch.urlAnchor[anchor].path, '#');
+    if (p)
+    {
+        *p = '\0';
+    }
+    p = strrchr(s2ch.urlAnchor[anchor].path, '.');
+    if (p && strlen(p) < 8)
+    {
+        strcpy(ext, p);
+    }
+    else
+    {
+        ext[0] = '\0';
+    }
+	// 拡張子が画像でなければ内蔵ブラウザに
+	if (stricmp(ext, ".jpg") != 0 && stricmp(ext, ".png") != 0 && stricmp(ext, ".bmp") != 0 && stricmp(ext, ".gif") != 0) {
+		sprintf(path, "http://%s/%s", s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path);
+		pspShowBrowser(path, NULL);
+		return 0;
+	}
+    sprintf(path, "%s/%s", s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path);
+    sceKernelUtilsMd5Digest((u8*)path, strlen(path), digest);
+    sprintf(path, "%s/%s/", s2ch.cwDir, cacheDir);
+    for (i = 0; i < 16; i++)
+    {
+        sprintf(tmp, "%02x", digest[i]);
+        strcat(path, tmp);
+    }
+    strcat(path, ext);
+    fd = sceIoOpen(path, PSP_O_RDONLY, 0777);
+    if (fd >= 0)
+    {
+        sceIoClose(fd);
+        if (stricmp(ext, ".jpg") == 0)
+        {
+            psp2chImageViewJpeg(path);
+            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        }
+        else if (stricmp(ext, ".png") == 0)
+        {
+            psp2chImageViewPng(path);
+            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        }
+        else if (stricmp(ext, ".bmp") == 0)
+        {
+            psp2chImageViewBmp(path);
+            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        }
+        else if (stricmp(ext, ".gif") == 0)
+        {
+            psp2chImageViewGif(path);
+            sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+        }
+        return 0;
+    }
+    ret = psp2chGet(s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path, "", NULL, &net);
+    if (ret < 0)
+    {
+        return ret;
+    }
+    switch(net.status)
+    {
+    case 200: // OK
+        break;
+    default:
+        /*
+        psp2chErrorDialog("HTTP error\nhost %s path %s\nStatus code %d", s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path, ret);
+        pgWaitVn(60);
+        */
+        return -1;
+    }
+    // save
+    fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
+    if (fd < 0)
+    {
+        psp2chErrorDialog("File open error\n%s", path);
+        return fd;
+    }
+    strcpy(buf, "表\示します");
+    pgCopy(0, offset);
+    pgPrintMenuBar(buf);
+	pgCopyMenuBar();
+    sceDisplayWaitVblankStart();
+    framebuffer = sceGuSwapBuffers();
+    pgCopy(0, offset);
+    pgCopyMenuBar();
+    sceDisplayWaitVblankStart();
+    framebuffer = sceGuSwapBuffers();
+    sceIoWrite(fd, net.body, net.length);
+    sceIoClose(fd);
+    if (stricmp(ext, ".jpg") == 0)
+    {
+        psp2chImageViewJpeg(path);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+    }
+    else if (stricmp(ext, ".png") == 0)
+    {
+        psp2chImageViewPng(path);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+    }
+    else if (stricmp(ext, ".bmp") == 0)
+    {
+        psp2chImageViewBmp(path);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+    }
+    else if (stricmp(ext, ".gif") == 0)
+    {
+        psp2chImageViewGif(path);
+        sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+    }
+    return 0;
 }
