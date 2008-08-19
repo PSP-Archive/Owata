@@ -669,7 +669,7 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
     imgWH = height / thumbW;
     thumbH = (double)height / SCR_HEIGHT;
     imgHW = width / thumbH;
-    sceCtrlPeekBufferPositive(&oldPad, 1);
+	s2ch.oldPad.Buttons = PSP_CTRL_UP;
     while (s2ch.running)
     {
         if(sceCtrlPeekBufferPositive(&pad, 1))

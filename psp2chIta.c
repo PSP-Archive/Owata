@@ -107,6 +107,7 @@ int psp2chIta(void)
 			end = s2ch.ita.count;
 			s2ch.viewX = 0;
 			s2ch.viewY = 0;
+			s2ch.oldPad.Buttons = PSP_CTRL_UP;
 		}
 		if (s2ch.tateFlag)
 		{
@@ -246,6 +247,7 @@ int psp2chIta(void)
                         s2ch.thread.select = 0;
                         pgFillvram(WHITE, 0, 0, SCR_WIDTH, BUF_HEIGHT, 2);
                         s2ch.sel = 3;
+						s2ch.oldPad.Buttons = PSP_CTRL_UP;
                         return 0;
                     }
                     else
