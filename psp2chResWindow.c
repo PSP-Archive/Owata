@@ -466,7 +466,11 @@ int psp2chUrlAnchor(int anchor, int offset)
         sceIoClose(fd);
         if (stricmp(ext, ".jpg") == 0)
         {
-            psp2chImageViewJpeg(path);
+            ret = psp2chImageViewJpeg(path);
+			if (ret < 0)
+			{
+				psp2chErrorDialog("jpeg error\n%d", ret);
+			}
             sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
         }
         else if (stricmp(ext, ".png") == 0)
@@ -523,7 +527,11 @@ int psp2chUrlAnchor(int anchor, int offset)
     sceIoClose(fd);
     if (stricmp(ext, ".jpg") == 0)
     {
-        psp2chImageViewJpeg(path);
+        ret = psp2chImageViewJpeg(path);
+		if (ret < 0)
+		{
+			psp2chErrorDialog("jpeg error\n%d", ret);
+		}
         sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
     }
     else if (stricmp(ext, ".png") == 0)

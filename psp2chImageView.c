@@ -42,7 +42,7 @@ int psp2chImageViewJpeg(char* fname)
     if (header[0] != 0xFF || header[1] != 0xD8)
     {
         fclose(infile);
-        return -1;
+        return -2;
     }
     cinfo.err = jpeg_std_error(&jerr);
     jpeg_create_decompress(&cinfo);
@@ -55,14 +55,14 @@ int psp2chImageViewJpeg(char* fname)
     if (!img)
     {
         fclose(infile);
-        return -1;
+        return -3;
     }
     imgbuf = (JSAMPROW)calloc(sizeof(JSAMPLE), 4 * width * height);
     if (!imgbuf)
     {
         free(img);
         fclose(infile);
-        return -1;
+        return -4;
     }
     buf = (JSAMPROW)calloc(sizeof(JSAMPLE), 3 * width);
     if (!buf)
@@ -70,7 +70,7 @@ int psp2chImageViewJpeg(char* fname)
         free(imgbuf);
         free(img);
         fclose(infile);
-        return -1;
+        return -5;
     }
     tmp = imgbuf;
     for (i = 0; i < height; i++ )
@@ -114,7 +114,7 @@ int psp2chImageViewJpeg(char* fname)
         free(img);
         jpeg_destroy_decompress(&cinfo);
         fclose(infile);
-        return -1;
+        return -6;
     }
     free(buf);
     jpeg_finish_decompress(&cinfo);
@@ -663,10 +663,11 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
     width2 = width;
     height2 = height;
 	thumb = 1.0;
-    thumbW = (double)width / SCR_WIDTH;
-    imgWH = height / thumbW;
-    thumbH = (double)height / SCR_HEIGHT;
-    imgHW = width / thumbH;
+    thumbW = (double)width / SCR_WIDTH; // 画面幅に合わせるための拡大縮小率
+    imgWH = height / thumbW; // 画面幅に合わせたときの画像高さ
+    thumbH = (double)height / SCR_HEIGHT; // 画面高さにあわせるための拡大縮小率
+    imgHW = width / thumbH; // 画面高さにあわせたときの画像幅
+	s2ch.oldPad.Buttons = PSP_CTRL_UP;
     while (s2ch.running)
     {
         if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
@@ -805,6 +806,12 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
                 startY += (padY)/4;
             }
         }
+		// width : 元画像幅
+		// height : 元画像高さ
+		// sx.sy : 元画像における表示開始位置
+		// width2 : 表示画像幅
+		// height2 : 表示画像高さ
+		// startX.startY : 表示画像における表示開始位置
         if (startX >= width2 - SCR_WIDTH)
         {
             startX = width2 - SCR_WIDTH;
@@ -825,7 +832,7 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
 		sy = thumb * startY;
 		tex.w = BUF_WIDTH;
 		tex.h = BUF_HEIGHT;
-		tex.tb = width;
+		tex.tb = width; // 1024以上は無理　どうする
 		blt(img[0]+sx+sy*width, &tex, width - sx, height - sy, width2 - startX, height2 - startY);
         if (menu)
         {
