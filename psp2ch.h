@@ -268,6 +268,8 @@ typedef struct {
     int padAccel;
     int padCutoff;
     int favSelect;
+    int imageView;
+	int browserDisconnect;
     char imageDir[32];
 } S_2CH_CONFIG;
 

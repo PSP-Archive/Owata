@@ -81,6 +81,8 @@ void psp2chIniLoadConfig(void)
                 setInt("CFG_PAD_ACCEL", s2ch.cfg.padAccel, 1);
                 setInt("CFG_PAD_CUTOFF", s2ch.cfg.padCutoff, 35);
                 setInt("CFG_FAV_SELECT", s2ch.cfg.favSelect, 0);
+                setInt("CFG_IMAGE_VIEW", s2ch.cfg.imageView, 0);
+                setInt("CFG_BROWSER_DISCONNECT", s2ch.cfg.browserDisconnect, 2);
                 setString("CFG_IMAGE_DIR", s2ch.cfg.imageDir, "", 32);
                 s2ch.font.count = 0;
                 while ((p = strstr(buf2, "CFG_FONT_SET")))
@@ -126,6 +128,8 @@ void psp2chIniLoadConfig(void)
     s2ch.cfg.padAccel = 1; // 0:2段階速, 1:8段階速
     s2ch.cfg.padCutoff = 35; // アナログパッドのニュートラルあそび値
     s2ch.cfg.favSelect = 0; // お気に入りのデフォルト表示 0:スレ, 1:板
+	s2ch.cfg.imageView = 0; // リンク先が画像のとき0：ビューワーで開く、1：ブラウザで開く
+	s2ch.cfg.browserDisconnect = 2; // ブラウザ終了時に切断 0：する、1：しない、2：選択
     strcpy(s2ch.cfg.imageDir, ""); // PICTUREフォルダに作成するフォルダ名
     strcpy(s2ch.font.fileA, "monafontA.bin"); // シングルバイト(ASCII, 半角カナ)フォント
     strcpy(s2ch.font.fileJ, "monafontJ.bin"); // マルチバイトフォント

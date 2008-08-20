@@ -19,6 +19,9 @@
 
 extern S_2CH s2ch; // psp2ch.c
 extern unsigned int list[512*512]; // pg.c
+extern unsigned short pixels[BUF_WIDTH*BUF_HEIGHT*2];
+extern unsigned short winPixels[BUF_WIDTH*BUF_HEIGHT*2];
+extern unsigned short* printBuf;
 extern intraFont* jpn0; // pg.c
 extern int preLine; // psp2chRes.c
 extern char keyWords[128]; //psp2ch.c
@@ -700,7 +703,12 @@ void psp2chThreadSort(void)
     const unsigned short text5[] = {0x4F5C,0x6210,0x65E5,0x0028,0x6607,0x9806,0x0029,0}; // çÏê¨ì˙(è∏èá)
     const unsigned short* text[MAX_SORT_COUNT] = {text1, text2, text3, text4, text5};
     int i, select = 0;
+    int temp;
 
+    temp = s2ch.tateFlag;
+    s2ch.tateFlag = 0;
+	printBuf = winPixels;
+	pgFillvram(0x8000, 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
     while (s2ch.running)
     {
         if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
@@ -728,13 +736,19 @@ void psp2chThreadSort(void)
                 }
                 if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
                 {
+					s2ch.tateFlag = temp;
+					printBuf = pixels;
                     return;
                 }
             }
+			printBuf = pixels;
+			s2ch.tateFlag = temp;
+			pgCopy(s2ch.viewX, 0);
+			printBuf = winPixels;
+			s2ch.tateFlag = 0;
+			pgCopy(0, 0);
             sceGuStart(GU_DIRECT, list);
 			sceGuScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
-            sceGuClearColor(0xFFFF0000);
-            sceGuClear(GU_COLOR_BUFFER_BIT);
             s2ch.pgCursorX = 240;
             s2ch.pgCursorY =  77;
             intraFontSetStyle(jpn0, 1.0f, 0xFF00FFFF, 0xFFFF0000, INTRAFONT_ALIGN_CENTER);
@@ -762,6 +776,8 @@ void psp2chThreadSort(void)
             framebuffer = sceGuSwapBuffers();
         }
     }
+    s2ch.tateFlag = temp;
+	printBuf = pixels;
     return psp2chSort(select);
 }
 

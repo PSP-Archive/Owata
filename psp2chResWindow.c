@@ -446,7 +446,7 @@ int psp2chUrlAnchor(int anchor, int offset)
         ext[0] = '\0';
     }
 	// 拡張子が画像でなければ内蔵ブラウザに
-	if (stricmp(ext, ".jpg") != 0 && stricmp(ext, ".png") != 0 && stricmp(ext, ".bmp") != 0 && stricmp(ext, ".gif") != 0) {
+	if (s2ch.cfg.imageView || (stricmp(ext, ".jpg") != 0 && stricmp(ext, ".png") != 0 && stricmp(ext, ".bmp") != 0 && stricmp(ext, ".gif")) != 0) {
 		sprintf(path, "http://%s/%s", s2ch.urlAnchor[anchor].host, s2ch.urlAnchor[anchor].path);
 		pspShowBrowser(path, NULL);
 		return 0;

@@ -298,6 +298,7 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
 				setMenuStr(main);
 			}
 		}
+		pgPrintMenuBar(menuStr);
 		if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
 		{
 			s2ch.oldPad = s2ch.pad;
@@ -516,7 +517,6 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
 					}
 				}
 			}
-			pgPrintMenuBar(menuStr);
 		}
 		if (s2ch.res.start > totalLine - lineEnd)
 		{

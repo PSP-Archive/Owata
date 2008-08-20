@@ -648,8 +648,6 @@ RGBAデータをVRAMに転送
 *****************************/
 void psp2chImageViewer(int* img[], int width, int height, char* fname)
 {
-    SceCtrlData pad;
-    SceCtrlData oldPad;
     SceUID src, dst;
     int padX, padY;
     int ret, menu = 1, rMenu = 0;
@@ -669,12 +667,11 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
     imgWH = height / thumbW;
     thumbH = (double)height / SCR_HEIGHT;
     imgHW = width / thumbH;
-	s2ch.oldPad.Buttons = PSP_CTRL_UP;
     while (s2ch.running)
     {
-        if(sceCtrlPeekBufferPositive(&pad, 1))
+        if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
         {
-            if(pad.Buttons & PSP_CTRL_RTRIGGER)
+            if(s2ch.pad.Buttons & PSP_CTRL_RTRIGGER)
             {
                 rMenu = 1;
             }
@@ -682,12 +679,12 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
             {
                 rMenu = 0;
             }
-            if (pad.Buttons != oldPad.Buttons)
+            if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
             {
-                oldPad = pad;
+                s2ch.oldPad = s2ch.pad;
                 if (rMenu)
                 {
-                    if(pad.Buttons & PSP_CTRL_CIRCLE)
+                    if(s2ch.pad.Buttons & PSP_CTRL_CIRCLE)
                     {
                         if (s2ch.cfg.imageDir[0])
                         {
@@ -737,7 +734,7 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
                 }
                 else
                 {
-                    if(pad.Buttons & PSP_CTRL_CIRCLE)
+                    if(s2ch.pad.Buttons & PSP_CTRL_CIRCLE)
                     {
                         thumbFlag++;
                         if (thumbFlag > 2)
@@ -765,15 +762,15 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
                         startX = 0;
                         startY = 0;
                     }
-                    else if(pad.Buttons & PSP_CTRL_CROSS)
+                    else if(s2ch.pad.Buttons & PSP_CTRL_CROSS)
                     {
                         break;
                     }
-                    else if(pad.Buttons & PSP_CTRL_TRIANGLE)
+                    else if(s2ch.pad.Buttons & PSP_CTRL_TRIANGLE)
                     {
                         menu = menu ? 0 : 1;
                     }
-                    else if(pad.Buttons & PSP_CTRL_SQUARE)
+                    else if(s2ch.pad.Buttons & PSP_CTRL_SQUARE)
                     {
                         sceIoRemove(fname);
                         break;
@@ -781,24 +778,24 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
                 }
                 pgPrintMenuBar("　○ : 拡大縮小　　× : 戻る　　△ : メニューオン・オフ　　□ : 削除");
             }
-            if(pad.Buttons & PSP_CTRL_UP)
+            if(s2ch.pad.Buttons & PSP_CTRL_UP)
             {
                 startY -= 2;
             }
-            if(pad.Buttons & PSP_CTRL_DOWN)
+            if(s2ch.pad.Buttons & PSP_CTRL_DOWN)
             {
                 startY += 2;
             }
-            if(pad.Buttons & PSP_CTRL_LEFT)
+            if(s2ch.pad.Buttons & PSP_CTRL_LEFT)
             {
                 startX -= 2;
             }
-            if(pad.Buttons & PSP_CTRL_RIGHT)
+            if(s2ch.pad.Buttons & PSP_CTRL_RIGHT)
             {
                 startX += 2;
             }
-            padX = pad.Lx - 127;
-            padY = pad.Ly - 127;
+            padX = s2ch.pad.Lx - 127;
+            padY = s2ch.pad.Ly - 127;
             if ((padX < -s2ch.cfg.padCutoff) || (padX > s2ch.cfg.padCutoff))
             {
                 startX += (padX)/4;

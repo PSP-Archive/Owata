@@ -439,7 +439,6 @@ void pgFillRect(unsigned short color, RECT *rect)
 *****************************/
 void pgPrintTitleBar(char* ita, char* title)
 {
-    static struct tm pre;
     unsigned short *temp;
     time_t timep;
     struct tm *t;
@@ -449,13 +448,6 @@ void pgPrintTitleBar(char* ita, char* title)
     sceKernelLibcTime(&timep);
     timep += 9 * 60 * 60;
     t = localtime(&timep);
-    if (t->tm_hour == pre.tm_hour && t->tm_min == pre.tm_min && t->tm_sec == pre.tm_sec)
-    {
-        return;
-    }
-    pre.tm_hour = t->tm_hour;
-    pre.tm_min = t->tm_min;
-    pre.tm_sec = t->tm_sec;
     sprintf(date, "%02d:%02d:%02d", t->tm_hour, t->tm_min, t->tm_sec);
     sprintf(buf, " [%s]", ita);
     temp = printBuf;
