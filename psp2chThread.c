@@ -488,7 +488,7 @@ int psp2chGetSubject(int ita)
     {
         case 200: // OK
             break;
-        case 301: // Moved Permanently
+        case 302: // Found
             memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
             s2ch.mh.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT | PSP_UTILITY_MSGDIALOG_OPTION_YESNO_BUTTONS;
             strcpy(s2ch.mh.message, TEXT_7);
