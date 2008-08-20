@@ -49,7 +49,8 @@ int psp2chImageViewJpeg(char* fname)
     jpeg_stdio_src(&cinfo, infile);
     jpeg_read_header(&cinfo, TRUE);
     jpeg_start_decompress(&cinfo);
-    width = cinfo.output_width;
+    width = cinfo.output_width + 15;
+	width &= 0xFFFFFFF0;
     height = cinfo.output_height;
     img = (JSAMPARRAY)malloc(sizeof(JSAMPROW) * height);
     if (!img)
@@ -83,7 +84,7 @@ int psp2chImageViewJpeg(char* fname)
         while(cinfo.output_scanline < cinfo.output_height)
         {
             jpeg_read_scanlines(&cinfo, &buf, 1);
-            for (i = 0; i < width; i++)
+            for (i = 0; i < cinfo.output_width; i++)
             {
                 img[cinfo.output_scanline-1][i * 4 + 0] = buf[i * 3 + 0];
                 img[cinfo.output_scanline-1][i * 4 + 1] = buf[i * 3 + 1];
@@ -98,7 +99,7 @@ int psp2chImageViewJpeg(char* fname)
         while(cinfo.output_scanline < cinfo.output_height)
         {
             jpeg_read_scanlines(&cinfo, &buf, 1);
-            for (i = 0; i < width; i++)
+            for (i = 0; i < cinfo.output_width; i++)
             {
                 img[cinfo.output_scanline-1][i * 4 + 0] = buf[i];
                 img[cinfo.output_scanline-1][i * 4 + 1] = buf[i];
@@ -120,7 +121,7 @@ int psp2chImageViewJpeg(char* fname)
     jpeg_finish_decompress(&cinfo);
     jpeg_destroy_decompress(&cinfo);
     fclose(infile);
-    psp2chImageViewer((int**)img, width, height, fname);
+    psp2chImageViewer((int**)img, cinfo.output_width, height, fname);
     free(imgbuf);
     free(img);
     preLine = -2;
@@ -225,7 +226,7 @@ BMPファイルを読み込んで32ビットRGBAに変換
 int psp2chImageViewBmp(char* fname)
 {
     FILE* infile;
-    int i, j, y, height, len;
+    int i, j, y, width, height, len;
     BITMAPFILEHEADER bf;
     BITMAPINFOHEADER bi;
     unsigned char **img, *imgbuf, *buf, *tmp;
@@ -271,7 +272,8 @@ int psp2chImageViewBmp(char* fname)
         fclose(infile);
         return -1;
     }
-    imgbuf = (unsigned char*)calloc(sizeof(unsigned char), 4 * bi.biWidth * height);
+	width = (bi.biWidth + 15) & 0xFFFFFFF0;
+    imgbuf = (unsigned char*)calloc(sizeof(unsigned char), 4 * width * height);
     if (!imgbuf)
     {
         free(img);
@@ -291,7 +293,7 @@ int psp2chImageViewBmp(char* fname)
     tmp = imgbuf;
     for (i = 0; i < height; i++ )
     {
-        img[i] = &tmp[i * bi.biWidth * 4];
+        img[i] = &tmp[i * width * 4];
     }
     fseek(infile, bf.bfOffBits, SEEK_SET);
     // 24ビットBMPをRGBAに
@@ -675,10 +677,12 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
             if(s2ch.pad.Buttons & PSP_CTRL_RTRIGGER)
             {
                 rMenu = 1;
+				pgPrintMenuBar("　○ : PICTUREフォルダへコピー　");
             }
             else
             {
                 rMenu = 0;
+                pgPrintMenuBar("　○ : 拡大縮小　　× : 戻る　　△ : メニューオン・オフ　　□ : 削除");
             }
             if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
             {
@@ -731,7 +735,6 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
                         sceIoClose(dst);
                         sceIoClose(src);
                     }
-					pgPrintMenuBar("　○ : PICTUREフォルダへコピー　");
                 }
                 else
                 {
@@ -777,7 +780,6 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
                         break;
                     }
                 }
-                pgPrintMenuBar("　○ : 拡大縮小　　× : 戻る　　△ : メニューオン・オフ　　□ : 削除");
             }
             if(s2ch.pad.Buttons & PSP_CTRL_UP)
             {
@@ -832,8 +834,8 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
 		sy = thumb * startY;
 		tex.w = BUF_WIDTH;
 		tex.h = BUF_HEIGHT;
-		tex.tb = width; // 1024以上は無理　どうする
-		blt(img[0]+sx+sy*width, &tex, width - sx, height - sy, width2 - startX, height2 - startY);
+		tex.tb = (width + 15) & 0xFFFFFFF0; // 1024以上は無理　どうする
+		blt(img[0] + sx + sy * tex.tb, &tex, width - sx, height - sy, width2 - startX, height2 - startY);
         if (menu)
         {
             pgCopyMenuBar();
