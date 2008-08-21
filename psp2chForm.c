@@ -14,9 +14,9 @@
 #define BOX_TEXT_BG_COLOR 0xFDDD
 
 extern S_2CH s2ch; // psp2ch.c
-extern unsigned short pixels[BUF_WIDTH*BUF_HEIGHT*2];
-extern unsigned short winPixels[BUF_WIDTH*BUF_HEIGHT*2];
-extern unsigned short* printBuf;
+extern unsigned short pixels[BUF_WIDTH*BUF_HEIGHT*2]; // pg.c
+extern unsigned short winPixels[BUF_WIDTH*BUF_HEIGHT*2]; // pg.c
+extern unsigned short* printBuf; // pg.c
 
 /*********************
 src文字列をURLエンコードしてdst文字列に格納　

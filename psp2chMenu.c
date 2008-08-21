@@ -13,9 +13,9 @@
 
 extern S_2CH s2ch; // psp2ch.c
 extern char keyWords[128]; //psp2ch.c
-extern unsigned int pixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
-extern unsigned int winPixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
-extern unsigned int* printBuf; // pg.c
+extern unsigned short pixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
+extern unsigned short winPixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
+extern unsigned short* printBuf; // pg.c
 extern const char *sBtnH[]; // psp2chRes.c
 extern const char *sBtnV[]; // psp2chRes.c
 

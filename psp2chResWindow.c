@@ -14,9 +14,9 @@
 
 extern S_2CH s2ch; // psp2ch.c
 extern int preLine; // psp2chRes.c
-extern unsigned int pixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
-extern unsigned int winPixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
-extern unsigned int* printBuf; // pg.c
+extern unsigned short pixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
+extern unsigned short winPixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
+extern unsigned short* printBuf; // pg.c
 
 static const char* cacheDir = "CACHE";
 

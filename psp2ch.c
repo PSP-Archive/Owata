@@ -20,9 +20,9 @@
 #include "intraFont.h"
 
 extern unsigned int list[512*512]; // pg.c
-extern unsigned short pixels[BUF_WIDTH*BUF_HEIGHT*2];
-extern unsigned short winPixels[BUF_WIDTH*BUF_HEIGHT*2];
-extern unsigned short* printBuf;
+extern unsigned short pixels[BUF_WIDTH*BUF_HEIGHT*2]; // pg.c
+extern unsigned short winPixels[BUF_WIDTH*BUF_HEIGHT*2]; // pg.c
+extern unsigned short* printBuf; // pg.c
 extern intraFont* jpn0; // pg.c
 extern RECT barSrcRectH; // pg.c
 extern RECT barSrcRectV; // pg.c

@@ -19,9 +19,9 @@
 
 extern S_2CH s2ch; // psp2ch.c
 extern unsigned int list[512*512]; // pg.c
-extern unsigned short pixels[BUF_WIDTH*BUF_HEIGHT*2];
-extern unsigned short winPixels[BUF_WIDTH*BUF_HEIGHT*2];
-extern unsigned short* printBuf;
+extern unsigned short pixels[BUF_WIDTH*BUF_HEIGHT*2]; // pg.c
+extern unsigned short winPixels[BUF_WIDTH*BUF_HEIGHT*2]; // pg.c
+extern unsigned short* printBuf; // pg.c
 extern intraFont* jpn0; // pg.c
 extern int preLine; // psp2chRes.c
 extern char keyWords[128]; //psp2ch.c

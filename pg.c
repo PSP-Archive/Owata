@@ -16,35 +16,36 @@
 
 extern S_2CH s2ch; // psp2chRes.c
 
-TEX tex = {BUF_WIDTH*2, BUF_HEIGHT, BUF_WIDTH*2};
-TEX cur = {32, 32, 32};
 RECT barSrcRectH; // psp2chInit(psp2ch.c)で初期化
 RECT barSrcRectV; // psp2chInit(psp2ch.c)で初期化
 RECT menuDstRectH; // psp2chInit(psp2ch.c)で初期化
 RECT menuDstRectV; // psp2chInit(psp2ch.c)で初期化
 RECT titleDstRectH; // psp2chInit(psp2ch.c)で初期化
 RECT titleDstRectV; // psp2chInit(psp2ch.c)で初期化
-static unsigned char *fontA, *fontJ;
-static int size_fontA, size_fontJ;
-#define MAX_ENTITIES 12
-static struct entityTag entity[MAX_ENTITIES];
-static S_PUTCHAR sChar;
-
 unsigned int   __attribute__((aligned(16))) list[512*512];
-unsigned short __attribute__((aligned(16))) pixels[BUF_WIDTH*BUF_HEIGHT*2];
-unsigned short __attribute__((aligned(16))) winPixels[BUF_WIDTH*BUF_HEIGHT*2];
-unsigned short __attribute__((aligned(16))) barPixels[BUF_WIDTH*32*2];
-unsigned short __attribute__((aligned(16))) titlePixels[BUF_WIDTH*32*2];
-unsigned short* printBuf;
-void* framebuffer;
+unsigned short __attribute__((aligned(16))) pixels[BUF_WIDTH*BUF_HEIGHT*2]; // main画面用バッファ
+unsigned short __attribute__((aligned(16))) winPixels[BUF_WIDTH*BUF_HEIGHT*2]; // window画面用バッファ
+unsigned short* printBuf; // 描画先選択用ポインタ（pixelsとwinPixelsを切り替えて使用）
+void* framebuffer; // drawbufferを保存
 intraFont* jpn0;
 
-unsigned short __attribute__((aligned(16))) cursorImg[32*45];
+#define MAX_ENTITIES 12
+static struct entityTag entity[MAX_ENTITIES];
+static TEX tex = {BUF_WIDTH*2, BUF_HEIGHT, BUF_WIDTH*2};
+static TEX cur = {32, 32, 32};
+static unsigned char *fontA, *fontJ;
+static int size_fontA, size_fontJ;
+static S_PUTCHAR sChar;
+// VRAM内にメモリ確保してメインメモリ節約
+static unsigned short* barPixels = (unsigned short*)(0x04000000 + 0x110000 + 0x88000); // BUF_WIDTH*64
+static unsigned short* titlePixels = (unsigned short*)(0x04000000 + 0x110000 + 0x88000 + BUF_WIDTH*64*2); // BUF_WIDTH*64
+static unsigned short* cursorImg = (unsigned short*)(0x04000000 + 0x110000 + 0x88000 + BUF_WIDTH*64*2*2); // 32*45
+
 #define O 0
 #define B 1
 #define W 2
 #define G 3
-unsigned short cursorFont[32*45] = {
+static const char cursorFont[32*45] = {
     O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
     O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
     O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,
@@ -123,6 +124,12 @@ void pgCursorColorSet(void)
     }
 }
 
+/*************************
+文字参照用の配列を作成
+追加するときは
+#define MAX_ENTITIES 
+を修正
+**************************/
 void pgEntitiesSet(void)
 {
     entity[0].str  = "&amp;"; entity[0].len  = 4;entity[0].byte  = 1;entity[0].c1  = '&'; entity[0].c2  = 0;

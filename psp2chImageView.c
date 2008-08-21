@@ -13,7 +13,7 @@
 
 extern S_2CH s2ch; //psp2ch.c
 extern unsigned int list[BUF_WIDTH*BUF_HEIGHT]; // pg.c
-extern unsigned int pixels[BUF_WIDTH*BUF_HEIGHT]; // pg.c
+extern unsigned short winPixels[BUF_WIDTH*BUF_HEIGHT*2]; // pg.c
 extern int preLine; // psp2chRes.c
 
 /*****************************
@@ -49,8 +49,8 @@ int psp2chImageViewJpeg(char* fname)
     jpeg_stdio_src(&cinfo, infile);
     jpeg_read_header(&cinfo, TRUE);
     jpeg_start_decompress(&cinfo);
-    width = cinfo.output_width + 15;
-	width &= 0xFFFFFFF0;
+	// Gu転送のため1行を16バイト境界にそろえる
+    width = (cinfo.output_width + 15) & 0xFFFFFFF0;
     height = cinfo.output_height;
     img = (JSAMPARRAY)malloc(sizeof(JSAMPROW) * height);
     if (!img)
@@ -137,7 +137,7 @@ int psp2chImageViewPng(char* fname)
     png_structp png_ptr;
     png_infop info_ptr;
     png_infop end_info;
-    unsigned long width, height;
+    unsigned long width, height, width2;
     int bit_depth, color_type, interlace_type;
     png_bytepp img;
     png_bytep imgbuf;
@@ -198,7 +198,9 @@ int psp2chImageViewPng(char* fname)
         fclose(infile);
         return -1;
     }
-    imgbuf = (png_bytep)malloc(png_get_rowbytes(png_ptr, info_ptr) * width);
+	// Gu転送のため1行を16バイト境界にそろえる
+	width2 = (width + 15) & 0xFFFFFFF0;
+    imgbuf = (png_bytep)malloc(png_get_rowbytes(png_ptr, info_ptr) * width2);
     if (!imgbuf)
     {
         free(img);
@@ -207,7 +209,7 @@ int psp2chImageViewPng(char* fname)
     }
     for (i = 0; i < height; i++)
     {
-        img[i] = &imgbuf[i * width * 4];
+        img[i] = &imgbuf[i * width2 * 4];
     }
     png_read_image(png_ptr, img);
     png_read_end(png_ptr, end_info);
@@ -272,6 +274,7 @@ int psp2chImageViewBmp(char* fname)
         fclose(infile);
         return -1;
     }
+	// Gu転送のため1行を16バイト境界にそろえる
 	width = (bi.biWidth + 15) & 0xFFFFFFF0;
     imgbuf = (unsigned char*)calloc(sizeof(unsigned char), 4 * width * height);
     if (!imgbuf)
@@ -367,7 +370,7 @@ int psp2chImageViewGif(char* fname)
 {
     int InterlacedOffset[] = { 0, 4, 2, 1 }; /* The way Interlaced image should. */
     int InterlacedJumps[] = { 8, 8, 4, 2 };    /* be read - offsets and jumps... */
-    int i, j, Size, Row, Col, Width, Height, Count, ExtCode;
+    int i, j, Size, Row, Col, Width, Height, Count, ExtCode, width2;
     GifFileType *GifFile;
     GifRowType *ScreenBuffer, ImgBuf, GifRow;
     GifRecordType RecordType;
@@ -399,7 +402,9 @@ int psp2chImageViewGif(char* fname)
         DGifCloseFile(GifFile);
         return -1;
     }
-    if ((buf = (unsigned char*)malloc(4 * GifFile->SWidth * GifFile->SHeight)) == NULL)
+	// Gu転送のため1行を16バイト境界にそろえる
+	width2 = (GifFile->SWidth + 15) & 0xFFFFFFF0;
+    if ((buf = (unsigned char*)malloc(4 * width2 * GifFile->SHeight)) == NULL)
     {
         free(img);
         free(ImgBuf);
@@ -410,7 +415,7 @@ int psp2chImageViewGif(char* fname)
     for (i = 0; i < GifFile->SHeight; i++)
     {
         ScreenBuffer[i] = &ImgBuf[i * Size];
-        img[i] = &buf[i * 4 * GifFile->SWidth];
+        img[i] = &buf[i * 4 * width2];
     }
     for (i = 0; i < GifFile->SWidth; i++)  /* Set its color to BackGround. */
     {
@@ -834,8 +839,15 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
 		sy = thumb * startY;
 		tex.w = BUF_WIDTH;
 		tex.h = BUF_HEIGHT;
-		tex.tb = (width + 15) & 0xFFFFFFF0; // 1024以上は無理　どうする
-		blt(img[0] + sx + sy * tex.tb, &tex, width - sx, height - sy, width2 - startX, height2 - startY);
+		if (width >= 1024) // 1024以上はGuが対応していない　どうする
+		{
+		}
+		else
+		{
+			// Gu転送のため1行を16バイト境界にそろえる
+			tex.tb = (width + 15) & 0xFFFFFFF0;
+			blt(img[0] + sx + sy * tex.tb, &tex, width - sx, height - sy, width2 - startX, height2 - startY);
+		}
         if (menu)
         {
             pgCopyMenuBar();
