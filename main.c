@@ -13,7 +13,7 @@
 /* Define the module info section */
 PSP_MODULE_INFO("2ch Browser for PSP", PSP_MODULE_USER, 0, 8);
 PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_USER);
-PSP_HEAP_SIZE_KB(8*1024); // psphtmlviewer.c ÇÃMEM_SIZEÇ∆ÇÃåìÇÀçáÇ¢Ç≈
+PSP_HEAP_SIZE_KB(4*1024); // psphtmlviewer.c ÇÃMEM_SIZEÇ∆ÇÃåìÇÀçáÇ¢Ç≈
 
 extern S_2CH s2ch; // psp2ch.c
 

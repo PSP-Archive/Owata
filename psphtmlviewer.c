@@ -5,7 +5,7 @@
 
 extern S_2CH s2ch;
 
-#define MEM_SIZE 4*1024*1024
+#define MEM_SIZE 8*1024*1024
 void pspShowBrowser(char *url, char *dldir)
 {
     int done=0;
@@ -14,7 +14,10 @@ void pspShowBrowser(char *url, char *dldir)
 	SceUID vpl;
 
 	vpl = sceKernelCreateVpl("BrowserVpl", PSP_MEMORY_PARTITION_USER, 0, MEM_SIZE + 256, NULL);
-
+    if (vpl < 0)
+    {
+        return;
+    }
     memset(&html, 0, html_size);
     html.base.size = html_size;
     sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_LANGUAGE,&html.base.language);

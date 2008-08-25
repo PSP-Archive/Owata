@@ -16,6 +16,7 @@ extern unsigned int list[BUF_WIDTH*BUF_HEIGHT]; // pg.c
 extern unsigned short winPixels[BUF_WIDTH*BUF_HEIGHT*2]; // pg.c
 extern int preLine; // psp2chRes.c
 
+#define MEM_SIZE 8*1024*1024
 /*****************************
 jpegファイルを読み込んで32ビットRGBAに変換
 *****************************/
@@ -24,13 +25,20 @@ int psp2chImageViewJpeg(char* fname)
     FILE* infile;
     JSAMPARRAY img;
     JSAMPROW buf, imgbuf, tmp;
+	void *mem;
     int width;
     int height;
     int i;
     struct jpeg_decompress_struct cinfo;
     struct jpeg_error_mgr jerr;
     unsigned char header[4];
+	SceUID vpl;
 
+	vpl = sceKernelCreateVpl("ImageVpl", PSP_MEMORY_PARTITION_USER, 0, MEM_SIZE + 256, NULL);
+    if (vpl < 0)
+    {
+        return -1;
+    }
     infile = fopen(fname, "rb" );
     if (!infile)
     {
@@ -52,27 +60,27 @@ int psp2chImageViewJpeg(char* fname)
 	// Gu転送のため1行を16バイト境界にそろえる
     width = (cinfo.output_width + 15) & 0xFFFFFFF0;
     height = cinfo.output_height;
-    img = (JSAMPARRAY)malloc(sizeof(JSAMPROW) * height);
-    if (!img)
-    {
+    if (sceKernelAllocateVpl(vpl, sizeof(JSAMPROW) * height, &mem, NULL) < 0)
+	{
+		sceKernelDeleteVpl(vpl);
         fclose(infile);
-        return -3;
-    }
-    imgbuf = (JSAMPROW)calloc(sizeof(JSAMPLE), 4 * width * height);
-    if (!imgbuf)
-    {
-        free(img);
+		return -3;
+	}
+	img = mem;
+    if (sceKernelAllocateVpl(vpl, sizeof(JSAMPLE) * 3 * width, &mem, NULL) < 0)
+	{
+		sceKernelDeleteVpl(vpl);
         fclose(infile);
-        return -4;
-    }
-    buf = (JSAMPROW)calloc(sizeof(JSAMPLE), 3 * width);
-    if (!buf)
-    {
-        free(imgbuf);
-        free(img);
+		return -4;
+	}
+	buf = mem;
+    if (sceKernelAllocateVpl(vpl, sizeof(JSAMPLE) * 4 * width * height, &mem, NULL) < 0)
+	{
+		sceKernelDeleteVpl(vpl);
         fclose(infile);
-        return -5;
-    }
+		return -5;
+	}
+	imgbuf = mem;
     tmp = imgbuf;
     for (i = 0; i < height; i++ )
     {
@@ -110,20 +118,16 @@ int psp2chImageViewJpeg(char* fname)
     }
     else
     {
-        free(buf);
-        free(imgbuf);
-        free(img);
         jpeg_destroy_decompress(&cinfo);
+		sceKernelDeleteVpl(vpl);
         fclose(infile);
         return -6;
     }
-    free(buf);
     jpeg_finish_decompress(&cinfo);
     jpeg_destroy_decompress(&cinfo);
     fclose(infile);
     psp2chImageViewer((int**)img, cinfo.output_width, height, fname);
-    free(imgbuf);
-    free(img);
+	sceKernelDeleteVpl(vpl);
     preLine = -2;
     return 0;
 }
@@ -141,9 +145,16 @@ int psp2chImageViewPng(char* fname)
     int bit_depth, color_type, interlace_type;
     png_bytepp img;
     png_bytep imgbuf;
+	void* mem;
     int i;
     unsigned char header[8];
+	SceUID vpl;
 
+	vpl = sceKernelCreateVpl("ImageVpl", PSP_MEMORY_PARTITION_USER, 0, MEM_SIZE + 256, NULL);
+    if (vpl < 0)
+    {
+        return -1;
+    }
     infile = fopen(fname, "rb");
     if (!infile)
     {
@@ -192,21 +203,22 @@ int psp2chImageViewPng(char* fname)
         png_set_add_alpha(png_ptr, 0xFFFF, PNG_FILLER_AFTER);
     }
     png_read_update_info(png_ptr, info_ptr);
-    img = (png_bytepp)malloc(height * sizeof(png_bytep));
-    if (!img)
-    {
-        fclose(infile);
-        return -1;
-    }
 	// Gu転送のため1行を16バイト境界にそろえる
 	width2 = (width + 15) & 0xFFFFFFF0;
-    imgbuf = (png_bytep)malloc(png_get_rowbytes(png_ptr, info_ptr) * width2);
-    if (!imgbuf)
-    {
-        free(img);
+    if (sceKernelAllocateVpl(vpl, height * sizeof(png_bytep), &mem, NULL) < 0)
+	{
+		sceKernelDeleteVpl(vpl);
         fclose(infile);
-        return -1;
-    }
+		return -3;
+	}
+	img = mem;
+    if (sceKernelAllocateVpl(vpl, png_get_rowbytes(png_ptr, info_ptr) * width2, &mem, NULL) < 0)
+	{
+		sceKernelDeleteVpl(vpl);
+        fclose(infile);
+		return -4;
+	}
+	imgbuf = mem;
     for (i = 0; i < height; i++)
     {
         img[i] = &imgbuf[i * width2 * 4];
@@ -216,8 +228,7 @@ int psp2chImageViewPng(char* fname)
     png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
     fclose(infile);
     psp2chImageViewer((int**)img, (int)width, (int)height, fname);
-    free(imgbuf);
-    free(img);
+	sceKernelDeleteVpl(vpl);
     preLine = -2;
     return 0;
 }
@@ -232,7 +243,14 @@ int psp2chImageViewBmp(char* fname)
     BITMAPFILEHEADER bf;
     BITMAPINFOHEADER bi;
     unsigned char **img, *imgbuf, *buf, *tmp;
+	void* mem;
+	SceUID vpl;
 
+	vpl = sceKernelCreateVpl("ImageVpl", PSP_MEMORY_PARTITION_USER, 0, MEM_SIZE + 256, NULL);
+    if (vpl < 0)
+    {
+        return -1;
+    }
     infile = fopen(fname, "rb" );
     if (!infile)
     {
@@ -268,31 +286,31 @@ int psp2chImageViewBmp(char* fname)
     {
         height = bi.biHeight;
     }
-    img = (unsigned char**)malloc(sizeof(unsigned char*) * height);
-    if (!img)
-    {
-        fclose(infile);
-        return -1;
-    }
 	// Gu転送のため1行を16バイト境界にそろえる
 	width = (bi.biWidth + 15) & 0xFFFFFFF0;
-    imgbuf = (unsigned char*)calloc(sizeof(unsigned char), 4 * width * height);
-    if (!imgbuf)
-    {
-        free(img);
-        fclose(infile);
-        return -1;
-    }
     len = bi.biWidth * bi.biBitCount / 8;
     len += (4 - (len & 3)) & 3;
-    buf = (unsigned char*)calloc(sizeof(unsigned char), len);
-    if (!buf)
-    {
-        free(imgbuf);
-        free(img);
+    if (sceKernelAllocateVpl(vpl, sizeof(unsigned char*) * height, &mem, NULL) < 0)
+	{
+		sceKernelDeleteVpl(vpl);
         fclose(infile);
-        return -1;
-    }
+		return -3;
+	}
+	img = mem;
+    if (sceKernelAllocateVpl(vpl, sizeof(unsigned char) * len, &mem, NULL) < 0)
+	{
+		sceKernelDeleteVpl(vpl);
+        fclose(infile);
+		return -4;
+	}
+	buf = mem;
+    if (sceKernelAllocateVpl(vpl, sizeof(unsigned char) * 4 * width * height, &mem, NULL) < 0)
+	{
+		sceKernelDeleteVpl(vpl);
+        fclose(infile);
+		return -5;
+	}
+	imgbuf = mem;
     tmp = imgbuf;
     for (i = 0; i < height; i++ )
     {
@@ -348,17 +366,13 @@ int psp2chImageViewBmp(char* fname)
     // 未対応
     else
     {
-        free(buf);
-        free(imgbuf);
-        free(img);
+		sceKernelDeleteVpl(vpl);
         fclose(infile);
         return -1;
     }
-    free(buf);
     fclose(infile);
     psp2chImageViewer((int**)img, bi.biWidth, height, fname);
-    free(imgbuf);
-    free(img);
+	sceKernelDeleteVpl(vpl);
     preLine = -2;
     return 0;
 }
@@ -378,40 +392,49 @@ int psp2chImageViewGif(char* fname)
     GifColorType *ColorMapEntry;
     ColorMapObject *ColorMap;
     unsigned char **img, *buf, *BufferP;
+	void* mem;
+	SceUID vpl;
 
+	vpl = sceKernelCreateVpl("ImageVpl", PSP_MEMORY_PARTITION_USER, 0, MEM_SIZE + 256, NULL);
+    if (vpl < 0)
+    {
+        return -1;
+    }
     if ((GifFile = DGifOpenFileName(fname)) == NULL)
     {
         return -1;
     }
-    if ((ScreenBuffer = (GifRowType *)malloc(GifFile->SHeight * sizeof(GifRowType *))) == NULL)
-    {
-        DGifCloseFile(GifFile);
-        return -1;
-    }
     Size = GifFile->SWidth * sizeof(GifPixelType);/* Size in bytes one row.*/
-    if ((ImgBuf = (GifRowType)malloc(Size * GifFile->SHeight)) == NULL)
-    {
-        free(ScreenBuffer);
-        DGifCloseFile(GifFile);
-        return -1;
-    }
-    if ((img = (unsigned char**)malloc(sizeof(unsigned char*) * GifFile->SHeight)) == NULL)
-    {
-        free(ImgBuf);
-        free(ScreenBuffer);
-        DGifCloseFile(GifFile);
-        return -1;
-    }
 	// Gu転送のため1行を16バイト境界にそろえる
 	width2 = (GifFile->SWidth + 15) & 0xFFFFFFF0;
-    if ((buf = (unsigned char*)malloc(4 * width2 * GifFile->SHeight)) == NULL)
-    {
-        free(img);
-        free(ImgBuf);
-        free(ScreenBuffer);
+    if (sceKernelAllocateVpl(vpl, GifFile->SHeight * sizeof(GifRowType *), &mem, NULL) < 0)
+	{
+		sceKernelDeleteVpl(vpl);
         DGifCloseFile(GifFile);
-        return -1;
-    }
+		return -3;
+	}
+	ScreenBuffer = mem;
+    if (sceKernelAllocateVpl(vpl, Size * GifFile->SHeight, &mem, NULL) < 0)
+	{
+		sceKernelDeleteVpl(vpl);
+        DGifCloseFile(GifFile);
+		return -4;
+	}
+	ImgBuf = mem;
+    if (sceKernelAllocateVpl(vpl, sizeof(unsigned char*) * GifFile->SHeight, &mem, NULL) < 0)
+	{
+		sceKernelDeleteVpl(vpl);
+        DGifCloseFile(GifFile);
+		return -5;
+	}
+	img = mem;
+    if (sceKernelAllocateVpl(vpl, 4 * width2 * GifFile->SHeight, &mem, NULL) < 0)
+	{
+		sceKernelDeleteVpl(vpl);
+        DGifCloseFile(GifFile);
+		return -6;
+	}
+	buf = mem;
     for (i = 0; i < GifFile->SHeight; i++)
     {
         ScreenBuffer[i] = &ImgBuf[i * Size];
@@ -430,10 +453,7 @@ int psp2chImageViewGif(char* fname)
     {
         if (DGifGetRecordType(GifFile, &RecordType) == GIF_ERROR)
         {
-            free(buf);
-            free(img);
-            free(ImgBuf);
-            free(ScreenBuffer);
+			sceKernelDeleteVpl(vpl);
             DGifCloseFile(GifFile);
             return -1;
         }
@@ -442,10 +462,7 @@ int psp2chImageViewGif(char* fname)
 	    case IMAGE_DESC_RECORD_TYPE:
             if (DGifGetImageDesc(GifFile) == GIF_ERROR)
             {
-                free(buf);
-                free(img);
-                free(ImgBuf);
-                free(ScreenBuffer);
+				sceKernelDeleteVpl(vpl);
                 DGifCloseFile(GifFile);
                 return -1;
             }
@@ -456,10 +473,7 @@ int psp2chImageViewGif(char* fname)
             if (GifFile->Image.Left + GifFile->Image.Width > GifFile->SWidth ||
                GifFile->Image.Top + GifFile->Image.Height > GifFile->SHeight)
             {
-                free(buf);
-                free(img);
-                free(ImgBuf);
-                free(ScreenBuffer);
+				sceKernelDeleteVpl(vpl);
                 DGifCloseFile(GifFile);
                 return -1;
             }
@@ -471,10 +485,7 @@ int psp2chImageViewGif(char* fname)
                     {
                         if (DGifGetLine(GifFile, &ScreenBuffer[j][Col], Width) == GIF_ERROR)
                         {
-                            free(buf);
-                            free(img);
-                            free(ImgBuf);
-                            free(ScreenBuffer);
+							sceKernelDeleteVpl(vpl);
                             DGifCloseFile(GifFile);
                             return -1;
                         }
@@ -486,10 +497,7 @@ int psp2chImageViewGif(char* fname)
                 {
                     if (DGifGetLine(GifFile, &ScreenBuffer[Row++][Col], Width) == GIF_ERROR)
                     {
-                        free(buf);
-                        free(img);
-                        free(ImgBuf);
-                        free(ScreenBuffer);
+						sceKernelDeleteVpl(vpl);
                         DGifCloseFile(GifFile);
                         return -1;
                     }
@@ -500,10 +508,7 @@ int psp2chImageViewGif(char* fname)
             /* Skip any extension blocks in file: */
             if (DGifGetExtension(GifFile, &ExtCode, &Extension) == GIF_ERROR)
             {
-                free(buf);
-                free(img);
-                free(ImgBuf);
-                free(ScreenBuffer);
+				sceKernelDeleteVpl(vpl);
                 DGifCloseFile(GifFile);
                 return -1;
             }
@@ -511,10 +516,7 @@ int psp2chImageViewGif(char* fname)
             {
                 if (DGifGetExtensionNext(GifFile, &Extension) == GIF_ERROR)
                 {
-                    free(buf);
-                    free(img);
-                    free(ImgBuf);
-                    free(ScreenBuffer);
+					sceKernelDeleteVpl(vpl);
                     DGifCloseFile(GifFile);
                     return -1;
                 }
@@ -529,10 +531,7 @@ int psp2chImageViewGif(char* fname)
     ColorMap = (GifFile->Image.ColorMap ? GifFile->Image.ColorMap : GifFile->SColorMap);
     if (ColorMap == NULL)
     {
-        free(buf);
-        free(img);
-        free(ImgBuf);
-        free(ScreenBuffer);
+		sceKernelDeleteVpl(vpl);
         DGifCloseFile(GifFile);
         return -1;
     }
@@ -549,10 +548,7 @@ int psp2chImageViewGif(char* fname)
     }
     psp2chImageViewer((int**)img, GifFile->SWidth, GifFile->SHeight, fname);
     DGifCloseFile(GifFile);
-    free(buf);
-    free(img);
-    free(ImgBuf);
-    free(ScreenBuffer);
+	sceKernelDeleteVpl(vpl);
     preLine = -2;
     return 0;
 }
