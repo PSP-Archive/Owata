@@ -31,6 +31,5 @@ int psp2chImageViewJpeg(char* fname);
 int psp2chImageViewPng(char* fname);
 int psp2chImageViewBmp(char* fname);
 int psp2chImageViewGif(char* fname);
-void psp2chImageViewer(int* img[], int width, int height, char* fname);
 
 #endif

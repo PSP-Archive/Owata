@@ -17,6 +17,7 @@ extern unsigned short winPixels[BUF_WIDTH*BUF_HEIGHT*2]; // pg.c
 extern int preLine; // psp2chRes.c
 
 #define MEM_SIZE 8*1024*1024
+void psp2chImageViewer(int* img[], int width, int height, char* fname, SceUID vpl);
 /*****************************
 jpegファイルを読み込んで32ビットRGBAに変換
 *****************************/
@@ -126,7 +127,7 @@ int psp2chImageViewJpeg(char* fname)
     jpeg_finish_decompress(&cinfo);
     jpeg_destroy_decompress(&cinfo);
     fclose(infile);
-    psp2chImageViewer((int**)img, cinfo.output_width, height, fname);
+    psp2chImageViewer((int**)img, cinfo.output_width, height, fname, vpl);
 	sceKernelDeleteVpl(vpl);
     preLine = -2;
     return 0;
@@ -227,7 +228,7 @@ int psp2chImageViewPng(char* fname)
     png_read_end(png_ptr, end_info);
     png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
     fclose(infile);
-    psp2chImageViewer((int**)img, (int)width, (int)height, fname);
+    psp2chImageViewer((int**)img, (int)width, (int)height, fname, vpl);
 	sceKernelDeleteVpl(vpl);
     preLine = -2;
     return 0;
@@ -371,7 +372,7 @@ int psp2chImageViewBmp(char* fname)
         return -1;
     }
     fclose(infile);
-    psp2chImageViewer((int**)img, bi.biWidth, height, fname);
+    psp2chImageViewer((int**)img, bi.biWidth, height, fname, vpl);
 	sceKernelDeleteVpl(vpl);
     preLine = -2;
     return 0;
@@ -546,7 +547,7 @@ int psp2chImageViewGif(char* fname)
             *BufferP++ = 0xFF;
         }
     }
-    psp2chImageViewer((int**)img, GifFile->SWidth, GifFile->SHeight, fname);
+    psp2chImageViewer((int**)img, GifFile->SWidth, GifFile->SHeight, fname, vpl);
     DGifCloseFile(GifFile);
 	sceKernelDeleteVpl(vpl);
     preLine = -2;
@@ -649,7 +650,7 @@ void blt(void *src, TEX *tex, int sw, int sh, int dw, int dh)
 メニュー処理
 RGBAデータをVRAMに転送
 *****************************/
-void psp2chImageViewer(int* img[], int width, int height, char* fname)
+void psp2chImageViewer(int* img[], int width, int height, char* fname, SceUID vpl)
 {
     SceUID src, dst;
     int padX, padY;
@@ -660,7 +661,36 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
     int thumbFlag = 0;
     int imgWH, imgHW, startX, startY, width2, height2, sx, sy;
 	TEX tex;
+	int **imgBuf = NULL;
 
+	if (width > 1024)
+	{
+		int i, j, k;
+		void* buf;
+		int mip = width >> 10;
+		mip++;
+		
+		i =  height / mip;
+		if (sceKernelAllocateVpl(vpl, i, &buf, NULL) < 0)
+		{
+			return;
+		}
+		imgBuf = buf;
+		if (sceKernelAllocateVpl(vpl, sizeof(int) * 1024 * i, &buf, NULL) < 0)
+		{
+			return;
+		}
+		for (j = 0; j < i; j++)
+		{
+			imgBuf[j] = (int*)buf + (1024 * j);
+			for (k = 0; k < width; k += mip)
+			{
+				imgBuf[j][k / mip] = img[j * mip][k];
+			}
+		}
+		width /= mip;
+		height /= mip;
+	}
     startX = 0;
     startY = 0;
     width2 = width;
@@ -837,12 +867,14 @@ void psp2chImageViewer(int* img[], int width, int height, char* fname)
 		tex.h = BUF_HEIGHT;
 		if (width >= 1024) // 1024以上はGuが対応していない　どうする
 		{
+			tex.tb = 1024;
+			blt(imgBuf[sy] + sx, &tex, width - sx, height - sy, width2 - startX, height2 - startY);
 		}
 		else
 		{
 			// Gu転送のため1行を16バイト境界にそろえる
 			tex.tb = (width + 15) & 0xFFFFFFF0;
-			blt(img[0] + sx + sy * tex.tb, &tex, width - sx, height - sy, width2 - startX, height2 - startY);
+			blt(img[sy] + sx, &tex, width - sx, height - sy, width2 - startX, height2 - startY);
 		}
         if (menu)
         {
