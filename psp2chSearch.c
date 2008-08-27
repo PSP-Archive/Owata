@@ -181,11 +181,11 @@ int psp2chSearch(int retSel)
 		{
 			s2ch.viewX = res;
 	        psp2chDrawSearch();
-			pgCopy(s2ch.viewX, 0);
-			pgCopyMenuBar();
-			sceDisplayWaitVblankStart();
-			framebuffer = sceGuSwapBuffers();
 		}
+		pgCopy(s2ch.viewX, 0);
+		pgCopyMenuBar();
+		sceDisplayWaitVblankStart();
+		framebuffer = sceGuSwapBuffers();
     }
     return 0;
 }

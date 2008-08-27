@@ -154,19 +154,19 @@ int psp2chMenu(S_SCROLLBAR* bar)
 			if (change)
 			{
 				psp2chDrawMenu((char**)menuList, menu, startX, startY, scrX, scrY);
-				printBuf = pixels;
-				pgCopy(s2ch.viewX, s2ch.viewY);
-				if (bar)
-				{
-					pgScrollbar(bar, s2ch.resBarColor);
-				}
-				printBuf = winPixels;
-				pgCopyWindow(0, startX, startY, scrX, scrY);
-				pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
-				pgCopyMenuBar();
-				sceDisplayWaitVblankStart();
-				framebuffer = sceGuSwapBuffers();
 			}
+			printBuf = pixels;
+			pgCopy(s2ch.viewX, s2ch.viewY);
+			if (bar)
+			{
+				pgScrollbar(bar, s2ch.resBarColor);
+			}
+			printBuf = winPixels;
+			pgCopyWindow(0, startX, startY, scrX, scrY);
+			pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
+			pgCopyMenuBar();
+			sceDisplayWaitVblankStart();
+			framebuffer = sceGuSwapBuffers();
         }
     }
     return 0;
@@ -281,19 +281,19 @@ void psp2chMenuNG(S_SCROLLBAR* bar)
 			if (change)
 			{
 	            psp2chDrawMenu((char**)menuList, menu, startX, startY, scrX, scrY);
-				printBuf = pixels;
-				pgCopy(s2ch.viewX, s2ch.viewY);
-				if (bar)
-				{
-					pgScrollbar(bar, s2ch.resBarColor);
-				}
-				printBuf = winPixels;
-				pgCopyWindow(0, startX, startY, scrX, scrY);
-				pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
-				pgCopyMenuBar();
-				sceDisplayWaitVblankStart();
-				framebuffer = sceGuSwapBuffers();
 			}
+			printBuf = pixels;
+			pgCopy(s2ch.viewX, s2ch.viewY);
+			if (bar)
+			{
+				pgScrollbar(bar, s2ch.resBarColor);
+			}
+			printBuf = winPixels;
+			pgCopyWindow(0, startX, startY, scrX, scrY);
+			pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
+			pgCopyMenuBar();
+			sceDisplayWaitVblankStart();
+			framebuffer = sceGuSwapBuffers();
         }
     }
 }
@@ -461,19 +461,19 @@ int psp2chNGDel(const char* file, S_SCROLLBAR* bar)
 			if (change)
 			{
 				psp2chDrawMenu(list, menu, startX, startY, scrX, scrY);
-				printBuf = pixels;
-				pgCopy(s2ch.viewX, s2ch.viewY);
-				if (bar)
-				{
-					pgScrollbar(bar, s2ch.resBarColor);
-				}
-				printBuf = winPixels;
-				pgCopyWindow(0, startX, startY, scrX, scrY);
-				pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
-				pgCopyMenuBar();
-				sceDisplayWaitVblankStart();
-				framebuffer = sceGuSwapBuffers();
 			}
+			printBuf = pixels;
+			pgCopy(s2ch.viewX, s2ch.viewY);
+			if (bar)
+			{
+				pgScrollbar(bar, s2ch.resBarColor);
+			}
+			printBuf = winPixels;
+			pgCopyWindow(0, startX, startY, scrX, scrY);
+			pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
+			pgCopyMenuBar();
+			sceDisplayWaitVblankStart();
+			framebuffer = sceGuSwapBuffers();
         }
     }
     free(list);
@@ -618,19 +618,19 @@ void psp2chMenuFont(S_SCROLLBAR* bar)
 			if (change)
 			{
 	            psp2chDrawMenu((char**)menuList, menu, startX, startY, scrX, scrY);
-				printBuf = pixels;
-				pgCopy(s2ch.viewX, s2ch.viewY);
-				if (bar)
-				{
-					pgScrollbar(bar, s2ch.resBarColor);
-				}
-				printBuf = winPixels;
-				pgCopyWindow(0, startX, startY, scrX, scrY);
-				pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
-				pgCopyMenuBar();
-				sceDisplayWaitVblankStart();
-				framebuffer = sceGuSwapBuffers();
 			}
+			printBuf = pixels;
+			pgCopy(s2ch.viewX, s2ch.viewY);
+			if (bar)
+			{
+				pgScrollbar(bar, s2ch.resBarColor);
+			}
+			printBuf = winPixels;
+			pgCopyWindow(0, startX, startY, scrX, scrY);
+			pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
+			pgCopyMenuBar();
+			sceDisplayWaitVblankStart();
+			framebuffer = sceGuSwapBuffers();
         }
     }
     for (i = 0; i < s2ch.font.count; i++)
@@ -765,19 +765,19 @@ int psp2chMenuColor(S_SCROLLBAR* bar)
 			if (change)
 			{
 	            psp2chDrawMenu((char**)menuList, menu, startX, startY, scrX, scrY);
-				printBuf = pixels;
-				pgCopy(s2ch.viewX, s2ch.viewY);
-				if (bar)
-				{
-					pgScrollbar(bar, s2ch.resBarColor);
-				}
-				printBuf = winPixels;
-				pgCopyWindow(0, startX, startY, scrX, scrY);
-				pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
-				pgCopyMenuBar();
-				sceDisplayWaitVblankStart();
-				framebuffer = sceGuSwapBuffers();
 			}
+			printBuf = pixels;
+			pgCopy(s2ch.viewX, s2ch.viewY);
+			if (bar)
+			{
+				pgScrollbar(bar, s2ch.resBarColor);
+			}
+			printBuf = winPixels;
+			pgCopyWindow(0, startX, startY, scrX, scrY);
+			pgWindowFrame(startX, startY, startX + scrX, startY + scrY);
+			pgCopyMenuBar();
+			sceDisplayWaitVblankStart();
+			framebuffer = sceGuSwapBuffers();
         }
     }
     for (i = 1; i < menu.count; i++)

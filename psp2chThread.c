@@ -207,11 +207,11 @@ int psp2chThread(int retSel)
 		{
 			s2ch.viewX = res;
 	        psp2chDrawThread();
-			pgCopy(s2ch.viewX, 0);
-			pgCopyMenuBar();
-			sceDisplayWaitVblankStart();
-			framebuffer = sceGuSwapBuffers();
 		}
+		pgCopy(s2ch.viewX, 0);
+		pgCopyMenuBar();
+		sceDisplayWaitVblankStart();
+		framebuffer = sceGuSwapBuffers();
     }
     return 0;
 }

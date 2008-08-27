@@ -93,17 +93,14 @@ int psp2ch(void)
 スタート画面
 *****************************/
 void psp2chStart(void)
-{
-	static int start = 0;
+{	static int start = 0;
 	if (start == 0)
 	{
 		pgPrintMona();
 		s2ch.pgCursorX = 450;
 		s2ch.pgCursorY = 260;
 		pgPrint(ver, BLUE, WHITE, SCR_WIDTH);
-        pgCopy(0, 0);
-        sceDisplayWaitVblankStart();
-        framebuffer = sceGuSwapBuffers();
+		pgWaitVn(20);
 		start = 1;
 	}
     if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))
@@ -130,6 +127,9 @@ void psp2chStart(void)
                 return;
             }
         }
+        pgCopy(0, 0);
+        sceDisplayWaitVblankStart();
+        framebuffer = sceGuSwapBuffers();
     }
 }
 
