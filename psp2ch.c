@@ -100,7 +100,6 @@ void psp2chStart(void)
 		s2ch.pgCursorX = 450;
 		s2ch.pgCursorY = 260;
 		pgPrint(ver, BLUE, WHITE, SCR_WIDTH);
-		pgWaitVn(20);
 		start = 1;
 	}
     if(sceCtrlPeekBufferPositive(&s2ch.pad, 1))

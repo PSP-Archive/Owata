@@ -107,7 +107,7 @@ int psp2chIta(void)
 			end = s2ch.ita.count;
 			s2ch.viewX = 0;
 			s2ch.viewY = 0;
-			s2ch.oldPad.Buttons = PSP_CTRL_UP;
+			s2ch.oldPad.Buttons = PSP_CTRL_START;
 		}
 		if (s2ch.tateFlag)
 		{
