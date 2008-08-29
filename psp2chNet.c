@@ -531,11 +531,13 @@ int psp2chGetHttpHeaders(S_NET* net, char* cookie)
 			return -1;
 		}
 		*q = '\0';
+		/*
 		pgPrintMenuBar(line);
 		pgWaitVn(10);
 		pgCopyMenuBar();
 		sceDisplayWaitVblankStart();
 		framebuffer = sceGuSwapBuffers();
+		*/
         if (strstr(line, "Content-Length:"))
         {
             sscanf(line, "Content-Length: %d", &contentLength);

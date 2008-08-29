@@ -16,7 +16,8 @@ extern unsigned int list[BUF_WIDTH*BUF_HEIGHT]; // pg.c
 extern unsigned short winPixels[BUF_WIDTH*BUF_HEIGHT*2]; // pg.c
 extern int preLine; // psp2chRes.c
 
-#define MEM_SIZE 8*1024*1024
+#define MEM_SIZE 14*1024*1024
+#define EX_MEMORRY (0x0a000000)
 /*****************************
 	矩形範囲を拡大縮小
 *****************************/
@@ -369,11 +370,6 @@ int psp2chImageViewJpeg(char* fname)
     unsigned char header[4];
 	SceUID vpl;
 
-	vpl = sceKernelCreateVpl("ImageVpl", PSP_MEMORY_PARTITION_USER, 0, MEM_SIZE + 256, NULL);
-    if (vpl < 0)
-    {
-        return -1;
-    }
     infile = fopen(fname, "rb" );
     if (!infile)
     {
@@ -395,25 +391,30 @@ int psp2chImageViewJpeg(char* fname)
 	// Gu転送のため1行を16バイト境界にそろえる
     width = (cinfo.output_width + 15) & 0xFFFFFFF0;
     height = cinfo.output_height;
+	vpl = sceKernelCreateVpl("ImageVpl", PSP_MEMORY_PARTITION_USER, 0, MEM_SIZE + 256, NULL);
+    if (vpl < 0)
+    {
+        return -3;
+    }
     if (sceKernelAllocateVpl(vpl, sizeof(JSAMPROW) * height, &mem, NULL) < 0)
 	{
 		sceKernelDeleteVpl(vpl);
         fclose(infile);
-		return -3;
+		return -4;
 	}
 	img = mem;
     if (sceKernelAllocateVpl(vpl, sizeof(JSAMPLE) * 3 * width, &mem, NULL) < 0)
 	{
 		sceKernelDeleteVpl(vpl);
         fclose(infile);
-		return -4;
+		return -5;
 	}
 	buf = mem;
     if (sceKernelAllocateVpl(vpl, sizeof(JSAMPLE) * 4 * width * height + 16, &mem, NULL) < 0)
 	{
 		sceKernelDeleteVpl(vpl);
         fclose(infile);
-		return -5;
+		return -6;
 	}
 	imgbuf = (JSAMPROW)(((int)mem + 15) & 0xFFFFFFF0);
     tmp = imgbuf;
@@ -456,7 +457,7 @@ int psp2chImageViewJpeg(char* fname)
         jpeg_destroy_decompress(&cinfo);
 		sceKernelDeleteVpl(vpl);
         fclose(infile);
-        return -6;
+        return -7;
     }
     jpeg_finish_decompress(&cinfo);
     jpeg_destroy_decompress(&cinfo);
@@ -485,11 +486,6 @@ int psp2chImageViewPng(char* fname)
     unsigned char header[8];
 	SceUID vpl;
 
-	vpl = sceKernelCreateVpl("ImageVpl", PSP_MEMORY_PARTITION_USER, 0, MEM_SIZE + 256, NULL);
-    if (vpl < 0)
-    {
-        return -1;
-    }
     infile = fopen(fname, "rb");
     if (!infile)
     {
@@ -540,6 +536,11 @@ int psp2chImageViewPng(char* fname)
     png_read_update_info(png_ptr, info_ptr);
 	// Gu転送のため1行を16バイト境界にそろえる
 	width2 = (width + 15) & 0xFFFFFFF0;
+	vpl = sceKernelCreateVpl("ImageVpl", PSP_MEMORY_PARTITION_USER, 0, MEM_SIZE + 256, NULL);
+    if (vpl < 0)
+    {
+        return -2;
+    }
     if (sceKernelAllocateVpl(vpl, height * sizeof(png_bytep), &mem, NULL) < 0)
 	{
 		sceKernelDeleteVpl(vpl);
@@ -581,11 +582,6 @@ int psp2chImageViewBmp(char* fname)
 	void* mem;
 	SceUID vpl;
 
-	vpl = sceKernelCreateVpl("ImageVpl", PSP_MEMORY_PARTITION_USER, 0, MEM_SIZE + 256, NULL);
-    if (vpl < 0)
-    {
-        return -1;
-    }
     infile = fopen(fname, "rb" );
     if (!infile)
     {
@@ -625,6 +621,11 @@ int psp2chImageViewBmp(char* fname)
 	width = (bi.biWidth + 15) & 0xFFFFFFF0;
     len = bi.biWidth * bi.biBitCount / 8;
     len += (4 - (len & 3)) & 3;
+	vpl = sceKernelCreateVpl("ImageVpl", PSP_MEMORY_PARTITION_USER, 0, MEM_SIZE + 256, NULL);
+    if (vpl < 0)
+    {
+        return -2;
+    }
     if (sceKernelAllocateVpl(vpl, sizeof(unsigned char*) * height, &mem, NULL) < 0)
 	{
 		sceKernelDeleteVpl(vpl);
@@ -730,11 +731,6 @@ int psp2chImageViewGif(char* fname)
 	void* mem;
 	SceUID vpl;
 
-	vpl = sceKernelCreateVpl("ImageVpl", PSP_MEMORY_PARTITION_USER, 0, MEM_SIZE + 256, NULL);
-    if (vpl < 0)
-    {
-        return -1;
-    }
     if ((GifFile = DGifOpenFileName(fname)) == NULL)
     {
         return -1;
@@ -742,6 +738,11 @@ int psp2chImageViewGif(char* fname)
     Size = GifFile->SWidth * sizeof(GifPixelType);/* Size in bytes one row.*/
 	// Gu転送のため1行を16バイト境界にそろえる
 	width2 = (GifFile->SWidth + 15) & 0xFFFFFFF0;
+	vpl = sceKernelCreateVpl("ImageVpl", PSP_MEMORY_PARTITION_USER, 0, MEM_SIZE + 256, NULL);
+    if (vpl < 0)
+    {
+        return -2;
+    }
     if (sceKernelAllocateVpl(vpl, GifFile->SHeight * sizeof(GifRowType *), &mem, NULL) < 0)
 	{
 		sceKernelDeleteVpl(vpl);
