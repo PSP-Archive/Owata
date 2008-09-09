@@ -684,3 +684,99 @@ void psp2chDrawIta(int start, int select, S_2CH_ITA_COLOR c)
         s2ch.pgCursorY += LINE_PITCH;
     }
 }
+
+/**********************
+移転書き換え
+**********************/
+int psp2chBoardReplace(char* oldhost, char* oldita, char* newhost, char* newita)
+{
+    SceUID fd;
+	char file[256];
+    SceIoStat st;
+    char *buf;
+	int ret;
+
+    sprintf(file, "%s/%s/%s", s2ch.cwDir, s2ch.logDir, boardFile);
+    ret = sceIoGetstat(file, &st);
+    if (ret < 0)
+    {
+        return ret;
+    }
+    buf = (char*)malloc(st.st_size + 1);
+    if (buf == NULL)
+    {
+        psp2chErrorDialog("memorry error\n");
+        return -1;
+    }
+	fd = sceIoOpen(file, PSP_O_RDONLY, 0777);
+    if (fd < 0)
+    {
+		free(buf);
+        psp2chErrorDialog("File open error\n%s", file);
+        return fd;
+    }
+	sceIoRead(fd, buf, st.st_size);
+	sceIoClose(fd);
+	fd = sceIoOpen(file, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
+    if (fd < 0)
+    {
+		free(buf);
+        psp2chErrorDialog("File open error\n%s", file);
+        return fd;
+    }
+	sceIoWrite(fd, buf, strlen(buf));
+	sceIoClose(fd);
+	free(buf);
+	return 0;
+}
+
+/**********************
+移転チェック
+index.htmlを読み込んでJavascriptのlocationがあるかチェックする
+locationがあればそのURLからhostと板ディレクトリを取得して書き換え関数へ送る
+戻り値　0：移転あり書き換え成功
+**********************/
+int psp2chItenCheck(char* host, char* ita)
+{
+	const char* needle = "window.location.href=\"http://";
+    S_NET net;
+	int ret;
+    char *newhost, *newita, *p;
+
+	if (psp2chApConnect() > 0)
+	{
+		return -1;
+	}
+    ret = psp2chGet(host, ita, "", NULL, &net);
+    if (ret < 0)
+    {
+        return ret;
+    }
+    switch(net.status)
+    {
+        case 200:
+            break;
+        default:
+            return -1;
+    }
+	newhost = strstr(net.body, needle);
+	if (newhost == NULL)
+	{
+		return -1;
+	}
+	newhost += strlen(needle);
+	p = strchr(newhost, '/');
+	if (p == NULL)
+	{
+		return -1;
+	}
+	*p = '\0';
+	newita = p + 1;
+	p = strchr(newita, '/');
+	if (p == NULL)
+	{
+		return -1;
+	}
+	*p = '\0';
+	return psp2chBoardReplace(host, ita, newhost, newita);
+}

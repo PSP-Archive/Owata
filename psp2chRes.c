@@ -1794,9 +1794,11 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
 			len = net.length - 1;
 			break;
 		case 302: // Found
-			/*
-			psp2chErrorDialog(TEXT_10);
-			*/
+			if (psp2chItenCheck(host, dir) == 0)
+			{
+				psp2chErrorDialog(TEXT_10);
+				return 1;
+			}
 			pgPrintMenuBar("‚±‚ÌƒXƒŒ‚ÍDAT—Ž‚¿‚µ‚½‚æ‚¤‚Å‚·");
 			pgWaitVn(10);
 			pgCopyMenuBar();
@@ -1804,7 +1806,6 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
 			framebuffer = sceGuSwapBuffers();
 			pgWaitVn(30);
 			return 1;
-			break;
 		case 304: // Not modified
 			return 1;
 		default:
