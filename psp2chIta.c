@@ -22,6 +22,7 @@ extern const char *sBtnV[]; // psp2chRes.c
 
 static const char* boardFile = "2channel.brd";
 static const char* boardFile2 = "my.brd";
+extern const char* favBoard;
 
 /*********************
 メニュー文字列の作成
@@ -241,6 +242,7 @@ int psp2chIta(void)
                     {
                         if (psp2chThreadList(s2ch.ita.select) < 0)
                         {
+							s2ch.sel = -1;
                             return -1;
                         }
                         s2ch.thread.start = 0;
@@ -333,7 +335,7 @@ int psp2chItaList(void)
         i = sceIoGetstat(file, &st);
         if (i< 0)
         {
-            psp2chErrorDialog("File stat error\n%s", file);
+            psp2chErrorDialog("2chboard stat error\n%s", file);
             return -1;
         }
     }
@@ -688,12 +690,14 @@ void psp2chDrawIta(int start, int select, S_2CH_ITA_COLOR c)
 /**********************
 移転書き換え
 **********************/
-int psp2chBoardReplace(char* oldhost, char* oldita, char* newhost, char* newita)
+// 2channel.brdの書き換え
+int psp2chReplaceMenu(char* oldhost, char* oldita, char* newhost, char* newita)
 {
     SceUID fd;
 	char file[256];
+	char match[256];
     SceIoStat st;
-    char *buf;
+    char *buf, *start, *end, *p;
 	int ret;
 
     sprintf(file, "%s/%s/%s", s2ch.cwDir, s2ch.logDir, boardFile);
@@ -717,15 +721,93 @@ int psp2chBoardReplace(char* oldhost, char* oldita, char* newhost, char* newita)
     }
 	sceIoRead(fd, buf, st.st_size);
 	sceIoClose(fd);
-	fd = sceIoOpen(file, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
+	sprintf(match, "%s\t%s\t", oldhost, oldita);
+	start = buf;
+	if ((p = strstr(start, match)))
+	{
+		fd = sceIoOpen(file, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
+		if (fd < 0)
+		{
+			free(buf);
+			psp2chErrorDialog("File open error\n%s", file);
+			return fd;
+		}
+		while (*start && (end = strchr(start, '\n')))
+		{
+			*end = '\0';
+			if ((p = strstr(start, match)))
+			{
+				start = p + strlen(match);
+				sprintf(match, "\t%s\t%s\t", newhost, newita);
+				sceIoWrite(fd, match, strlen(match));
+			}
+			sceIoWrite(fd, start, strlen(start));
+			sceIoWrite(fd, "\n", 1);
+			start = end + 1;
+		}
+		sceIoClose(fd);
+	}
+	free(buf);
+	return 0;
+}
+
+// favorite.brdの書き換え
+int psp2chReplaceFav(char* oldhost, char* oldita, char* newhost, char* newita)
+{
+    SceUID fd;
+	char file[256];
+	char match[256];
+    SceIoStat st;
+    char *buf, *start, *end, *p;
+	int ret;
+
+    sprintf(file, "%s/%s/%s", s2ch.cwDir, s2ch.logDir, favBoard);
+    ret = sceIoGetstat(file, &st);
+    if (ret < 0)
+    {
+        return ret;
+    }
+    buf = (char*)malloc(st.st_size + 1);
+    if (buf == NULL)
+    {
+        psp2chErrorDialog("memorry error\n");
+        return -1;
+    }
+	fd = sceIoOpen(file, PSP_O_RDONLY, 0777);
     if (fd < 0)
     {
 		free(buf);
         psp2chErrorDialog("File open error\n%s", file);
         return fd;
     }
-	sceIoWrite(fd, buf, strlen(buf));
+	sceIoRead(fd, buf, st.st_size);
 	sceIoClose(fd);
+	sprintf(match, "%s\t%s\t", oldhost, oldita);
+	start = buf;
+	if ((p = strstr(start, match)))
+	{
+		fd = sceIoOpen(file, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
+		if (fd < 0)
+		{
+			free(buf);
+			psp2chErrorDialog("File open error\n%s", file);
+			return fd;
+		}
+		while (*start && (end = strchr(start, '\n')))
+		{
+			*end = '\0';
+			if ((p = strstr(start, match)))
+			{
+				start = p + strlen(match);
+				sprintf(match, "%s\t%s\t", newhost, newita);
+				sceIoWrite(fd, match, strlen(match));
+			}
+			sceIoWrite(fd, start, strlen(start));
+			sceIoWrite(fd, "\n", 1);
+			start = end + 1;
+		}
+		sceIoClose(fd);
+	}
 	free(buf);
 	return 0;
 }
@@ -738,16 +820,18 @@ locationがあればそのURLからhostと板ディレクトリを取得して書き換え関数へ送る
 **********************/
 int psp2chItenCheck(char* host, char* ita)
 {
-	const char* needle = "window.location.href=\"http://";
+	const char* needle = "\nwindow.location.href=\"http://";
     S_NET net;
 	int ret;
     char *newhost, *newita, *p;
+	char buf[256];
 
 	if (psp2chApConnect() > 0)
 	{
 		return -1;
 	}
-    ret = psp2chGet(host, ita, "", NULL, &net);
+	sprintf(buf, "%s/index.html", ita);
+    ret = psp2chGet(host, buf, "", NULL, &net);
     if (ret < 0)
     {
         return ret;
@@ -778,5 +862,11 @@ int psp2chItenCheck(char* host, char* ita)
 		return -1;
 	}
 	*p = '\0';
-	return psp2chBoardReplace(host, ita, newhost, newita);
+    pgPrintMenuBar("移転先をチェック中");
+	pgCopyMenuBar();
+    sceDisplayWaitVblankStart();
+    framebuffer = sceGuSwapBuffers();
+	psp2chReplaceMenu(host, ita, newhost, newita);
+	psp2chReplaceFav(host, ita, newhost, newita);
+	return 0;
 }

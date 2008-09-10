@@ -188,7 +188,13 @@ int psp2chThread(int retSel)
                 // スレ一覧の更新
                 else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thH.reload) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.thV.reload))
                 {
-                    psp2chGetSubject(s2ch.ita.select);
+                    if (psp2chGetSubject(s2ch.ita.select) == -2)
+					{
+						// 移転
+						s2ch.sel = -1;
+						ret = 0;
+						return 0;
+					}
                     psp2chThreadList(s2ch.ita.select);
                     s2ch.thread.start = 0;
                     s2ch.thread.select = 0;
@@ -421,6 +427,7 @@ int psp2chThreadList(int ita)
 subject.txtの取得日データをつけて2chにアクセス
 更新されていれば新しいデータを取得して保存
 なければ普通に取得して保存
+移転時は-2を返す
 *****************/
 int psp2chGetSubject(int ita)
 {
@@ -468,15 +475,15 @@ int psp2chGetSubject(int ita)
         sprintf(buf, "If-Modified-Since: %s\r\nIf-None-Match: %s\r\n", lastModified, eTag);
     }
     sprintf(path, "%s/subject.txt", s2ch.itaList[ita].dir);
-	pgCopy(s2ch.viewX, s2ch.viewY);
+	pgCopy(s2ch.viewX, 0);
 	if (psp2chApConnect() > 0)
 	{
 		return -1;
 	}
-	pgCopy(s2ch.viewX, s2ch.viewY);
+	pgCopy(s2ch.viewX, 0);
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
-	pgCopy(s2ch.viewX, s2ch.viewY);
+	pgCopy(s2ch.viewX, 0);
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
     ret = psp2chGet(s2ch.itaList[ita].host, path, buf, NULL, &net);
@@ -487,6 +494,23 @@ int psp2chGetSubject(int ita)
     switch(net.status)
     {
         case 200: // OK
+			if (strlen(net.body) == 0)
+			{
+				if (psp2chItenCheck(s2ch.itaList[ita].host, s2ch.itaList[ita].dir) == 0)
+				{
+					free(s2ch.itaList);
+					s2ch.itaList = NULL;
+					free(s2ch.favList);
+					s2ch.favList = NULL;
+					free(s2ch.threadList);
+					s2ch.threadList = NULL;
+					free(s2ch.findList);
+					s2ch.findList = NULL;
+					psp2chErrorDialog(TEXT_10);
+					sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+					return -2;
+				}
+			}
             break;
         case 302: // Found
             memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));

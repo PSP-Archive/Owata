@@ -26,6 +26,7 @@ extern const char *sBtnH[]; // psp2chRes.c
 extern const char *sBtnV[]; // psp2chRes.c
 
 int* favSort = NULL;
+const char* favBoard = "favorite.brd";
 
 /*********************
 ƒƒjƒ…[•¶š—ñ‚Ìì¬
@@ -219,6 +220,10 @@ int psp2chFavorite(void)
                 {
                     s2ch.favList[favSort[update]].update = 0;
                     update++;
+                }
+                else if (res == 2)
+                {
+                    return 0;
                 }
                 else
                 {

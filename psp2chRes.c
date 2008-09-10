@@ -482,13 +482,21 @@ int psp2chRes(char* host, char* dir, char* title, int dat, int ret)
 					// çXêV
 					else if((!s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResH.reload) || (s2ch.tateFlag && s2ch.pad.Buttons & s2ch.btnResV.reload))
 					{
+						int rt;
 						psp2chResLineSet(&i, &j);
-						if (psp2chGetDat(host, dir, title, dat) == 0)
+						rt = psp2chGetDat(host, dir, title, dat);
+						if (rt == 0)
 						{
 							psp2chResList(host, dir, title, dat);
 							totalLine = psp2chResSetLine(&bar);
 							psp2chResLineGet(i, j);
 							s2ch.res.start++;
+						}
+						// à⁄ì]
+						else if (rt == 2)
+						{
+							s2ch.sel = -1;
+							return 0;
 						}
 					}
 					// DATçÌèú
@@ -1796,8 +1804,17 @@ int psp2chGetDat(char* host, char* dir, char* title, int dat)
 		case 302: // Found
 			if (psp2chItenCheck(host, dir) == 0)
 			{
+				free(s2ch.itaList);
+				s2ch.itaList = NULL;
+				free(s2ch.favList);
+				s2ch.favList = NULL;
+				free(s2ch.threadList);
+				s2ch.threadList = NULL;
+				free(s2ch.findList);
+				s2ch.findList = NULL;
 				psp2chErrorDialog(TEXT_10);
-				return 1;
+				sceCtrlPeekBufferPositive(&s2ch.oldPad, 1);
+				return 2;
 			}
 			pgPrintMenuBar("Ç±ÇÃÉXÉåÇÕDATóéÇøÇµÇΩÇÊÇ§Ç≈Ç∑");
 			pgWaitVn(10);
