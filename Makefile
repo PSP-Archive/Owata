@@ -17,7 +17,7 @@ PSP_FW_VERSION=352
 LIBS= -lpsppower -lpspgu -lpspssl -lpsphttp -lpspwlan -ljpeg -lpng -lz -lm
 
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = 人生ｵﾜﾀ＼(^o^)／
+PSP_EBOOT_TITLE = owata
 PSP_EBOOT_ICON = icon.png
 PSP_EBOOT_ICON1 = owata.pmf
 
