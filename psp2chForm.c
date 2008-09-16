@@ -137,7 +137,8 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
             return -1;
     }
     // Cookieにhana=mogeraも追加(encodeに&hana=mogera追加でもいいけど)
-    strcat(cookie, "; NAME=\"\"; MAIL=\"\"; hana=mogera");
+	// 2008/9/16 suka=pontanに変更
+    strcat(cookie, "; NAME=\"\"; MAIL=\"\"; suka=pontan");
     // Cookieをセットして本送信
     ret = psp2chPost(host, dir, dat, cookie, &net);
     free(encode);
