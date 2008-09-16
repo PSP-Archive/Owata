@@ -57,14 +57,10 @@ void psp2chUrlEncode(char* dst, char* src)
 int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, char* message, int tmp)
 {
     S_NET net;
-    int ret, x, y;
+    int ret;
     char *encode, *buffer, *str;
-    char cookie[128] = {0};
+    static char cookie[256] = {0};
 
-	x = s2ch.viewX;
-	y = s2ch.viewY;
-	s2ch.viewX = 0;
-	s2ch.viewY = 0;
     encode = (char*)malloc(2048*4);
     if (encode == NULL)
     {
@@ -80,6 +76,8 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
     }
 	if (psp2chApConnect() > 0)
 	{
+        free(buffer);
+        free(encode);
 		return -1;
 	}
     // 送信しますかダイアログで画面消えてるので再描画
@@ -114,31 +112,32 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
     sprintf(buffer, "&bbs=%s&key=%d&time=1", dir, dat);
     strcat(encode, buffer);
     free(buffer);
-    // 仮送信して2ちゃんからSet-CookieのPON HAP 取得
     memset(&net, 0, sizeof(S_NET));
+	if (!cookie[0])
+	{
+		net.body = encode;
+		// 仮送信して2ちゃんからSet-CookieのPON HAP 取得
+		ret = psp2chPost(host, dir, dat, cookie, &net);
+		if (ret < 0)
+		{
+			free(encode);
+			psp2chErrorDialog("POST error");
+			return ret;
+		}
+		switch(net.status)
+		{
+			case 200: // OK
+				break;
+			default:
+				free(encode);
+				psp2chErrorDialog("Status code %d", ret);
+				return -1;
+		}
+		// Cookieにhana=mogeraも追加(encodeに&hana=mogera追加でもいいけど)
+		// 2008/9/16 suka=pontanに変更
+		strcat(cookie, "; NAME=\"\"; MAIL=\"\"; suka=pontan");
+	}
     net.body = encode;
-    ret = psp2chPost(host, dir, dat, cookie, &net);
-	s2ch.viewX = x;
-	s2ch.viewY = y;
-    if (ret < 0)
-    {
-        free(encode);
-        psp2chErrorDialog("POST error");
-        return ret;
-    }
-    net.body = encode;
-    switch(net.status)
-    {
-        case 200: // OK
-            break;
-        default:
-            free(encode);
-            psp2chErrorDialog("Status code %d", ret);
-            return -1;
-    }
-    // Cookieにhana=mogeraも追加(encodeに&hana=mogera追加でもいいけど)
-	// 2008/9/16 suka=pontanに変更
-    strcat(cookie, "; NAME=\"\"; MAIL=\"\"; suka=pontan");
     // Cookieをセットして本送信
     ret = psp2chPost(host, dir, dat, cookie, &net);
     free(encode);

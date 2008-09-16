@@ -587,7 +587,8 @@ static void draw_callback( void* pvUserData )
     minimalRender();
 }
 
-static void screen_update_callback( void* pvUserData ) {
+static void screen_update_callback( void* pvUserData )
+{
     // 更新処理
     // フレームバッファのスワップなど
 

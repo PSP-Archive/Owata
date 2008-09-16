@@ -5,7 +5,7 @@
 
 extern S_2CH s2ch;
 
-#define MEM_SIZE 14*1024*1024
+#define MEM_SIZE 8*1024*1024
 void pspShowBrowser(char *url, char *dldir)
 {
     int done=0;
