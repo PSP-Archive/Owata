@@ -364,28 +364,24 @@ int psp2chPost(char* host, char* dir, int dat, char* cook, S_NET* net)
 int psp2chRequest(const char* host, const char* path, const char* requestText, S_NET* net)
 {
     int ret;
-    char buf[512];
     struct in_addr addr;
 
     ret = psp2chResolve(host, &addr);
     if (ret < 0) {
         return ret;
     }
+	/*
+    char buf[512];
     sprintf(buf, "  %s (%s)", host, inet_ntoa(addr));
     pgPrintMenuBar(buf);
 	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
+	*/
     // Tell the socket to connect to the IP address we found, on port 80 (HTTP)
     sain.sin_family = AF_INET;
     sain.sin_port = htons(80);
     sain.sin_addr.s_addr = addr.s_addr;
-    sprintf(buf, "  http://%s/%s に接続しています", host, path);
-    pgPrintMenuBar(buf);
-	pgWaitVn(5);
-	pgCopyMenuBar();
-    sceDisplayWaitVblankStart();
-    framebuffer = sceGuSwapBuffers();
 	connectSleep = 0;
 	sceKernelWakeupThread(connectThread);
     while (1)
@@ -405,11 +401,6 @@ int psp2chRequest(const char* host, const char* path, const char* requestText, S
 		}
 		sceKernelDelayThread(1000);
     }
-    pgPrintMenuBar("接続しました");
-	pgWaitVn(5);
-	pgCopyMenuBar();
-    sceDisplayWaitVblankStart();
-    framebuffer = sceGuSwapBuffers();
     // send our request
     send(mySocket, requestText, strlen(requestText), 0 );
     return 0;
@@ -424,7 +415,6 @@ int psp2chResponse(const char* host, const char* path, S_NET* net)
 
     sprintf(buf, "http://%s/%s からデータを転送しています...", host, path);
     pgPrintMenuBar(buf);
-	pgWaitVn(5);
 	pgCopyMenuBar();
     sceDisplayWaitVblankStart();
     framebuffer = sceGuSwapBuffers();
@@ -455,9 +445,6 @@ int psp2chResponse(const char* host, const char* path, S_NET* net)
 	{
 		return -1;
 	}
-    sprintf(buf, "完了(%dBytes)", recvSize);
-    pgPrintMenuBar(buf);
-	pgWaitVn(5);
 	// 1行目のステータスラインで区切る
 	recvHeader = strstr(recvBuf, "\r\n");
 	if (recvHeader == NULL)
@@ -480,9 +467,6 @@ int psp2chResponse(const char* host, const char* path, S_NET* net)
 	recvSize -= 2;
     net->length = recvSize;
 	recvBody += 2;
-	pgCopyMenuBar();
-    sceDisplayWaitVblankStart();
-    framebuffer = sceGuSwapBuffers();
     return 0;
 }
 
@@ -557,6 +541,7 @@ int psp2chGetHttpHeaders(S_NET* net, char* cookie)
         }
         else if (cookie && strstr(line, "Set-Cookie:"))
         {
+			// cookie[ ] のサイズチェックが必要だけど手抜き
             p = strchr(line, ';');
             *p = '\0';
             if (cookie[0])

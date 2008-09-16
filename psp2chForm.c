@@ -52,6 +52,23 @@ void psp2chUrlEncode(char* dst, char* src)
 }
 
 /*********************
+画面再描画
+tmp メイン画面の縦横フラグ
+*********************/
+void psp2chRedraw(int tmp)
+{
+	printBuf = pixels;
+	s2ch.tateFlag = tmp;
+	pgCopy(s2ch.viewX, s2ch.viewY);
+	printBuf = winPixels;
+	s2ch.tateFlag = 0;
+    pgCopy(0, 0);
+	pgCopyMenuBar();
+    sceDisplayWaitVblankStart();
+    framebuffer = sceGuSwapBuffers();
+}
+
+/*********************
 レス書き込み
 *********************/
 int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, char* message, int tmp)
@@ -81,24 +98,8 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
 		return -1;
 	}
     // 送信しますかダイアログで画面消えてるので再描画
-	printBuf = pixels;
-	s2ch.tateFlag = tmp;
-	pgCopy(s2ch.viewX, s2ch.viewY);
-	printBuf = winPixels;
-	s2ch.tateFlag = 0;
-    pgCopy(0, 0);
-	pgCopyMenuBar();
-    sceDisplayWaitVblankStart();
-    framebuffer = sceGuSwapBuffers();
-	printBuf = pixels;
-	s2ch.tateFlag = tmp;
-	pgCopy(s2ch.viewX, s2ch.viewY);
-	printBuf = winPixels;
-	s2ch.tateFlag = 0;
-    pgCopy(0, 0);
-	pgCopyMenuBar();
-    sceDisplayWaitVblankStart();
-    framebuffer = sceGuSwapBuffers();
+	psp2chRedraw(tmp);
+	psp2chRedraw(tmp);
     // URLエンコードしてformデータ作成
     strcpy(encode, "submit=%8F%91%82%AB%8D%9E%82%DE&FROM=");
     psp2chUrlEncode(buffer, name);
@@ -133,12 +134,11 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
 				psp2chErrorDialog("Status code %d", ret);
 				return -1;
 		}
-		// Cookieにhana=mogeraも追加(encodeに&hana=mogera追加でもいいけど)
-		// 2008/9/16 suka=pontanに変更
+		// Cookieにsuka=pontan追加(encodeに&suka=pontan追加でもいいけど)
 		strcat(cookie, "; NAME=\"\"; MAIL=\"\"; suka=pontan");
 	}
     net.body = encode;
-    // Cookieをセットして本送信
+    // Cookieをセットして送信
     ret = psp2chPost(host, dir, dat, cookie, &net);
     free(encode);
     if (ret < 0)
@@ -185,15 +185,7 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
     pgPrintMenuBar("画面は切り替わりません　○で入力画面に　×でレス表\示に戻ります");
     while (s2ch.running)
     {
-		printBuf = pixels;
-		s2ch.tateFlag = tmp;
-		pgCopy(s2ch.viewX, s2ch.viewY);
-		printBuf = winPixels;
-		s2ch.tateFlag = 0;
-        pgCopy(0,0);
-		pgCopyMenuBar();
-        sceDisplayWaitVblankStart();
-        framebuffer = sceGuSwapBuffers();
+		psp2chRedraw(tmp);
         sceCtrlPeekBufferPositive(&s2ch.pad, 1);
         if (s2ch.pad.Buttons != s2ch.oldPad.Buttons)
         {
@@ -222,7 +214,8 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
     SceUID fd;
     int focus, prefocus, sage, ret = 0;
     char buf[256];
-    char  *str, *p, *menuStr = "　○ : 入力　　　× : 戻る　　　△ : 送信";
+    char *str, *p;
+	char *sagestr = "sage", *menuStr = "　○ : 入力　　　× : 戻る　　　△ : 送信";
     int changeFlag = 0;
 	int tmp;
 
@@ -230,6 +223,7 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
 	s2ch.tateFlag = 0;
 	printBuf = winPixels;
     focus = 0;
+	// focusが移動したときだけ描画するための変数
 	prefocus = -1;
     if (mail[0] == '\0' && name[0] == '\0')
     {
@@ -352,7 +346,18 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
                 }
 				if (sage)
 				{
-					strcpy(mail, "sage");
+					if (strlen(mail) < 60)
+					{
+						strcat(mail, sagestr);
+					}
+				}
+				else
+				{
+					p = strstr(mail, sagestr);
+					if (p)
+					{
+						*p = '\0';
+					}
 				}
 				if (focus != prefocus)
 				{
@@ -438,19 +443,10 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
 						}
 						break;
 					}
-					pgWaitVn(10);
 				}
             }
         }
-		printBuf = pixels;
-		s2ch.tateFlag = tmp;
-		pgCopy(s2ch.viewX, s2ch.viewY);
-		printBuf = winPixels;
-		s2ch.tateFlag = 0;
-        pgCopy(0, 0);
-		pgCopyMenuBar();
-        sceDisplayWaitVblankStart();
-        framebuffer = sceGuSwapBuffers();
+		psp2chRedraw(tmp);
     }
     if (changeFlag)
     {
