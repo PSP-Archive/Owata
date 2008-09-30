@@ -346,7 +346,7 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
                 }
 				if (sage)
 				{
-					if (strlen(mail) < 60)
+					if (!strstr(mail, sagestr) && strlen(mail) < 60)
 					{
 						strcat(mail, sagestr);
 					}
