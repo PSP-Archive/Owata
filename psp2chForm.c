@@ -242,13 +242,13 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
             strcpy(mail, str);
         }
     }
-    if (mail[0])
+    if (strstr(mail, sagestr))
     {
-        sage = 0;
+        sage = 1;
     }
     else
     {
-        sage = 1;
+        sage = 0;
     }
     pgPrintMenuBar(menuStr);
 	pgFillvram(FORM_BG_COLOR, 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
@@ -349,6 +349,7 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
 					if (!strstr(mail, sagestr) && strlen(mail) < 60)
 					{
 						strcat(mail, sagestr);
+						changeFlag = 1;
 					}
 				}
 				else
@@ -357,6 +358,7 @@ int psp2chForm(char* host, char* dir, int dat, char* subject, char* message)
 					if (p)
 					{
 						*p = '\0';
+						changeFlag = 1;
 					}
 				}
 				if (focus != prefocus)
