@@ -667,7 +667,7 @@ int psp2chApConnect(void)
     } ap[2];
     int count = 0;
     int i;
-    char buf[32];
+    union SceNetApctlInfo buf;
 
     memset(&s2ch.mh,0,sizeof(MESSAGE_HELPER));
     s2ch.mh.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT;
@@ -681,7 +681,7 @@ int psp2chApConnect(void)
         psp2chErrorDialog(TEXT_2);
         return -1;
     }
-    if (sceNetApctlGetInfo(8, buf) == 0)
+    if (sceNetApctlGetInfo(PSP_NET_APCTL_INFO_IP, &buf) == 0)
     {
         // IPéÊìæçœÇ›
         return 0;
