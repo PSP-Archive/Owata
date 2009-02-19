@@ -155,33 +155,38 @@ int psp2chFormResPost(char* host, char* dir, int dat, char* name, char* mail, ch
             return -1;
     }
 #ifdef DEBUG
-    SceUID fd;
-    fd = sceIoOpen("log.txt", PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
-    if (fd >= 0)
-    {
-        sceIoWrite(fd, net.body, net.length);
-        sceIoClose(fd);
-    }
+	{
+		SceUID fd;
+		fd = sceIoOpen("log.txt", PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
+		if (fd >= 0)
+		{
+			sceIoWrite(fd, net.body, net.length);
+			sceIoClose(fd);
+		}
+	}
 #endif
-    S_2CH_RES_COLOR c;
-    c.text = WHITE;
-    c.bg = FORM_BG_COLOR;
-    c.link = BLUE;
-    pgFillvram(FORM_BG_COLOR, 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
-    s2ch.pgCursorX = 0;
-    s2ch.pgCursorY = 0;
-    str = strstr(net.body, "</html");
-    if (str) *str = 0;
-    str = strstr(net.body, "<html");
-    while ((str = pgPrintHtml(str, &c, 0, SCR_WIDTH, 0)))
-    {
-        s2ch.pgCursorX = 0;
-        s2ch.pgCursorY += LINE_PITCH;
-        if (s2ch.pgCursorY >= 260)
-        {
-            break;
-        }
-    }
+	{
+		S_2CH_RES_COLOR c;
+		c.text = WHITE;
+		c.bg = FORM_BG_COLOR;
+		c.link = BLUE;
+		pgFillvram(FORM_BG_COLOR, 0, 0, SCR_WIDTH, SCR_HEIGHT, 2);
+		s2ch.pgCursorX = 0;
+		s2ch.pgCursorY = 0;
+		str = strstr(net.body, "</html");
+		if (str) *str = 0;
+		str = strstr(net.body, "<html");
+		// 画面に表示しきれる分だけ表示（スクロールは面倒なのでなし）
+		while ((str = pgPrintHtml(str, &c, 0, SCR_WIDTH, 0)))
+		{
+			s2ch.pgCursorX = 0;
+			s2ch.pgCursorY += LINE_PITCH;
+			if (s2ch.pgCursorY >= 260)
+			{
+				break;
+			}
+		}
+	}
     pgPrintMenuBar("画面は切り替わりません　○で入力画面に　×でレス表\示に戻ります");
     while (s2ch.running)
     {
